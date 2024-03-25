@@ -29,9 +29,9 @@ AIzaSyD38z0nXaplg6dVmYmKpD_td4Gj0mAYBeg
 const firebaseConfig = {
   apiKey: "AIzaSyD38z0nXaplg6dVmYmKpD_td4Gj0mAYBeg",
 //  authDomain: "cv-site-10ad3.firebaseapp.com",
-//  databaseURL: "https://cv-site-10ad3-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "asztalos-a5496",
-  storageBucket: "asztalos-a5496.appspot.com",
+  databaseURL: "https://cv-site-10ad3-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cv-site-10ad3",
+  storageBucket: "cv-site-10ad3.appspot.com",
   messagingSenderId: "125941372972",
   appId: "1:125941372972:web:46adf68b746edebc9ed989",
   measurementId: "G-RS8V2SM423"
@@ -41,6 +41,7 @@ const firebaseConfig = {
 
 
 // Firebase inicializálása
+/*
 firebase.initializeApp(firebaseConfig);
 
 // Bejelentkezés függvény
@@ -60,4 +61,4 @@ const handleSignIn = async (event) => {
   } catch (error) {
     console.error('Hiba történt a bejelentkezés során:', error);
   }
-}
+}*/
