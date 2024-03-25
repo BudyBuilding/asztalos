@@ -1,28 +1,69 @@
-import { useState } from 'react';
-import Alert from 'react-bootstrap/Alert';
-import Button from 'react-bootstrap/Button';
+import { useState } from "react";
+import Table from "react-bootstrap/Table";
+import ListGroup from "react-bootstrap/ListGroup";
+import Button from "react-bootstrap/Button"; // Importáljuk be a Button komponenst
+import DashboardListItem from "../reusable/dashboard-list-item";
 
 function Dashboard() {
-  const [show, setShow] = useState(true);
+  const [tasks, setTasks] = useState([
+    {
+      Id: 1,
+      Client: "Chereji Clau",
+      Date: new Date("2024-03-30"),
+      Status: "Completed",
+      Price: 2024,
+      Paid: 1500,
+    },
+    {
+      Id: 2,
+      Client: "Irina geta",
+      Date: new Date("2024-04-05"),
+      Status: "In Progress",
+      Price: 2024,
+      Paid: 1500,
+    },
+    {
+      Id: 3,
+      Client: "Aronia",
+      Date: new Date("2024-04-10"),
+      Status: "Pending",
+      Price: 2024,
+      Paid: 1500,
+    },
+  ]);
 
   return (
     <>
-      <Alert show={show} variant="success">
-        <Alert.Heading>My Alert</Alert.Heading>
-        <p>
-          Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget
-          lacinia odio sem nec elit. Cras mattis consectetur purus sit amet
-          fermentum.
-        </p>
-        <hr />
-        <div className="d-flex justify-content-end">
-          <Button onClick={() => setShow(false)} variant="outline-success">
-            Close me
+      <div class="container d-xl-block">
+        <p className="fs-1 fw-bold text-start">Dashboard</p>
+      </div>
+
+      <div class="container d-xl-block">
+        <p className="fs-2 fw-bold text-start">Recent works</p>
+        <div className="d-flex justify-content-between mb-2">
+          {/* Gombok hozzáadása a rendezéshez */}
+          <Button variant="primary" onClick={() => {}}>
+            Client
+          </Button>
+          <Button variant="primary" onClick={() => {}}>
+            Date
+          </Button>
+          <Button variant="primary" onClick={() => {}}>
+            Status
+          </Button>
+          <Button variant="primary" onClick={() => {}}>
+            Price
+          </Button>
+          <Button variant="primary" onClick={() => {}}>
+            Paid
           </Button>
         </div>
-      </Alert>
-
-      {!show && <Button onClick={() => setShow(true)}>Show Alert</Button>}
+        <ListGroup>
+          {tasks.map((work) => (
+            <DashboardListItem key={work.id} work={work} />
+          ))}
+        </ListGroup>
+      </div>
     </>
   );
 }
