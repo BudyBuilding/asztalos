@@ -2,7 +2,7 @@ import { useState } from "react";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
-import DashboardListItem from "../reusable/dashboard-list-item";
+import DashboardListItem from "../reusable/dashboardListItem";
 
 function Dashboard() {
   const [works, setWorks] = useState([

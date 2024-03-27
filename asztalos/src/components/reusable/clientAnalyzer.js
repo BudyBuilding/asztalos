@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button, ListGroup } from "react-bootstrap";
-import ClientWorkListItem from "./client-works-list-item";
+import ClientWorkListItem from "./clientWorksListItem";
 function Clientanalyzer() {
   const [works, setWorks] = useState([
     {
