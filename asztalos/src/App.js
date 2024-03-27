@@ -2,7 +2,7 @@ import "./App.css";
 import Login from "./components/modules/login";
 import Dashboard from "./components/modules/dashboard";
 import Navbar from "./components/modules/navigationbar";
-import Clientanalyzer from "./components/reusable/Client-analyzer";
+import Clientanalyzer from "./components/reusable/clientAnalyzer";
 
 import "bootstrap/dist/css/bootstrap.min.css"; // Importáljuk a Bootstrap stíluslapot
 

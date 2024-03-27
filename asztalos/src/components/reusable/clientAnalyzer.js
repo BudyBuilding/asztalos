@@ -43,7 +43,10 @@ function Clientanalyzer() {
   return (
     <>
       <div class="container d-xl-block">
-        <p className="fs-1 fw-bold text-start">Chereju Clau</p>
+        <p className="fs-3  text-start">
+          <span className="fs-1 fw-bold">Chereju Clau</span>
+          &nbsp; works
+        </p>
       </div>
       <div class="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Informations</p>
