@@ -1,11 +1,15 @@
 import { useState } from "react";
 import Table from "react-bootstrap/Table";
 import ListGroup from "react-bootstrap/ListGroup";
-import Button from "react-bootstrap/Button"; // Importáljuk be a Button komponenst
+import Container from "react-bootstrap/Container";
+import Button from "react-bootstrap/Button";
 import DashboardListItem from "../reusable/dashboard-list-item";
+import Carousel from "react-bootstrap/Carousel";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 
 function Dashboard() {
-  const [tasks, setTasks] = useState([
+  const [works, setWorks] = useState([
     {
       Id: 1,
       Client: "Chereji Clau",
@@ -31,6 +35,112 @@ function Dashboard() {
       Paid: 1500,
     },
   ]);
+  const clientBoxWidth = 200;
+
+  const [clients, setClients] = useState([
+    {
+      Id: 1,
+      Name: "Johhnysdasd Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+    {
+      Id: 1,
+      Name: "Johhny Depp",
+      Tel: "+40758612749",
+      Address: "Satu Mare, street and house number",
+    },
+  ]);
 
   return (
     <>
@@ -38,10 +148,26 @@ function Dashboard() {
         <p className="fs-1 fw-bold text-start">Dashboard</p>
       </div>
 
+      <Container className="d-xl-block">
+        <p className="fs-2 fw-bold text-start">Clients</p>
+        <div className="d-flex flex-nowrap overflow-x-scroll">
+          {clients.map((client) => (
+            <div
+              key={client.Id}
+              className="p-3 border rounded"
+              style={{ minWidth: "200px", margin: "10px" }}
+            >
+              <p className="fw-bold">{client.Name}</p>
+              <p>Tel: {client.Tel}</p>
+              <p>Address: {client.Address}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+
       <div class="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Recent works</p>
         <div className="d-flex justify-content-between mb-2">
-          {/* Gombok hozzáadása a rendezéshez */}
           <Button variant="primary" onClick={() => {}}>
             Client
           </Button>
@@ -59,8 +185,8 @@ function Dashboard() {
           </Button>
         </div>
         <ListGroup>
-          {tasks.map((work) => (
-            <DashboardListItem key={work.id} work={work} />
+          {works.map((work) => (
+            <DashboardListItem key={work.Id} work={work} />
           ))}
         </ListGroup>
       </div>
