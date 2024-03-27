@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button, ListGroup } from "react-bootstrap";
 import ClientWorkListItem from "./clientWorksListItem";
-function Clientanalyzer() {
+function ClientAnalyzer() {
   const [works, setWorks] = useState([
     {
       Id: 1,
@@ -112,4 +112,4 @@ function Clientanalyzer() {
   );
 }
 
-export default Clientanalyzer;
+export default ClientAnalyzer;
