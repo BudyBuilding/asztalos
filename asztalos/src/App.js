@@ -8,14 +8,12 @@ import "bootstrap/dist/css/bootstrap.min.css"; // Importáljuk a Bootstrap stíl
 
 function App() {
   return (
-    <div className="App">
-      {/*
-
-     <Login />  
-*/}
+    <div className="App mb-10 w-100 h-100 bg-1">
+      {/**
+       * 
+      <Login />
       <Navbar />
       <WorkAnalyzer />
-      {/*
       <ClientAnalyzer />
       <Dashboard />
        */}
