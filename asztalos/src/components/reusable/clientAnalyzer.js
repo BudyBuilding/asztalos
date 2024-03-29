@@ -43,9 +43,14 @@ function ClientAnalyzer() {
   return (
     <>
       <div class="container d-xl-block">
-        <p className="fs-3  text-start">
-          <span className="fs-1 fw-bold">Chereju Clau</span>
-          &nbsp; works
+        <p className="fs-3  text-start d-flex justify-content-between">
+          <div>
+            <span className="fs-1 fw-bold">Chereju Clau</span>
+            &nbsp; works
+          </div>
+          <div>
+            <Button>Edit Client</Button>
+          </div>
         </p>
       </div>
       <div class="container d-xl-block">
