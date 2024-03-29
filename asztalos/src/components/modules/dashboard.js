@@ -326,7 +326,7 @@ function Dashboard() {
 
   return (
     <>
-      <div class="container d-xl-block">
+      <Container class="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
           <div>
@@ -338,7 +338,7 @@ function Dashboard() {
             </Button>
           </div>
         </div>
-      </div>
+      </Container>
 
       <Container className="d-xl-block">
         <p className="fs-2 fw-bold text-start">Clients</p>

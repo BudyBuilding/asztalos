@@ -15,9 +15,9 @@ function App() {
       <Navbar />
       <WorkAnalyzer />
       <Dashboard />
-      <NewWork />
-    */}
       <ClientAnalyzer />
+    */}
+      <NewWork />
     </div>
   );
 }
