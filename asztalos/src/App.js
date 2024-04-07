@@ -8,16 +8,17 @@ import WorkAnalyzer from "./components/reusable/workAnalyzer";
 import NewWork from "./components/reusable/newWork";
 function App() {
   return (
-    <div className="App mb-10 w-100 h-100 bg-1">
+    <div className="App mb-5 w-100 h-100 bg-1">
+      <div className="bg-3 bg-info h-100"></div>
       {/**
        * 
        <Navbar />
        <Login />
        <WorkAnalyzer />
        <ClientAnalyzer />
-      <Dashboard />
+       <NewWork />
       */}
-      <NewWork />
+      <Dashboard />
     </div>
   );
 }
