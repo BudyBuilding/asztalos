@@ -6,20 +6,30 @@ import Navbar from "./components/modules/navigationbar";
 import ClientAnalyzer from "./components/reusable/clientAnalyzer";
 import WorkAnalyzer from "./components/reusable/workAnalyzer";
 import NewWork from "./components/reusable/newWork";
+import { Provider } from "react-redux"; // Provider importálása a react-redux csomagból
+import store from "./components/data/store/store"; // Redux store importálása
+import { useSelector } from "react-redux"; // useSelector importálása a react-redux csomagból
+
 function App() {
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+
   return (
-    <div className="App mb-5 w-100 h-100 bg-1">
-      <div className="bg-3 bg-info h-100"></div>
+    <Provider store={store}>
+      <div className="App mb-5 w-100 h-100 bg-1">
+        <div className="bg-3 bg-info h-100"></div>
+        <Navbar />
+        {isLoggedIn ? <Dashboard /> : <Login />}
+      </div>
+
       {/**
-       * 
-       <Navbar />
-       <Login />
-       <WorkAnalyzer />
-       <ClientAnalyzer />
-       <NewWork />
-      */}
       <Dashboard />
-    </div>
+      <Navbar />
+      <Login />
+      <WorkAnalyzer />
+      <ClientAnalyzer />
+      <NewWork />
+    */}
+    </Provider>
   );
 }
 
