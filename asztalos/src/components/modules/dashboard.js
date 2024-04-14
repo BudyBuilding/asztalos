@@ -3,15 +3,35 @@ import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import { Modal } from "react-bootstrap";
 import DashboardListItem from "../reusable/dashboardListItem";
 import { getClients, getWorks } from "../data/firebase/apiService";
+import NewClient from "../reusable/newClient";
 
 function Dashboard() {
   const works = useSelector((state) => state.works);
   const clients = useSelector((state) => state.clients);
+  const [showNewClient, setShowNewClient] = useState(false); // állapot a NewClient komponens megjelenítéséhez
+  const dispatch = useDispatch();
 
+  const handleNewClientClick = () => {
+    setShowNewClient(true);
+  };
+
+  const handleNewClientClose = () => {
+    setShowNewClient(false);
+  };
   return (
     <>
+      {/* Bootstrap Modal for NewClient */}
+      <Modal show={showNewClient} onHide={handleNewClientClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add New Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <NewClient onClose={handleNewClientClose} />
+        </Modal.Body>
+      </Modal>
       <Container className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
@@ -19,7 +39,11 @@ function Dashboard() {
             <Button variant="primary" onClick={() => {}} className="me-3">
               New work
             </Button>
-            <Button variant="primary" onClick={() => {}} className="me-3">
+            <Button
+              variant="primary"
+              onClick={handleNewClientClick}
+              className="me-3"
+            >
               New client
             </Button>
           </div>

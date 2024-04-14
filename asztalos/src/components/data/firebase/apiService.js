@@ -1,14 +1,18 @@
 //apiService.js
 import store from "../store/store"; // Redux store importálása
 
-import { getClientsSuccess, getWorksSuccess } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
+import {
+  getClientsSuccess,
+  getWorksSuccess,
+  addClientSuccess,
+} from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const BASE_URL = "https://api.example.com";
 const works = [
   {
     workId: 1,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-29",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -16,7 +20,7 @@ const works = [
   {
     workId: 2,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -24,7 +28,7 @@ const works = [
   {
     workId: 3,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -32,7 +36,7 @@ const works = [
   {
     workId: 4,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -40,7 +44,7 @@ const works = [
   {
     workId: 5,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -48,7 +52,7 @@ const works = [
   {
     workId: 6,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -56,7 +60,7 @@ const works = [
   {
     workId: 7,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -64,7 +68,7 @@ const works = [
   {
     workId: 8,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -72,7 +76,7 @@ const works = [
   {
     workId: 9,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -80,7 +84,7 @@ const works = [
   {
     workId: 10,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -88,7 +92,7 @@ const works = [
   {
     workId: 11,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -96,7 +100,7 @@ const works = [
   {
     workId: 12,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -104,7 +108,7 @@ const works = [
   {
     workId: 13,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -112,7 +116,7 @@ const works = [
   {
     workId: 14,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -120,7 +124,7 @@ const works = [
   {
     workId: 15,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -128,7 +132,7 @@ const works = [
   {
     workId: 16,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -136,7 +140,7 @@ const works = [
   {
     workId: 17,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -144,7 +148,7 @@ const works = [
   {
     workId: 18,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -152,7 +156,7 @@ const works = [
   {
     workId: 19,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -160,7 +164,7 @@ const works = [
   {
     workId: 20,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -168,7 +172,7 @@ const works = [
   {
     workId: 21,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -176,7 +180,7 @@ const works = [
   {
     workId: 22,
     Client: "Chereji Clau",
-    Date: new Date("2024-03-30"),
+    Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
     Paid: 1500,
@@ -184,7 +188,7 @@ const works = [
   {
     workId: 23,
     Client: "Irina geta",
-    Date: new Date("2024-04-05"),
+    Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
     Paid: 1500,
@@ -192,7 +196,7 @@ const works = [
   {
     workId: 24,
     Client: "Aronia",
-    Date: new Date("2024-04-10"),
+    Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
     Paid: 1500,
@@ -321,30 +325,45 @@ const clients = [
     Address: "456 Birch Street, Austin",
   },
 ];
-const apiService = {
-  // Kliensek lekérdezése
-  getClients: async (userId) => {
-    try {
-      console.log("itt vagyunk");
-      store.dispatch(getClientsSuccess(clients));
-    } catch (error) {
-      console.error("Error while fetching clients:", error);
-      throw error;
-    }
-  },
 
-  // Munkák lekérdezése
-  getWorks: async (userId) => {
-    try {
-      store.dispatch(getWorksSuccess(works));
-    } catch (error) {
-      console.error("Error while fetching works:", error);
-      throw error;
-    }
-  },
+export const getClients = async () => {
+  try {
+    // Itt lehetne az API hívást megvalósítani
+    store.dispatch(getClientsSuccess(clients));
+  } catch (error) {
+    console.error("Error while fetching clients:", error);
+    throw error;
+  }
 };
 
-export default apiService;
+export const getWorks = async () => {
+  try {
+    // Itt lehetne az API hívást megvalósítani
+    store.dispatch(getWorksSuccess(works));
+  } catch (error) {
+    console.error("Error while fetching works:", error);
+    throw error;
+  }
+};
 
-export const GET_CLIENTS_SUCCESS = "GET_CLIENTS_SUCCESS";
-export const GET_WORKS_SUCCESS = "GET_WORKS_SUCCESS";
+export const addClient = (clientData) => {
+  return async (dispatch) => {
+    try {
+      const newClient = {
+        ClientId: Math.floor(Math.random() * 1000000), // Random szám generálása
+        Name: clientData.name,
+        Tel: clientData.tel,
+        Address: clientData.address,
+      };
+
+      // Add the client to the database or API
+      // ...
+      console.log("sza");
+      dispatch(addClientSuccess(newClient));
+      return newClient;
+    } catch (error) {
+      console.error("Error while adding client:", error);
+      throw error;
+    }
+  };
+};

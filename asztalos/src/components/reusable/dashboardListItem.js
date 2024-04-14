@@ -9,7 +9,7 @@ function DashboardListItem({ work }) {
           {work.Client}
         </span>
         <span className="mb-1" style={{ width: "20%" }}>
-          {work.Date.toLocaleDateString()}
+          {work.Date}
         </span>
         <span className="mb-1" style={{ width: "30%" }}>
           {work.Status}

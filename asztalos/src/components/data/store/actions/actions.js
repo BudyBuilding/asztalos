@@ -1,5 +1,4 @@
-//actions.js
-import apiService from "../../firebase/apiService";
+import { getClients, getWorks } from "../../firebase/apiService"; // addClient eltávolítva, mert már importálva van az apiService-ből
 
 import { GET_CLIENTS_SUCCESS, GET_WORKS_SUCCESS } from "../constants";
 
@@ -31,22 +30,24 @@ export const logout = () => ({
   type: "auth/logout",
 });
 
+export const addClientSuccess = (client) => ({
+  type: "ADD_CLIENT_SUCCESS",
+  payload: client,
+});
+
 export const login = (userData) => {
   return (dispatch) => {
     dispatch(loginStart());
-    // Ide jön majd a valós bejelentkezési logika, például az API hívás
-    // Példa aszinkron műveletre:
     setTimeout(async () => {
-      // Egyelőre példa adatokkal dolgozunk, később helyettesítsd az API hívással
       if (userData.email === "a@gmail.com" && userData.password === "a") {
         console.log("hello");
         const user = { id: 1, name: "John Doe", email: userData.email };
-        apiService.getClients(user.id);
-        apiService.getWorks(user.id);
+        getClients(user.id);
+        getWorks(user.id);
         dispatch(loginSuccess(user));
       } else {
         dispatch(loginFailure("Invalid email or password"));
       }
-    }, 1000); // Példa aszinkron művelet késleltetéssel
+    }, 1000);
   };
 };
