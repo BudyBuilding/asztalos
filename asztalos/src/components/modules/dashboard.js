@@ -7,11 +7,11 @@ import { Modal } from "react-bootstrap";
 import DashboardListItem from "../reusable/dashboardListItem";
 import { selectClient } from "../data/store/actions/actions";
 import ClientAnalyzer from "../reusable/clientAnalyzer";
-
 import NewClient from "../reusable/newClient";
+import sorting from "../reusable/sort";
 
 function Dashboard() {
-  const works = useSelector((state) => state.works);
+  const [works, setWorks] = useState(useSelector((state) => state.works));
   const clients = useSelector((state) => state.clients);
   const [showNewClient, setShowNewClient] = useState(false); // állapot a NewClient komponens megjelenítéséhez
   const dispatch = useDispatch();
@@ -41,6 +41,27 @@ function Dashboard() {
 
   const handleCloseClientAnalyzer = () => {
     setIsClientAnalyzerVisible(false);
+  };
+
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 1, // Default direction is ascending
+  });
+
+  const requestSort = (key) => {
+    let direction = 1;
+
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
+      direction = 2; // Change to descending if already ascending
+    }
+
+    if (key === "Status") {
+      direction = sortConfig.direction === 4 ? 1 : sortConfig.direction + 1;
+    }
+
+    setSortConfig({ key, direction });
+    const sorted = sorting(works, { key, direction });
+    setWorks(sorted);
   };
 
   return (
@@ -109,19 +130,19 @@ function Dashboard() {
           <div className="container d-xl-block">
             <p className="fs-2 fw-bold text-start">Recent works</p>
             <div className="d-flex justify-content-between mb-2">
-              <Button variant="primary" onClick={() => {}}>
+              <Button variant="primary" onClick={() => requestSort("Client")}>
                 Client
               </Button>
-              <Button variant="primary" onClick={() => {}}>
+              <Button variant="primary" onClick={() => requestSort("Date")}>
                 Date
               </Button>
-              <Button variant="primary" onClick={() => {}}>
+              <Button variant="primary" onClick={() => requestSort("Status")}>
                 Status
               </Button>
-              <Button variant="primary" onClick={() => {}}>
+              <Button variant="primary" onClick={() => requestSort("Price")}>
                 Price
               </Button>
-              <Button variant="primary" onClick={() => {}}>
+              <Button variant="primary" onClick={() => requestSort("Paid")}>
                 Paid
               </Button>
             </div>

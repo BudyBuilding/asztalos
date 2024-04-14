@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, ListGroup } from "react-bootstrap";
 import ClientWorkListItem from "./clientWorksListItem";
 import { useSelector } from "react-redux";
+import sorting from "./sort";
 
 function ClientAnalyzer({ client }) {
   const [works, setWorks] = useState(
@@ -23,56 +24,26 @@ function ClientAnalyzer({ client }) {
     0
   );
   //
+
   const [sortConfig, setSortConfig] = useState({
     key: null,
-    direction: "asc",
+    direction: 1, // Default direction is ascending
   });
+
   const requestSort = (key) => {
-    let direction = "asc";
-    if (
-      sortConfig &&
-      sortConfig.key === key &&
-      sortConfig.direction === "asc"
-    ) {
-      direction = "desc";
+    let direction = 1; // Default direction is ascending
+
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
+      direction = 2; // Change to descending if already ascending
     }
+
+    if (key === "Status") {
+      direction = sortConfig.direction === 4 ? 1 : sortConfig.direction + 1;
+    }
+
     setSortConfig({ key, direction });
-    sortWorks(key, direction);
+    setWorks(sorting(works, { key, direction }));
   };
-
-  const sortWorks = (key, order = "asc") => {
-    const statusSet = new Set();
-    works.forEach((work) => {
-      statusSet.add(work.Status);
-    });
-
-    const sortedStatusValues = Array.from(statusSet);
-
-    const sortedWorks = [...works].sort((a, b) => {
-      if (key === "Status") {
-        const aStatus = a.Status === "In Progress" ? "" : a.Status;
-        const bStatus = b.Status === "In Progress" ? "" : b.Status;
-
-        if (aStatus === bStatus) {
-          return order === "asc" ? a[key] - b[key] : b[key] - a[key];
-        }
-
-        const aStatusIndex = sortedStatusValues.indexOf(aStatus);
-        const bStatusIndex = sortedStatusValues.indexOf(bStatus);
-
-        return order === "asc"
-          ? aStatusIndex - bStatusIndex
-          : bStatusIndex - aStatusIndex;
-      }
-
-      if (a[key] < b[key]) return order === "asc" ? -1 : 1;
-      if (a[key] > b[key]) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    setWorks(sortedWorks);
-  };
-
   return (
     <>
       <div className="container d-xl-block">

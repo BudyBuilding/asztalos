@@ -329,6 +329,7 @@ const works = [
   {
     workId: 1,
     ClientId: 1,
+    Client: "Chereji Clau",
     Date: "2024-03-29",
     Status: "Completed",
     Price: 2024,
@@ -337,6 +338,7 @@ const works = [
   {
     workId: 2,
     ClientId: 1,
+    Client: "Chereji Clau",
     Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
@@ -345,6 +347,7 @@ const works = [
   {
     workId: 3,
     ClientId: 1,
+    Client: "Chereji Clau",
     Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
@@ -354,6 +357,7 @@ const works = [
   {
     workId: 4,
     ClientId: 2,
+    Client: "irina Geta",
     Date: "2024-03-30",
     Status: "Completed",
     Price: 2024,
@@ -362,6 +366,7 @@ const works = [
   {
     workId: 5,
     ClientId: 2,
+    Client: "irina Geta",
     Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
@@ -370,6 +375,7 @@ const works = [
   {
     workId: 6,
     ClientId: 2,
+    Client: "irina Geta",
     Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
@@ -379,6 +385,7 @@ const works = [
   {
     workId: 7,
     ClientId: 3,
+    Client: "Aronia",
     Date: "2024-03-29",
     Status: "Completed",
     Price: 2024,
@@ -387,6 +394,7 @@ const works = [
   {
     workId: 8,
     ClientId: 3,
+    Client: "Aronia",
     Date: "2024-04-05",
     Status: "In Progress",
     Price: 2024,
@@ -395,6 +403,7 @@ const works = [
   {
     workId: 9,
     ClientId: 3,
+    Client: "Aronia",
     Date: "2024-04-10",
     Status: "Pending",
     Price: 2024,
@@ -403,16 +412,28 @@ const works = [
   // Dummy munkák minden klienshez
   // Minden klienshez 4-4 dummy munkát adok
   // Dummy munkák generálása
-  ...Array.from({ length: 19 * 4 }, (_, i) => ({
-    workId: 10 + i,
-    ClientId: (i % 19) + 1,
-    Date: `2024-04-${10 + (i % 3)}`,
-    Client: clients[i % 19].Name, // Nevet adok a munkáknak a kliens alapján
+  ...Array.from({ length: 19 * 4 }, (_, i) => {
+    const randomYear = 2024;
+    const randomMonth = Math.floor(Math.random() * 12) + 1; // 1-12 hónap
+    const randomDay = Math.floor(Math.random() * 28) + 1; // 1-28 nap (figyelve a hónapokra)
 
-    Status: i % 3 === 0 ? "Completed" : i % 3 === 1 ? "In Progress" : "Pending",
-    Price: 2024,
-    Paid: 1500,
-  })),
+    const randomPrice = Math.floor(Math.random() * 2000) + 1000; // 1000-2999 RON között
+    const randomPaid = Math.floor(Math.random() * randomPrice); // 0-Price között
+
+    return {
+      workId: 10 + i,
+      ClientId: (i % 19) + 1,
+      Date: `${randomYear}-${String(randomMonth).padStart(2, "0")}-${String(
+        randomDay
+      ).padStart(2, "0")}`,
+      Client: clients[i % 19].Name,
+
+      Status:
+        i % 3 === 0 ? "Completed" : i % 3 === 1 ? "In Progress" : "Pending",
+      Price: randomPrice,
+      Paid: randomPaid,
+    };
+  }),
 ];
 
 export const getClients = async () => {
