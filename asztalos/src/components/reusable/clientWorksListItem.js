@@ -6,7 +6,7 @@ function ClientWorkListItem({ work }) {
     <ListGroup.Item>
       <div className="d-flex w-100 mb-2 justify-content-between">
         <span className="mb-1 text-start" style={{ width: "25%" }}>
-          {work.Date.toLocaleDateString()}
+          {work.Date}
         </span>
         <span className="mb-1 text-center" style={{ width: "25%" }}>
           {work.Status}

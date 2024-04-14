@@ -8,7 +8,7 @@ import {
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const BASE_URL = "https://api.example.com";
-const works = [
+/*const works = [
   {
     workId: 1,
     Client: "Chereji Clau",
@@ -201,8 +201,7 @@ const works = [
     Price: 2024,
     Paid: 1500,
   },
-];
-
+];*/
 const clients = [
   {
     ClientId: 1,
@@ -324,6 +323,96 @@ const clients = [
     Tel: "+123987456",
     Address: "456 Birch Street, Austin",
   },
+];
+const works = [
+  // Chereji Clau munkái
+  {
+    workId: 1,
+    ClientId: 1,
+    Date: "2024-03-29",
+    Status: "Completed",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 2,
+    ClientId: 1,
+    Date: "2024-04-05",
+    Status: "In Progress",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 3,
+    ClientId: 1,
+    Date: "2024-04-10",
+    Status: "Pending",
+    Price: 2024,
+    Paid: 1500,
+  },
+  // Irina geta munkái
+  {
+    workId: 4,
+    ClientId: 2,
+    Date: "2024-03-30",
+    Status: "Completed",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 5,
+    ClientId: 2,
+    Date: "2024-04-05",
+    Status: "In Progress",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 6,
+    ClientId: 2,
+    Date: "2024-04-10",
+    Status: "Pending",
+    Price: 2024,
+    Paid: 1500,
+  },
+  // Aronia munkái
+  {
+    workId: 7,
+    ClientId: 3,
+    Date: "2024-03-29",
+    Status: "Completed",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 8,
+    ClientId: 3,
+    Date: "2024-04-05",
+    Status: "In Progress",
+    Price: 2024,
+    Paid: 1500,
+  },
+  {
+    workId: 9,
+    ClientId: 3,
+    Date: "2024-04-10",
+    Status: "Pending",
+    Price: 2024,
+    Paid: 1500,
+  },
+  // Dummy munkák minden klienshez
+  // Minden klienshez 4-4 dummy munkát adok
+  // Dummy munkák generálása
+  ...Array.from({ length: 19 * 4 }, (_, i) => ({
+    workId: 10 + i,
+    ClientId: (i % 19) + 1,
+    Date: `2024-04-${10 + (i % 3)}`,
+    Client: clients[i % 19].Name, // Nevet adok a munkáknak a kliens alapján
+
+    Status: i % 3 === 0 ? "Completed" : i % 3 === 1 ? "In Progress" : "Pending",
+    Price: 2024,
+    Paid: 1500,
+  })),
 ];
 
 export const getClients = async () => {

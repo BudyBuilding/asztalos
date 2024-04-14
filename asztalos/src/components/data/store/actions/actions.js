@@ -35,6 +35,11 @@ export const addClientSuccess = (client) => ({
   payload: client,
 });
 
+export const selectClient = (client) => ({
+  type: "SELECT_CLIENT",
+  payload: client,
+});
+
 export const login = (userData) => {
   return (dispatch) => {
     dispatch(loginStart());

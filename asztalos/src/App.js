@@ -1,14 +1,15 @@
+import React from "react";
 import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css"; // Importáljuk a Bootstrap stíluslapot
+import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./components/modules/login";
 import Dashboard from "./components/modules/dashboard";
 import Navbar from "./components/modules/navigationbar";
-import ClientAnalyzer from "./components/reusable/clientAnalyzer";
+import ClientAnalyzer from "./components/reusable/clientAnalyzer"; // Módosítva
 import WorkAnalyzer from "./components/reusable/workAnalyzer";
 import NewWork from "./components/reusable/newWork";
-import { Provider } from "react-redux"; // Provider importálása a react-redux csomagból
-import store from "./components/data/store/store"; // Redux store importálása
-import { useSelector } from "react-redux"; // useSelector importálása a react-redux csomagból
+import { Provider } from "react-redux";
+import store from "./components/data/store/store";
+import { useSelector } from "react-redux";
 
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
@@ -20,15 +21,6 @@ function App() {
         <Navbar />
         {isLoggedIn ? <Dashboard /> : <Login />}
       </div>
-
-      {/**
-      <Dashboard />
-      <Navbar />
-      <Login />
-      <WorkAnalyzer />
-      <ClientAnalyzer />
-      <NewWork />
-    */}
     </Provider>
   );
 }

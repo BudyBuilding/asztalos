@@ -52,10 +52,20 @@ const authReducer = (
   }
 };
 
+const selectedClientReducer = (state = null, action) => {
+  switch (action.type) {
+    case "SELECT_CLIENT":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
 const reducers = combineReducers({
   clients: clientsReducer,
   works: worksReducer,
   auth: authReducer,
+  selectedClient: selectedClientReducer,
 });
 
 export default reducers;
