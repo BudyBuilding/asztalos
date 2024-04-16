@@ -9,22 +9,20 @@ import { selectClient } from "../data/store/actions/actions";
 import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
-
-function Dashboard() {
+import { useNavigate } from "react-router-dom";
+function Dashboard({ onSelectClient }) {
   const [works, setWorks] = useState(useSelector((state) => state.works));
   const clients = useSelector((state) => state.clients);
-  const [showNewClient, setShowNewClient] = useState(false); // állapot a NewClient komponens megjelenítéséhez
+  const [showNewClient, setShowNewClient] = useState(false);
   const dispatch = useDispatch();
-  const selectedClientId = useSelector((state) => state.selectedClient); // Hozzáadva
-  const [isClientAnalyzerVisible, setIsClientAnalyzerVisible] = useState(false); // Lokális állapot a ClientAnalyzer láthatóságához
-  const [isAddingWork, setIsAddingWork] = useState(false); // Lokális állapot az új munka hozzáadásához
+  const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
 
-  useEffect(() => {
-    if (selectedClientId) {
-      setIsClientAnalyzerVisible(true);
-    }
-  }, [selectedClientId]);
+  const handleSelectClient = (clientId) => {
+    dispatch(selectClient(clientId));
+    console.log({ clientId });
 
+    navigate(`/clientAnalyzer/${clientId}`);
+  };
   const handleNewClientClick = () => {
     setShowNewClient(true);
   };
@@ -33,26 +31,16 @@ function Dashboard() {
     setShowNewClient(false);
   };
 
-  const handleClientClick = (client) => {
-    dispatch(selectClient(client.ClientId));
-    setIsClientAnalyzerVisible(true);
-    //   navigate(`/client/${client.ClientId}`); // URL módosítása a kiválasztott ügyfélre
-  };
-
-  const handleCloseClientAnalyzer = () => {
-    setIsClientAnalyzerVisible(false);
-  };
-
   const [sortConfig, setSortConfig] = useState({
     key: null,
-    direction: 1, // Default direction is ascending
+    direction: 1,
   });
 
   const requestSort = (key) => {
     let direction = 1;
 
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
-      direction = 2; // Change to descending if already ascending
+      direction = 2;
     }
 
     if (key === "Status") {
@@ -66,94 +54,76 @@ function Dashboard() {
 
   return (
     <>
-      {isClientAnalyzerVisible || isAddingWork ? (
-        <>
-          {isClientAnalyzerVisible && (
-            <ClientAnalyzer
-              client={selectedClientId}
-              onClose={handleCloseClientAnalyzer}
-            />
-          )}
+      <Modal show={showNewClient} onHide={handleNewClientClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add New Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <NewClient onClose={handleNewClientClose} />
+        </Modal.Body>
+      </Modal>
 
-          {/*isAddingWork && (
-            <AddNewWork onClose={() => setIsAddingWork(false)} /> // Implementálásra került
-          )*/}
-        </>
-      ) : (
-        <>
-          {/* Bootstrap Modal for NewClient */}
-          <Modal show={showNewClient} onHide={handleNewClientClose}>
-            <Modal.Header closeButton>
-              <Modal.Title>Add New Client</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <NewClient onClose={handleNewClientClose} />
-            </Modal.Body>
-          </Modal>
-
-          <Container className="container d-xl-block">
-            <div className="d-flex justify-content-between align-items-center">
-              <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
-              <div>
-                <Button variant="primary" onClick={() => {}} className="me-3">
-                  New work
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleNewClientClick}
-                  className="me-3"
-                >
-                  New client
-                </Button>
-              </div>
-            </div>
-          </Container>
-
-          <Container className="d-xl-block">
-            <p className="fs-2 fw-bold text-start">Clients</p>
-            <div className="d-flex flex-nowrap overflow-x-scroll">
-              {clients.map((client) => (
-                <div
-                  key={client.ClientId}
-                  className="p-3 border rounded"
-                  style={{ minWidth: "200px", margin: "10px" }}
-                  onClick={() => handleClientClick(client)}
-                >
-                  <p className="fw-bold">{client.Name}</p>
-                  <p>Tel: {client.Tel}</p>
-                  <p>Address: {client.Address}</p>
-                </div>
-              ))}
-            </div>
-          </Container>
-
-          <div className="container d-xl-block">
-            <p className="fs-2 fw-bold text-start">Recent works</p>
-            <div className="d-flex justify-content-between mb-2">
-              <Button variant="primary" onClick={() => requestSort("Client")}>
-                Client
-              </Button>
-              <Button variant="primary" onClick={() => requestSort("Date")}>
-                Date
-              </Button>
-              <Button variant="primary" onClick={() => requestSort("Status")}>
-                Status
-              </Button>
-              <Button variant="primary" onClick={() => requestSort("Price")}>
-                Price
-              </Button>
-              <Button variant="primary" onClick={() => requestSort("Paid")}>
-                Paid
-              </Button>
-            </div>
-            <ListGroup>
-              {works.map((work) => (
-                <DashboardListItem key={work.workId} work={work} />
-              ))}
-            </ListGroup>
+      <Container className="container d-xl-block">
+        <div className="d-flex justify-content-between align-items-center">
+          <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
+          <div>
+            <Button variant="primary" onClick={() => {}} className="me-3">
+              New work
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleNewClientClick}
+              className="me-3"
+            >
+              New client
+            </Button>
           </div>
-        </>
-      )}
+        </div>
+      </Container>
+
+      <Container className="d-xl-block">
+        <p className="fs-2 fw-bold text-start">Clients</p>
+        <div className="d-flex flex-nowrap overflow-x-scroll">
+          {clients.map((client) => (
+            <div
+              key={client.ClientId}
+              className="p-3 border rounded"
+              style={{ minWidth: "200px", margin: "10px" }}
+              onClick={() => handleSelectClient(client.ClientId)}
+            >
+              <p className="fw-bold">{client.Name}</p>
+              <p>Tel: {client.Tel}</p>
+              <p>Address: {client.Address}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+
+      <div className="container d-xl-block">
+        <p className="fs-2 fw-bold text-start">Recent works</p>
+        <div className="d-flex justify-content-between mb-2">
+          <Button variant="primary" onClick={() => requestSort("Client")}>
+            Client
+          </Button>
+          <Button variant="primary" onClick={() => requestSort("Date")}>
+            Date
+          </Button>
+          <Button variant="primary" onClick={() => requestSort("Status")}>
+            Status
+          </Button>
+          <Button variant="primary" onClick={() => requestSort("Price")}>
+            Price
+          </Button>
+          <Button variant="primary" onClick={() => requestSort("Paid")}>
+            Paid
+          </Button>
+        </div>
+        <ListGroup>
+          {works.map((work) => (
+            <DashboardListItem key={work.workId} work={work} />
+          ))}
+        </ListGroup>
+      </div>
     </>
   );
 }

@@ -1,25 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button, ListGroup } from "react-bootstrap";
 import ClientWorkListItem from "./clientWorksListItem";
 import { useSelector } from "react-redux";
 import sorting from "./sort";
+import { useParams } from "react-router-dom";
 
-function ClientAnalyzer({ client }) {
-  const [works, setWorks] = useState(
-    useSelector((state) =>
-      state.works.filter((work) => work.ClientId === client)
-    )
+function ClientAnalyzer() {
+  const { clientId } = useParams();
+
+  const allWorks = useSelector((state) => state.works);
+  const allClients = useSelector((state) => state.clients);
+
+  const memoizedWorks = useMemo(
+    () => allWorks.filter((work) => work.ClientId == clientId),
+    [allWorks, clientId]
+  );
+  const selectedClient = useMemo(
+    () => allClients.find((c) => c.ClientId == clientId),
+    [allClients, clientId]
   );
 
-  const selectedClient = useSelector((state) =>
-    state.clients.find((c) => c.ClientId === client)
-  );
-
-  const totalWorks = works.length;
-  const activeWorks = works.filter(
+  console.log(clientId);
+  const totalWorks = memoizedWorks.length;
+  const activeWorks = memoizedWorks.filter(
     (work) => work.Status === "In Progress"
   ).length;
-  const stillToPay = works.reduce(
+  const stillToPay = memoizedWorks.reduce(
     (acc, work) => acc + (work.Price - work.Paid),
     0
   );
@@ -42,12 +48,12 @@ function ClientAnalyzer({ client }) {
     }
 
     setSortConfig({ key, direction });
-    setWorks(sorting(works, { key, direction }));
+    memoizedWorks = sorting(memoizedWorks, { key, direction });
   };
   return (
     <>
       <div className="container d-xl-block">
-        <p className="fs-3  text-start d-flex justify-content-between">
+        <div className="fs-3  text-start d-flex justify-content-between">
           <div>
             <span className="fs-1 fw-bold">{selectedClient?.Name}</span>
             &nbsp; works
@@ -55,7 +61,7 @@ function ClientAnalyzer({ client }) {
           <div>
             <Button>Edit Client</Button>
           </div>
-        </p>
+        </div>
       </div>
       <div className="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Informations</p>
@@ -112,8 +118,8 @@ function ClientAnalyzer({ client }) {
           </Button>
         </div>
         <ListGroup>
-          {works.map((work) => (
-            <ClientWorkListItem key={work.Id} work={work} />
+          {memoizedWorks.map((work) => (
+            <ClientWorkListItem key={work.workId} work={work} />
           ))}
         </ListGroup>
       </div>
