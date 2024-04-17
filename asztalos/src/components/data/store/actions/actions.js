@@ -40,6 +40,20 @@ export const selectClient = (client) => ({
   payload: client,
 });
 
+export const addColorStart = () => ({
+  type: "ADD_COLOR_START",
+});
+
+export const addColorSuccess = (color) => ({
+  type: "ADD_COLOR_SUCCESS",
+  payload: color,
+});
+
+export const addColorFailure = (error) => ({
+  type: "ADD_COLOR_FAILURE",
+  payload: error,
+});
+
 export const login = (userData) => {
   return (dispatch) => {
     dispatch(loginStart());

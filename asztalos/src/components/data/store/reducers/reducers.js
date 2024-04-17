@@ -61,11 +61,40 @@ const selectedClientReducer = (state = null, action) => {
   }
 };
 
+const initialState = {
+  colors: {
+    door: [],
+    side: [],
+    countertop: [],
+    saved: [],
+  },
+};
+
+const colorReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case "UPDATE_COLORS":
+      console.log("Updating colors with:", action.payload);
+      return {
+        ...state,
+        colors: {
+          ...state.colors,
+          [action.payload.category]: [
+            ...(state.colors[action.payload.category] || []),
+            ...action.payload.colors,
+          ],
+        },
+      };
+
+    default:
+      return state;
+  }
+};
 const reducers = combineReducers({
   clients: clientsReducer,
   works: worksReducer,
   auth: authReducer,
   selectedClient: selectedClientReducer,
+  colors: colorReducer,
 });
 
 export default reducers;

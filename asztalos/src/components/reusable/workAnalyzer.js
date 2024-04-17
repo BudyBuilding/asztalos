@@ -119,7 +119,7 @@ function WorkAnalyzer() {
       </div>
 
       {/** Basic informations */}
-      <div class="container d-xl-block">
+      <div className="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Informations</p>
         <div className="row">
           <div className="col-md-6">
@@ -166,7 +166,7 @@ function WorkAnalyzer() {
       </div>
 
       {/** Measurements */}
-      <div class="container d-xl-block">
+      <div className="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Measurements</p>
 
         {/** Woods */}
@@ -273,7 +273,7 @@ function WorkAnalyzer() {
       </div>
 
       {/** Files list */}
-      <div class="container d-xl-block">
+      <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-2 fw-bold text-start ">Files</p>
         </div>

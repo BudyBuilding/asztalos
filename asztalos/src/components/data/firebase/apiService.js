@@ -273,13 +273,22 @@ export const addClient = (clientData) => {
       };
 
       // Add the client to the database or API
-      // ...
-      console.log("sza");
       dispatch(addClientSuccess(newClient));
       return newClient;
     } catch (error) {
       console.error("Error while adding client:", error);
       throw error;
     }
+  };
+};
+
+export const addColor = (colorObj) => {
+  return (dispatch) => {
+    // Itt hívod meg a firebase api-t vagy bármilyen aszinkron műveletet,
+    // és miután sikeresen hozzáadtad a színt, dispatcheld az actiont
+    dispatch({
+      type: "ADD_COLOR",
+      payload: colorObj,
+    });
   };
 };

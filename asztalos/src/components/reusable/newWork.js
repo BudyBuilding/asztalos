@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown } from "react-bootstrap";
 import FurnitureItem from "./furnitureItem";
+import ColorSelector from "./colorSelector"; // Importing ColorSelector
+import store from "../data/store/store";
 
 function NewWork() {
   const [types, setTypes] = useState([
@@ -24,14 +27,38 @@ function NewWork() {
   ]);
 
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
+  const [showColors, setShowColors] = useState(false);
 
   const handleSelectPlace = (place) => {
     setSelectedPlace(place);
   };
 
+  const colors = useSelector((state) => state.colors);
+  const dispatch = useDispatch();
+
+  function closeSelector() {
+    setShowColorSelector(false);
+    console.log(showColorSelector);
+  }
+
+  useEffect(() => {
+    dispatch({ type: "LOAD_COLORS" });
+  }, [dispatch]);
+
+  useEffect(() => {
+    console.log(showColorSelector);
+  }, [showColorSelector]);
+
+  store.subscribe(() => {
+    //    console.log(colors.colors.door.length);
+    //  console.log(colors.colors.door);
+    //console.log("State changed:", store.getState());
+  });
+
   return (
     <>
-      {/*   <Container className="d-flex align-content-center ">
+      <Container className="d-flex align-content-center ">
         <span className="fs-2 fw-bold text-start">Place</span>
         <Dropdown>
           <Dropdown.Toggle
@@ -62,7 +89,7 @@ function NewWork() {
             </div>
           ))}
         </div>
-          </Container>
+      </Container>
       <Container>
         <p className="fs-1 fw-bold text-start">New work</p>
       </Container>
@@ -70,11 +97,104 @@ function NewWork() {
         <Button variant="primary" onClick={() => {}} className="me-3">
           New item
         </Button>
-        <Button variant="primary" onClick={() => {}} className="me-3">
-          Check all
+        <Button
+          variant="primary"
+          onClick={() => setShowColorSelector(true)}
+          className="me-3"
+        >
+          Add Color
+        </Button>
+        <Button className="" onClick={() => setShowColors(!showColors)}>
+          Saved Colors
         </Button>
       </Container>
-          */}
+      {showColorSelector && (
+        <ColorSelector
+          show={showColorSelector}
+          handleClose={() => {
+            closeSelector();
+          }} // vagy bármelyik másik kategória
+        />
+      )}
+      <Container></Container>
+      {showColors && (
+        <Container className="colors">
+          <h2 className="fw-bold"> Colors</h2>
+          <h2 className="fw-bold">Saved Colors</h2>
+          <div className="color-row">
+            {colors.colors.saved.length > 0 &&
+              colors.colors.saved.map((color, index) => (
+                <div
+                  key={index}
+                  className="color-box"
+                  style={{
+                    backgroundColor: color,
+                    height: "5rem",
+                    cursor: "pointer",
+                    width: "5rem",
+                  }}
+                >
+                  <span>{color}</span>
+                </div>
+              ))}
+          </div>
+          <h2 className="fw-bold">Door Colors</h2>
+          <div className="color-row text-center">
+            {colors.colors.door.length > 0 &&
+              colors.colors.door.map((color, index) => (
+                <div
+                  key={index}
+                  className="color-box"
+                  style={{
+                    backgroundColor: color,
+                    height: "5rem",
+                    cursor: "pointer",
+                    width: "5rem",
+                  }}
+                >
+                  <span>{color}</span>
+                </div>
+              ))}
+          </div>
+          <h2 className="fw-bold mt-4">Side Colors</h2>
+          <div className="color-row text-center">
+            {colors.colors.side.length > 0 &&
+              colors.colors.side.map((color, index) => (
+                <div
+                  key={index}
+                  className="color-box"
+                  style={{
+                    backgroundColor: color,
+                    height: "5rem",
+                    cursor: "pointer",
+                    width: "5rem",
+                  }}
+                >
+                  <span>{color}</span>
+                </div>
+              ))}
+          </div>
+
+          <h2 className="fw-bold mt-4">Countertop Colors</h2>
+          <div className="color-row text-center">
+            {colors.colors.countertop.length > 0 &&
+              colors.colors.countertop.map((color, index) => (
+                <div
+                  key={index}
+                  className="color-box"
+                  style={{
+                    backgroundColor: color,
+                    height: "5rem",
+                    cursor: "pointer",
+                    width: "5rem",
+                  }}
+                >
+                  <span>{color}</span>
+                </div>
+              ))}
+          </div>
+        </Container>
+      )}
       {/************************************* */}
       <Container className="w-100 mt-4 p-0">
         {/************************************* */}
@@ -140,7 +260,6 @@ function NewWork() {
         <Container className="d-flex p-0 justify-content-between ">
           {/************************************* */}
           {/** Required items*/}
-          {/*
           <Container
             className="flex-fill me-4 border rounded-4 p-0"
             style={{ height: "600px" }}
@@ -234,7 +353,7 @@ function NewWork() {
                 <Container className="items"></Container>
               </Container>
             </Container>
-        </Container>*/}
+          </Container>
           {/************************************* */}
           {/** Model */}
           <Container
