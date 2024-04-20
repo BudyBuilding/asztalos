@@ -92,7 +92,7 @@ function processScript(script, measurements, thickness) {
 
     resultItems.push(newItem);
   }
-  console.log(CurrentScripts);
+  //  console.log(CurrentScripts);
 
   if (CurrentScripts) {
     for (let script of CurrentScripts) {
@@ -102,16 +102,12 @@ function processScript(script, measurements, thickness) {
         measurements,
         thickness
       );
-      console.log(currentResult);
-      console.log(Object(currentResult));
+      //    console.log(currentResult);
+      //  console.log(Object(currentResult));
       currentResult.resultItems.map((item) => {
         resultItems.push(item);
       });
     }
-
-    //itt kell futtatni az aktuális scriptet, annyi, hogy jelenleg a script egy string
-    //és át kell alakítani, hogy hivatkozzon az adott scriptre
-    //resultItems.push(processScript(script)); így kellene futtatni
   }
 
   return {
@@ -119,20 +115,4 @@ function processScript(script, measurements, thickness) {
   };
 }
 
-//
-function ItemGen() {
-  // Tesztelés
-
-  const measurements = {
-    height: 1000,
-    width: 500,
-    depth: 320,
-  };
-
-  const thickness = 18;
-
-  const processedScript = processScript(keretScript, measurements, thickness);
-  console.log(processedScript);
-}
-
-export default ItemGen;
+export default processScript;

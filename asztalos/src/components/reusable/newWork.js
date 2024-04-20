@@ -1,65 +1,496 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Button, Container, Dropdown } from "react-bootstrap";
+import { Button, Container, Dropdown, Nav } from "react-bootstrap";
 import FurnitureItem from "./furnitureItem";
 import ColorSelector from "./colorSelector"; // Importing ColorSelector
 import store from "../data/store/store";
-import ItemGen from "../calculation/itemGenerator/ItemGen";
+import processScript from "../calculation/itemGenerator/processScript";
 function NewWork() {
-  const [types, setTypes] = useState([
-    "Kitchen",
-    "Living Room",
-    "Wardrobe",
-    "Bedroom",
-    "Warehouse",
-    "Living Room",
-    "Wardrobe",
-    "Bedroom",
-    "Warehouse",
-    "Living Room",
-    "Wardrobe",
-    "Bedroom",
-    "Warehouse",
-    "Living Room",
-    "Wardrobe",
-    "Bedroom",
-    "Warehouse",
-  ]);
-
+  const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
   const [showColors, setShowColors] = useState(false);
+  const [selectedSettingKeys, setSelectedSettingKeys] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("0");
 
-  const handleSelectPlace = (place) => {
-    setSelectedPlace(place);
-  };
+  const [objects, setObjects] = useState([
+    {
+      name: "All",
+      key: 0,
+      values: {
+        red: 5,
+        blue: 10,
+        table: 3,
+        chair: 8,
+      },
+    },
+    {
+      name: "Sofa",
+      key: 1,
+      values: {
+        color: "green",
+        size: {
+          width: 200,
+          height: 100,
+        },
+      },
+    },
+    {
+      name: "Bed",
+      key: 2,
+      values: {
+        color: "blue",
+        size: {
+          width: 180,
+          height: 200,
+        },
+      },
+    },
+    {
+      name: "Bed1",
+      key: 3,
+      values: {
+        color: "blue",
+        size: {
+          width: 180,
+          height: 200,
+        },
+      },
+    },
+    {
+      name: "Bed2",
+      key: 4,
+      values: {
+        color: "blue",
+        size: {
+          width: 180,
+          height: 200,
+        },
+      },
+    },
+    {
+      name: "Bed3",
+      key: 5,
+      values: {
+        color: "blue",
+        size: {
+          width: 180,
+          height: 200,
+        },
+      },
+    },
+  ]);
 
-  const colors = useSelector((state) => state.colors);
-  const dispatch = useDispatch();
+  const [items, setItems] = useState([
+    {
+      name: "All",
+      key: 0,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+    {
+      name: "Sofa",
+      key: 1,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+    {
+      name: "Bed",
+      key: 2,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+    {
+      name: "Bed1",
+      key: 3,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+    {
+      name: "Bed2",
+      key: 4,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+    {
+      name: "Bed3",
+      key: 5,
+      items: {
+        0: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        1: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+        2: {
+          length: 464,
+          width: 318,
+          cantType: "2",
+          longCant: 1,
+          shortCant: 0,
+          pcs: 2,
+          type: "121 FS 01",
+        },
+      },
+    },
+  ]);
 
-  function closeSelector() {
-    setShowColorSelector(false);
-    console.log(showColorSelector);
+  const [selectedSettings, setSelectedSettings] = useState(objects);
+  const [selectedItems, setSelectedItems] = useState(items);
+
+  function handleShowObjectSetting(key) {
+    let showedSettings = [...selectedSettingKeys];
+    if (showedSettings.includes(key)) {
+      showedSettings = showedSettings.filter((k) => k !== key);
+    } else {
+      showedSettings.push(key);
+    }
+    setSelectedSettingKeys(showedSettings);
   }
 
-  useEffect(() => {
-    dispatch({ type: "LOAD_COLORS" });
-  }, [dispatch]);
+  const [selectedItemKeys, setSelectedItemKeys] = useState([]);
+
+  function handleShowItemSetting(key) {
+    let showedItems = [...selectedItemKeys];
+    if (showedItems.includes(key)) {
+      showedItems = showedItems.filter((k) => k !== key);
+    } else {
+      showedItems.push(key);
+    }
+    setSelectedItemKeys(showedItems);
+  }
+
+  const PFLScript = {
+    items: [
+      [
+        "measurements.height - 5",
+        "measurements.width - 5",
+        "0",
+        "0",
+        "0",
+        "1",
+        "PFL",
+      ],
+    ],
+  };
+  const keretScript = {
+    config: {
+      PFL: true,
+    },
+    items: [
+      ["measurements.height", "measurements.depth", "2", "1", "2", "2", "side"],
+      [
+        "measurements.width - 2 * thickness",
+        "measurements.depth",
+        "2",
+        "1",
+        "0",
+        "2",
+        "roof",
+      ],
+    ],
+    CurrentScripts: ["PFLScript"],
+  };
+
+  const measurements = {
+    height: 1000,
+    width: 500,
+    depth: 320,
+  };
+
+  const thickness = 18;
+
+  const processedScript = processScript(keretScript, measurements, thickness);
 
   useEffect(() => {
-    //    console.log(showColorSelector);
-  }, [showColorSelector]);
+    if (selectedTab == "0") {
+      setSelectedSettings(objects);
+      setSelectedItems(items);
+    } else {
+      objects.map((obj) => {
+        if (obj.key == selectedTab) {
+          setSelectedSettings([obj]);
+        }
+      });
+      items.map((item) => {
+        if (item.key == selectedTab) {
+          setSelectedItems([item]);
+        }
+      });
+    }
+  }, [selectedTab]);
 
-  store.subscribe(() => {
-    //    console.log(colors.colors.door.length);
-    //  console.log(colors.colors.door);
-    //console.log("State changed:", store.getState());
-  });
+  ////////////////////////////////
+  {
+    const handleSelectPlace = (place) => {
+      setSelectedPlace(place);
+    };
 
+    const colors = useSelector((state) => state.colors);
+    const dispatch = useDispatch();
+
+    function closeSelector() {
+      setShowColorSelector(false);
+      console.log(showColorSelector);
+    }
+
+    useEffect(() => {
+      dispatch({ type: "LOAD_COLORS" });
+    }, [dispatch]);
+  }
+  ////////////////////////////////
   return (
     <>
-      <ItemGen />
-      <Container className="d-flex align-content-center ">
+      <Nav
+        className="pt-5"
+        variant="tabs"
+        defaultActiveKey="0"
+        onSelect={(selectedKey) => {
+          if (selectedKey !== selectedTab) {
+            console.log("change from: ", selectedTab, " to: ", selectedKey);
+            setSelectedTab(selectedKey);
+          }
+        }}
+      >
+        <Nav.Item key={"10000"}>
+          <Nav.Link eventKey="newObject">New Object</Nav.Link>
+        </Nav.Item>
+
+        {objects.map((obj) => {
+          return (
+            <>
+              <Nav.Item key={obj.key}>
+                <Nav.Link eventKey={obj.key} style={{ cursor: "pointer" }}>
+                  {obj.name}
+                </Nav.Link>
+              </Nav.Item>
+            </>
+          );
+        })}
+      </Nav>
+
+      <Container
+        fluid
+        className="d-flex justify-content-between p-0 m-0 w-100"
+        style={{
+          height: "calc(70vh - 56px)",
+        }}
+      >
+        <Container
+          className="w-25 border m-0 p-0"
+          style={{ overflowY: "auto" }}
+        >
+          <h3 className="fw-bold">Settin gs</h3>
+          {selectedSettings.map((obj, index) => {
+            return (
+              <div key={index}>
+                <h3
+                  className="mt-4 mb-2"
+                  onClick={() => handleShowObjectSetting(obj.key)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {obj.name}
+                </h3>
+                {selectedSettingKeys.includes(obj.key) && (
+                  <ul>
+                    {Object.entries(obj.values).map(([subKey, value]) => (
+                      <li key={subKey}>{`${subKey}: ${JSON.stringify(
+                        value
+                      )}`}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </Container>
+        <Container
+          className="w-60 border m-0 p-0"
+          style={{ overflowY: "auto" }}
+        ></Container>
+
+        <Container
+          className="w-25 border m-0 p-0"
+          style={{ overflowY: "auto" }}
+        >
+          <h3 className="fw-bold">Required Pieces</h3>
+
+          {selectedItems.map((itemObj) => {
+            return (
+              <div key={itemObj.key}>
+                <h3
+                  className="mt-4 mb-2"
+                  onClick={() => handleShowItemSetting(itemObj.key)}
+                  style={{ cursor: "pointer" }}
+                >
+                  {itemObj.name}
+                </h3>
+                {selectedItemKeys.includes(itemObj.key) && (
+                  <ul>
+                    {Object.entries(itemObj.items).map(([subKey, item]) => (
+                      <li key={subKey}>
+                        {`Item ${subKey}: ${JSON.stringify(item)}`}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </Container>
+      </Container>
+
+      {
+        ////////////////////////////////
+      }
+      {/**       <Container className="d-flex align-content-center ">
         <span className="fs-2 fw-bold text-start">Place</span>
         <Dropdown>
           <Dropdown.Toggle
@@ -196,10 +627,7 @@ function NewWork() {
           </div>
         </Container>
       )}
-      {/************************************* */}
       <Container className="w-100 mt-4 p-0">
-        {/************************************* */}
-        {/**settings */}
         <Container
           className="flex-fill border rounded-4 p-3"
           style={{ height: "600px" }}
@@ -255,12 +683,9 @@ function NewWork() {
               ))}
             </Container>
           </Container>
-          {/** */}
         </Container>
 
         <Container className="d-flex p-0 justify-content-between ">
-          {/************************************* */}
-          {/** Required items*/}
           <Container
             className="flex-fill me-4 border rounded-4 p-0"
             style={{ height: "600px" }}
@@ -355,8 +780,6 @@ function NewWork() {
               </Container>
             </Container>
           </Container>
-          {/************************************* */}
-          {/** Model */}
           <Container
             className="flex-fill border rounded-4 p-0"
             style={{ height: "600px" }}
@@ -369,6 +792,7 @@ function NewWork() {
           </Container>
         </Container>
       </Container>
+      */}
     </>
   );
 }
