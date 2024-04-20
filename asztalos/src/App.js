@@ -15,11 +15,9 @@ import ColorSelector from "./components/reusable/colorSelector";
 
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  //<WorkAnalyzer />
 
   return (
     <Provider store={store}>
-      <ColorSelector />
       <NewWork />
       <BrowserRouter>
         <Routes>

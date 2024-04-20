@@ -4,7 +4,7 @@ import { Button, Container, Dropdown } from "react-bootstrap";
 import FurnitureItem from "./furnitureItem";
 import ColorSelector from "./colorSelector"; // Importing ColorSelector
 import store from "../data/store/store";
-
+import ItemGen from "../calculation/itemGenerator/ItemGen";
 function NewWork() {
   const [types, setTypes] = useState([
     "Kitchen",
@@ -47,7 +47,7 @@ function NewWork() {
   }, [dispatch]);
 
   useEffect(() => {
-    console.log(showColorSelector);
+    //    console.log(showColorSelector);
   }, [showColorSelector]);
 
   store.subscribe(() => {
@@ -58,6 +58,7 @@ function NewWork() {
 
   return (
     <>
+      <ItemGen />
       <Container className="d-flex align-content-center ">
         <span className="fs-2 fw-bold text-start">Place</span>
         <Dropdown>
