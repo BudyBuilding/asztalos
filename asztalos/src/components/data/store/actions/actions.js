@@ -1,6 +1,11 @@
 import { getClients, getWorks } from "../../firebase/apiService"; // addClient eltávolítva, mert már importálva van az apiService-ből
 
-import { GET_CLIENTS_SUCCESS, GET_WORKS_SUCCESS } from "../constants";
+import {
+  GET_CLIENTS_SUCCESS,
+  GET_WORKS_SUCCESS,
+  GET_SCRIPTS_SUCCESS,
+  ADD_SCRIPT_SUCCESS,
+} from "../constants";
 
 export const getClientsSuccess = (clients) => ({
   type: GET_CLIENTS_SUCCESS,
@@ -10,6 +15,11 @@ export const getClientsSuccess = (clients) => ({
 export const getWorksSuccess = (works) => ({
   type: GET_WORKS_SUCCESS,
   payload: works,
+});
+
+export const getScriptsSuccess = (scripts) => ({
+  type: GET_SCRIPTS_SUCCESS,
+  payload: scripts,
 });
 
 export const loginStart = () => ({
@@ -33,6 +43,11 @@ export const logout = () => ({
 export const addClientSuccess = (client) => ({
   type: "ADD_CLIENT_SUCCESS",
   payload: client,
+});
+
+export const addScriptsSuccess = (script) => ({
+  type: ADD_SCRIPT_SUCCESS,
+  payload: script,
 });
 
 export const selectClient = (client) => ({

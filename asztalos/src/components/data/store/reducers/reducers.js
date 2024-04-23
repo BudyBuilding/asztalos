@@ -1,6 +1,10 @@
 //reducers.js
 import { combineReducers } from "redux";
-import { GET_CLIENTS_SUCCESS, GET_WORKS_SUCCESS } from "../constants";
+import {
+  GET_CLIENTS_SUCCESS,
+  GET_WORKS_SUCCESS,
+  GET_SCRIPTS_SUCCESS,
+} from "../constants";
 
 const clientsReducer = (state = [], action) => {
   switch (action.type) {
@@ -70,6 +74,19 @@ const initialState = {
   },
 };
 
+const scriptsReducer = (state = [], action) => {
+  switch (action.type) {
+    case GET_SCRIPTS_SUCCESS:
+      return action.payload;
+    case "ADD_SCRIPT_SUCCESS":
+      if (!state.includes(action.payload)) {
+        return [...state, action.payload];
+      }
+    default:
+      return state;
+  }
+};
+
 const colorReducer = (state = initialState, action) => {
   switch (action.type) {
     case "UPDATE_COLORS":
@@ -95,6 +112,7 @@ const reducers = combineReducers({
   auth: authReducer,
   selectedClient: selectedClientReducer,
   colors: colorReducer,
+  scripts: scriptsReducer,
 });
 
 export default reducers;

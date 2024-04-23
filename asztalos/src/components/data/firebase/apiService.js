@@ -5,6 +5,8 @@ import {
   getClientsSuccess,
   getWorksSuccess,
   addClientSuccess,
+  getScriptsSuccess,
+  addScriptsSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const BASE_URL = "https://api.example.com";
@@ -272,7 +274,6 @@ export const addClient = (clientData) => {
         Address: clientData.address,
       };
 
-      // Add the client to the database or API
       dispatch(addClientSuccess(newClient));
       return newClient;
     } catch (error) {
@@ -284,11 +285,21 @@ export const addClient = (clientData) => {
 
 export const addColor = (colorObj) => {
   return (dispatch) => {
-    // Itt hívod meg a firebase api-t vagy bármilyen aszinkron műveletet,
-    // és miután sikeresen hozzáadtad a színt, dispatcheld az actiont
     dispatch({
       type: "ADD_COLOR",
       payload: colorObj,
     });
+  };
+};
+
+export const addScript = (script) => {
+  return async (dispatch) => {
+    try {
+      dispatch(addScriptsSuccess(script));
+      return script;
+    } catch (error) {
+      console.error("Error while adding client:", error);
+      throw error;
+    }
   };
 };

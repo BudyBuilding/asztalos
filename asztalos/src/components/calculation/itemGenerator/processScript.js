@@ -42,25 +42,36 @@ function processScript(script, measurements, thickness) {
     const frameHeight = measurements.height;
     const frameDepth = measurements.depth;
     const frameWidth = measurements.width;
-    longCant = parseInt(longCant);
-    shortCant = parseInt(shortCant);
-    pcs = parseInt(pcs);
 
     length = length.replace("measurements.height", frameHeight);
     length = length.replace("measurements.width", frameWidth);
     length = length.replace("measurements.depth", frameDepth);
+    length = length.replace("config.cantType", cantType);
     length = length.replace("thickness", thickness);
-
-    length = eval(length);
-    length = parseFloat(length);
+    //  length = length.replace("doorNumber", doorNumber);
 
     width = width.replace("measurements.length", frameHeight);
     width = width.replace("measurements.width", frameWidth);
     width = width.replace("measurements.depth", frameDepth);
+    width = width.replace("config.cantType", cantType);
     width = width.replace("thickness", thickness);
+    // width = width.replace("doorNumber", doorNumber);
+
+    if (pcs.includes("config.doorNumber")) {
+      length = length.replace("config.doorNumber", config.doorNumber);
+      width = width.replace("config.doorNumber", config.doorNumber);
+      pcs = pcs.replace("config.doorNumber", config.doorNumber);
+    }
+
+    length = eval(length);
+    length = parseFloat(length);
 
     width = eval(width);
     width = parseFloat(width);
+
+    longCant = parseInt(longCant);
+    shortCant = parseInt(shortCant);
+    pcs = parseInt(pcs);
 
     if (cantType === "2" || cantType === "42") {
       if (shortCant > 0) {
@@ -92,7 +103,6 @@ function processScript(script, measurements, thickness) {
 
     resultItems.push(newItem);
   }
-  //  console.log(CurrentScripts);
 
   if (CurrentScripts) {
     for (let script of CurrentScripts) {
@@ -102,8 +112,6 @@ function processScript(script, measurements, thickness) {
         measurements,
         thickness
       );
-      //    console.log(currentResult);
-      //  console.log(Object(currentResult));
       currentResult.resultItems.map((item) => {
         resultItems.push(item);
       });

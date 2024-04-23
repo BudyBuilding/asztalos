@@ -12,10 +12,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { selectClient } from "./components/data/store/actions/actions";
 import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
+import { loadScripts } from "./components/calculation/script/manageScript";
 
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-
+  loadScripts();
   return (
     <Provider store={store}>
       <NewWork />
