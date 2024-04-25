@@ -8,6 +8,8 @@ import processScript from "../calculation/itemGenerator/processScript";
 import Item from "./item";
 import { loadScripts } from "../calculation/script/manageScript";
 import ScriptCaller from "../calculation/scriptCaller";
+import ModelViewer from "../model/ModelViewer";
+import { addObject } from "../data/firebase/apiService";
 
 function NewWork() {
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
@@ -262,13 +264,29 @@ function NewWork() {
     },
   ]);
 
+  objects.forEach((object) => {});
+
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
 
+  /*
   useEffect(() => {
-    //  console.log(selectedScript);
-  }, [selectedScript]);
+    addallobjects().catch((error) => {
+      console.error("Error in addallobjects:", error);
+    });
+  }, []);*/
 
+  const addallobjects = () => {
+    objects.forEach((object) => {
+      store.dispatch(addObject(object));
+    });
+  };
+
+  addallobjects();
+
+  store.subscribe(() => {
+    console.log("State changed:", store.getState());
+  });
   function handleShowObjectSetting(key) {
     let showedSettings = [...selectedSettingKeys];
     if (showedSettings.includes(key)) {
@@ -289,7 +307,13 @@ function NewWork() {
     setSelectedItemKeys(showedItems);
   }
   function addNewObject(object) {
-    setObjects([...objects, object]);
+    // Ellenőrizzük, hogy az új objektum már szerepel-e az állapotban
+    if (!objects.some((obj) => obj.key === object.key)) {
+      setObjects([...objects, object]);
+      store.dispatch(addObject(object));
+    } else {
+      console.warn("Az objektum már szerepel az állapotban:", object);
+    }
   }
 
   const PFLScript = {
@@ -476,6 +500,9 @@ function NewWork() {
           className="w-60 border m-0 p-0"
           style={{ overflowY: "auto" }}
         >
+          {" "}
+          {/*
+          <ModelViewer /> Így hívod meg a ModelViewer komponenst */}
           {showForm && <ScriptCaller newObject={addNewObject} />}
         </Container>
         <Container

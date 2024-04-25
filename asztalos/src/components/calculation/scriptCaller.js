@@ -288,8 +288,8 @@ export default function ScriptCaller({ newObject }) {
           <Container fluid className="w-50  m-1 p-1">
             <h3 className="fw-bold">Results</h3>
             {results.resultItems &&
-              results.resultItems.map((result) => {
-                return <Item item={result} />;
+              results.resultItems.map((result, index) => {
+                return <Item key={result.key || index} item={result} />;
               })}
           </Container>
         </div>

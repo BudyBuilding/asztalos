@@ -1,3 +1,4 @@
+//actions.js
 import { getClients, getWorks } from "../../firebase/apiService"; // addClient eltávolítva, mert már importálva van az apiService-ből
 
 import {
@@ -5,6 +6,8 @@ import {
   GET_WORKS_SUCCESS,
   GET_SCRIPTS_SUCCESS,
   ADD_SCRIPT_SUCCESS,
+  GET_OBJECT_SUCCESS,
+  ADD_OBJECT_SUCCESS,
 } from "../constants";
 
 export const getClientsSuccess = (clients) => ({
@@ -85,3 +88,21 @@ export const login = (userData) => {
     }, 1000);
   };
 };
+export const getObjectsSuccess = (objects) => ({
+  type: GET_OBJECT_SUCCESS,
+  payload: objects,
+});
+
+export const loadObjects = () => {
+  return (dispatch) => {
+    // Itt lehetne az API hívást megvalósítani, ha szükséges
+    const mockObjects = [
+      // ... mock objektumok
+    ];
+    dispatch(getObjectsSuccess(mockObjects));
+  };
+};
+export const addObjectSuccess = (object) => ({
+  type: ADD_OBJECT_SUCCESS,
+  payload: object,
+});

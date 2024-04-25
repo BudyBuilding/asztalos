@@ -7,6 +7,7 @@ import {
   addClientSuccess,
   getScriptsSuccess,
   addScriptsSuccess,
+  addObjectSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const BASE_URL = "https://api.example.com";
@@ -243,7 +244,247 @@ const works = [
     };
   }),
 ];
-
+const objects = [
+  {
+    name: "All",
+    key: 0,
+    values: {
+      red: 5,
+      blue: 10,
+      table: 3,
+      chair: 8,
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 2,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+  {
+    name: "Sofa",
+    key: 1,
+    values: {
+      color: "green",
+      size: {
+        width: 200,
+        height: 100,
+      },
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+  {
+    name: "Bed",
+    key: 2,
+    values: {
+      color: "blue",
+      size: {
+        width: 180,
+        height: 200,
+      },
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+  {
+    name: "Bed1",
+    key: 3,
+    values: {
+      color: "blue",
+      size: {
+        width: 180,
+        height: 200,
+      },
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+  {
+    name: "Bed2",
+    key: 4,
+    values: {
+      color: "blue",
+      size: {
+        width: 180,
+        height: 200,
+      },
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+  {
+    name: "Bed3",
+    key: 5,
+    values: {
+      color: "blue",
+      size: {
+        width: 180,
+        height: 200,
+      },
+    },
+    items: {
+      0: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      1: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+      2: {
+        length: 464,
+        width: 318,
+        cantType: "2",
+        longCant: 1,
+        shortCant: 0,
+        pcs: 2,
+        type: "121 FS 01",
+      },
+    },
+  },
+];
 export const getClients = async () => {
   try {
     // Itt lehetne az API hívást megvalósítani
@@ -299,6 +540,22 @@ export const addScript = (script) => {
       return script;
     } catch (error) {
       console.error("Error while adding client:", error);
+      throw error;
+    }
+  };
+};
+
+export const addObject = (object) => {
+  return async (dispatch) => {
+    try {
+      // Placeholder for API call
+      // const response = await axios.post(`${BASE_URL}/objects`, object);
+      // dispatch(addObjectSuccess(response.data || object));
+
+      dispatch(addObjectSuccess(object));
+      return object;
+    } catch (error) {
+      console.error("Error while adding object:", error);
       throw error;
     }
   };
