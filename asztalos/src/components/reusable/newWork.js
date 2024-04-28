@@ -9,7 +9,7 @@ import Item from "./item";
 import { loadScripts } from "../calculation/script/manageScript";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
-import { addObject } from "../data/firebase/apiService";
+import { addObject, selectingObject } from "../data/firebase/apiService";
 
 function NewWork() {
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
@@ -283,7 +283,6 @@ function NewWork() {
   };
 
   addallobjects();
-
   store.subscribe(() => {
     console.log("State changed:", store.getState());
   });
@@ -381,7 +380,7 @@ function NewWork() {
       const selectedObject = objects.find(
         (obj) => obj.key === parseInt(selectedTab)
       );
-      console.log(selectedObject);
+      //      console.log(selectedObject);
       if (selectedObject) {
         setSelectedSettings([
           {
@@ -413,6 +412,13 @@ function NewWork() {
       dispatch({ type: "LOAD_COLORS" });
     }, [dispatch]);
   }
+
+  function handleSelectedTab(key) {
+    if (key !== selectedTab) {
+      setSelectedTab(key);
+      selectingObject(key);
+    }
+  }
   return (
     <>
       <Nav
@@ -420,9 +426,7 @@ function NewWork() {
         variant="tabs"
         defaultActiveKey="0"
         onSelect={(selectedKey) => {
-          if (selectedKey !== selectedTab) {
-            setSelectedTab(selectedKey);
-          }
+          handleSelectedTab(selectedKey);
         }}
       >
         <Nav.Item key={"10000"}>

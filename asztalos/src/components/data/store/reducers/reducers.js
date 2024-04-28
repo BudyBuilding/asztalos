@@ -5,9 +5,8 @@ import {
   GET_CLIENTS_SUCCESS,
   GET_WORKS_SUCCESS,
   GET_SCRIPTS_SUCCESS,
-  ADD_SCRIPT_SUCCESS,
   GET_OBJECT_SUCCESS,
-  ADD_OBJECT_SUCCESS,
+  SELECT_OBJECT,
 } from "../constants";
 const clientsReducer = (state = [], action) => {
   switch (action.type) {
@@ -75,7 +74,6 @@ const initialState = {
     countertop: [],
     saved: [],
   },
-  selectedObject: null,
   settings: [],
   items: [],
   objects: [],
@@ -96,15 +94,6 @@ const colorReducer = (state = initialState, action) => {
         },
       };
 
-    default:
-      return state;
-  }
-};
-
-const selectedObjectReducer = (state = initialState.selectedObject, action) => {
-  switch (action.type) {
-    case "SELECT_OBJECT":
-      return action.payload;
     default:
       return state;
   }
@@ -148,6 +137,15 @@ const objectsReducer = (state = [], action) => {
       if (!state.some((obj) => obj.key === action.payload.key)) {
         return [...state, action.payload];
       }
+    default:
+      return state;
+  }
+};
+
+const selectedObjectReducer = (state = null, action) => {
+  switch (action.type) {
+    case SELECT_OBJECT:
+      return action.payload;
     default:
       return state;
   }

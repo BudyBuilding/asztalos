@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -12,6 +12,7 @@ function createFurnitureModel(length, width, height) {
 }
 
 function ModelViewer({ data }) {
+  const [selectedObject, setSelectedObject] = useState(null);
   const mountRef = useRef(null);
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -95,6 +96,9 @@ function ModelViewer({ data }) {
             .to({ y: targetRotation }, 1000)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .start();
+
+          // Frissítjük a kiválasztott objektumot
+          setSelectedObject(object);
         }
       }
     };
@@ -117,6 +121,12 @@ function ModelViewer({ data }) {
   return (
     <div ref={mountRef} style={{ width: "100%", height: "100vh" }}>
       <FurnitureList items={data.items} />
+      {selectedObject && (
+        <div style={{ position: "absolute", top: 10, left: 10 }}>
+          Selected Object: {selectedObject.name}{" "}
+          {/* Példa a kiválasztott objektum adatainak megjelenítésére */}
+        </div>
+      )}
     </div>
   );
 }

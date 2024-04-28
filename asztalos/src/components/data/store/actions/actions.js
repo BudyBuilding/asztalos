@@ -8,6 +8,7 @@ import {
   ADD_SCRIPT_SUCCESS,
   GET_OBJECT_SUCCESS,
   ADD_OBJECT_SUCCESS,
+  SELECT_OBJECT,
 } from "../constants";
 
 export const getClientsSuccess = (clients) => ({
@@ -102,7 +103,13 @@ export const loadObjects = () => {
     dispatch(getObjectsSuccess(mockObjects));
   };
 };
+
 export const addObjectSuccess = (object) => ({
   type: ADD_OBJECT_SUCCESS,
   payload: object,
+});
+
+export const selectObject = (objectKey) => ({
+  type: SELECT_OBJECT,
+  payload: objectKey,
 });

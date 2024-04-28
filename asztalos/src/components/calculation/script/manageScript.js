@@ -147,7 +147,6 @@ const scripts = [
   },
 ];
 export const loadScripts = () => {
-  console.log("uploading the scripts");
   scripts.forEach((script) => {
     store.dispatch(addScript(script));
   });

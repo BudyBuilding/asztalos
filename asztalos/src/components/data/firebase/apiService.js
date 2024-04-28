@@ -8,6 +8,7 @@ import {
   getScriptsSuccess,
   addScriptsSuccess,
   addObjectSuccess,
+  selectObject,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const BASE_URL = "https://api.example.com";
@@ -548,10 +549,6 @@ export const addScript = (script) => {
 export const addObject = (object) => {
   return async (dispatch) => {
     try {
-      // Placeholder for API call
-      // const response = await axios.post(`${BASE_URL}/objects`, object);
-      // dispatch(addObjectSuccess(response.data || object));
-
       dispatch(addObjectSuccess(object));
       return object;
     } catch (error) {
@@ -559,4 +556,13 @@ export const addObject = (object) => {
       throw error;
     }
   };
+};
+
+export const selectingObject = async (objectKey) => {
+  try {
+    store.dispatch(selectObject(objectKey));
+  } catch (error) {
+    console.error("Error while fetching objects:", error);
+    throw error;
+  }
 };
