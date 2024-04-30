@@ -1,18 +1,20 @@
+// FurnitureList.js
 import React from "react";
 import FurnitureModel from "./FurnitureModel";
 
-function FurnitureList({ items }) {
+function FurnitureList({ objects, sceneRef }) {
   return (
-    <>
-      {Object.values(items).map((item, index) => (
+    <div>
+      {objects.map((object) => (
         <FurnitureModel
-          key={index}
-          length={item.length}
-          width={item.width}
-          height={item.height}
+          key={object.key}
+          length={object.size.width}
+          width={object.size.height}
+          height={object.size.depth}
+          sceneRef={sceneRef}
         />
       ))}
-    </>
+    </div>
   );
 }
 

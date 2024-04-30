@@ -1,35 +1,28 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import * as TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import FurnitureList from "./FurnitureList";
 
-function createFurnitureModel(length, width, height) {
-  const geometry = new THREE.BoxGeometry(length, height, width);
-  const material = new THREE.MeshBasicMaterial({ color: 0x8b4513 });
-  const cube = new THREE.Mesh(geometry, material);
-  return cube;
-}
-
-function ModelViewer({ data }) {
-  const [selectedObject, setSelectedObject] = useState(null);
+function ModelViewer() {
   const mountRef = useRef(null);
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
-  const controlsRef = useRef(null);
-  const sceneRef = useRef(null);
+  const furnitureData = useSelector((state) => state.objects);
+  const selectedObject = useSelector((state) => state.selectedObject);
+  const MM_TO_M = 0.003;
+
+  // Room dimensions and initial offsets
+  let roomHeight = 2000 * MM_TO_M;
+  let roomWidth = 5000 * MM_TO_M;
+  let roomDepth = 2500 * MM_TO_M;
+  let offsetX = -roomWidth / 2;
+  let offsetZ = -roomDepth / 2;
+  let offsetY = roomHeight / 2;
 
   useEffect(() => {
-    if (!data || !data.items) {
-      console.log("no data");
-      return;
-    }
-
-    console.log(data);
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xeeeeee);
-    sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -37,34 +30,138 @@ function ModelViewer({ data }) {
       0.1,
       1000
     );
-    camera.position.z = 5;
+    camera.position.set(0, 0, 7);
+    let currentPosition = new THREE.Vector3(0, 0, 0);
 
+    let maxRowHeight = 0; // Maximum row height
+    if (furnitureData) {
+      furnitureData.forEach((item) => {
+        if (item.name !== "All") {
+          console.log(selectedObject);
+          if (item.key == selectedObject || selectedObject == 0) {
+            const { values } = item;
+            const { width, height, depth } = values.size;
+            const convertedWidth = width * MM_TO_M;
+            const convertedHeight = height * MM_TO_M;
+            const convertedDepth = depth * MM_TO_M;
+
+            // Creating cabinet frame
+            const cabinetGeometry = new THREE.BoxGeometry(
+              convertedWidth,
+              convertedHeight,
+              convertedDepth
+            );
+            const cabinetEdges = new THREE.EdgesGeometry(cabinetGeometry);
+            const cabinetLine = new THREE.LineSegments(
+              cabinetEdges,
+              new THREE.LineBasicMaterial({ color: 0x8b4513 })
+            );
+
+            // Creating door frames
+            const doorGeometry = new THREE.BoxGeometry(
+              convertedWidth / 2,
+              convertedHeight,
+              18 * MM_TO_M
+            );
+            const doorEdges = new THREE.EdgesGeometry(doorGeometry);
+            const doorLine1 = new THREE.LineSegments(
+              doorEdges,
+              new THREE.LineBasicMaterial({ color: 0x8b4513 })
+            );
+            const doorLine2 = new THREE.LineSegments(
+              doorEdges,
+              new THREE.LineBasicMaterial({ color: 0x8b4513 })
+            );
+
+            // Closed position
+            doorLine1.position.set(-convertedWidth / 4, 0, convertedDepth / 2);
+            doorLine2.position.set(convertedWidth / 4, 0, convertedDepth / 2);
+
+            // Labeling the door objects for identification
+            doorLine1.userData.isDoor = true;
+            doorLine2.userData.isDoor = true;
+
+            cabinetLine.add(doorLine1);
+            cabinetLine.add(doorLine2);
+
+            // Adding shelves
+            const shelfFrameGeometry = new THREE.BoxGeometry(
+              convertedWidth,
+              convertedDepth,
+              18 * MM_TO_M
+            );
+
+            const shelfEdges = new THREE.EdgesGeometry(shelfFrameGeometry);
+
+            const shelfFrame = new THREE.LineSegments(
+              shelfEdges,
+              new THREE.LineBasicMaterial({ color: 0x8b4513 })
+            );
+
+            shelfFrame.rotateX(1.55);
+            cabinetLine.add(shelfFrame);
+
+            // Setting position
+
+            cabinetLine.position.x = offsetX + convertedWidth / 2;
+            cabinetLine.position.z = offsetZ + convertedDepth / 2;
+            cabinetLine.position.y = offsetY - convertedDepth * 1.5;
+            currentPosition.x += convertedWidth;
+            const margin = 0.05;
+
+            if (convertedHeight > maxRowHeight) {
+              maxRowHeight = convertedHeight;
+            }
+
+            if (currentPosition.x + convertedWidth > window.innerWidth) {
+              currentPosition.x = 0;
+              currentPosition.y -= maxRowHeight;
+              maxRowHeight = convertedHeight;
+            }
+
+            offsetX += convertedWidth + margin;
+            if (offsetX + convertedWidth > window.innerWidth) {
+              offsetX = 0;
+              offsetY += convertedHeight + margin;
+            }
+
+            scene.add(cabinetLine);
+          }
+        }
+      });
+    }
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
-    controlsRef.current = controls;
-
-    const furnitureModels = Object.values(data.items).map((item) => {
-      return createFurnitureModel(item.length, item.width, item.height);
-    });
-
-    furnitureModels.forEach((model) => {
-      scene.add(model);
-    });
+    // Room frame
+    const roomGeometry = new THREE.BoxGeometry(
+      roomWidth,
+      roomHeight,
+      roomDepth
+    );
+    const roomMaterial = new THREE.EdgesGeometry(roomGeometry);
+    const room = new THREE.LineSegments(
+      roomMaterial,
+      new THREE.LineBasicMaterial({ color: 0x00000 })
+    );
+    scene.add(room);
 
     const light = new THREE.PointLight(0xffffff, 1, 100);
     light.position.set(5, 5, 5);
     scene.add(light);
 
+    // OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    controls.update();
+
     const animate = () => {
       requestAnimationFrame(animate);
-      controlsRef.current.update();
+      controls.update();
       TWEEN.update();
-      renderer.render(sceneRef.current, camera);
+      renderer.render(scene, camera);
     };
 
     animate();
@@ -77,58 +174,16 @@ function ModelViewer({ data }) {
 
     window.addEventListener("resize", handleResize);
 
-    const handleMouseDown = (event) => {
-      event.preventDefault();
-      if (controlsRef.current.enabled) {
-        controlsRef.current.enabled = false;
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(mouse, camera);
-
-        const intersects = raycaster.intersectObjects(
-          sceneRef.current.children
-        );
-
-        if (intersects.length > 0) {
-          const object = intersects[0].object;
-          const targetRotation = object.rotation.y === 0 ? -Math.PI / 2 : 0;
-          new TWEEN.Tween(object.rotation)
-            .to({ y: targetRotation }, 1000)
-            .easing(TWEEN.Easing.Quadratic.InOut)
-            .start();
-
-          // Frissítjük a kiválasztott objektumot
-          setSelectedObject(object);
-        }
+    return () => {
+      if (mountRef.current) {
+        // Ha a mountRef.current nem null, akkor hajtsd végre az eltávolítást
+        mountRef.current.removeChild(renderer.domElement);
+        window.removeEventListener("resize", handleResize);
       }
     };
+  }, [furnitureData, selectedObject]);
 
-    const handleMouseUp = () => {
-      controlsRef.current.enabled = true;
-    };
-
-    window.addEventListener("mousedown", handleMouseDown);
-    window.addEventListener("mouseup", handleMouseUp);
-
-    return () => {
-      mountRef.current.removeChild(renderer.domElement);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("mousedown", handleMouseDown);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [data]);
-
-  return (
-    <div ref={mountRef} style={{ width: "100%", height: "100vh" }}>
-      <FurnitureList items={data.items} />
-      {selectedObject && (
-        <div style={{ position: "absolute", top: 10, left: 10 }}>
-          Selected Object: {selectedObject.name}{" "}
-          {/* Példa a kiválasztott objektum adatainak megjelenítésére */}
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={mountRef} style={{ width: "100%", height: "100vh" }} />;
 }
 
 export default ModelViewer;

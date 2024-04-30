@@ -293,6 +293,7 @@ const objects = [
       size: {
         width: 200,
         height: 100,
+        depth: 500,
       },
     },
     items: {
@@ -331,8 +332,9 @@ const objects = [
     values: {
       color: "blue",
       size: {
-        width: 180,
-        height: 200,
+        width: 500,
+        height: 700,
+        depth: 250,
       },
     },
     items: {
@@ -371,8 +373,9 @@ const objects = [
     values: {
       color: "blue",
       size: {
-        width: 180,
-        height: 200,
+        width: 500,
+        height: 700,
+        depth: 250,
       },
     },
     items: {
@@ -411,8 +414,9 @@ const objects = [
     values: {
       color: "blue",
       size: {
-        width: 180,
-        height: 200,
+        width: 500,
+        height: 700,
+        depth: 250,
       },
     },
     items: {
@@ -451,8 +455,9 @@ const objects = [
     values: {
       color: "blue",
       size: {
-        width: 180,
-        height: 200,
+        width: 500,
+        height: 700,
+        depth: 250,
       },
     },
     items: {

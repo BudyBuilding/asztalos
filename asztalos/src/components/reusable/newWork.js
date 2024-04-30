@@ -10,6 +10,7 @@ import { loadScripts } from "../calculation/script/manageScript";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
 import { addObject, selectingObject } from "../data/firebase/apiService";
+import addallobjects from "./objectManager";
 
 function NewWork() {
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
@@ -21,250 +22,9 @@ function NewWork() {
   const [showForm, setShowForm] = useState(false);
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
+  const [showModel, setShowModel] = useState(true);
 
-  const [objects, setObjects] = useState([
-    {
-      name: "All",
-      key: 0,
-      values: {
-        red: 5,
-        blue: 10,
-        table: 3,
-        chair: 8,
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 2,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-    {
-      name: "Sofa",
-      key: 1,
-      values: {
-        color: "green",
-        size: {
-          width: 200,
-          height: 100,
-        },
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-    {
-      name: "Bed",
-      key: 2,
-      values: {
-        color: "blue",
-        size: {
-          width: 180,
-          height: 200,
-        },
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-    {
-      name: "Bed1",
-      key: 3,
-      values: {
-        color: "blue",
-        size: {
-          width: 180,
-          height: 200,
-        },
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-    {
-      name: "Bed2",
-      key: 4,
-      values: {
-        color: "blue",
-        size: {
-          width: 180,
-          height: 200,
-        },
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-    {
-      name: "Bed3",
-      key: 5,
-      values: {
-        color: "blue",
-        size: {
-          width: 180,
-          height: 200,
-        },
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-  ]);
-
-  objects.forEach((object) => {});
+  const [objects, setObjects] = useState(useSelector((state) => state.objects));
 
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
@@ -276,13 +36,8 @@ function NewWork() {
     });
   }, []);*/
 
-  const addallobjects = () => {
-    objects.forEach((object) => {
-      store.dispatch(addObject(object));
-    });
-  };
+  //addallobjects();
 
-  addallobjects();
   store.subscribe(() => {
     console.log("State changed:", store.getState());
   });
@@ -433,6 +188,7 @@ function NewWork() {
           <Nav.Link
             eventKey="newObject"
             onClick={() => {
+              setShowModel(false);
               setSelectedItems([]);
               setSelectedSettings([]);
               if (!showForm) {
@@ -453,6 +209,7 @@ function NewWork() {
                   if (showForm) {
                     setShowForm(false);
                   }
+                  setShowModel(true);
                 }}
                 style={{ cursor: "pointer" }}
               >
@@ -504,10 +261,8 @@ function NewWork() {
           className="w-60 border m-0 p-0"
           style={{ overflowY: "auto" }}
         >
-          {" "}
-          {/*
-          <ModelViewer /> Így hívod meg a ModelViewer komponenst */}
-          {showForm && <ScriptCaller newObject={addNewObject} />}
+          {showModel && <ModelViewer />}
+          {!showModel && showForm && <ScriptCaller newObject={addNewObject} />}
         </Container>
         <Container
           fluid
