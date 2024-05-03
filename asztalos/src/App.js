@@ -13,12 +13,17 @@ import { selectClient } from "./components/data/store/actions/actions";
 import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
 import { loadScripts } from "./components/calculation/script/manageScript";
-
+import ModelViewer from "./components/model/ModelViewer";
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   loadScripts();
   return (
     <Provider store={store}>
+      {/**
+     * 
+      <ModelViewer />
+     */}
+
       <NewWork />
       <BrowserRouter>
         <Routes>

@@ -28,18 +28,12 @@ function NewWork() {
 
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
-
-  /*
   useEffect(() => {
-    addallobjects().catch((error) => {
-      console.error("Error in addallobjects:", error);
-    });
-  }, []);*/
-
-  //addallobjects();
+    selectingObject("0");
+  }, []);
 
   store.subscribe(() => {
-    console.log("State changed:", store.getState());
+    //    console.log("State changed:", store.getState());
   });
   function handleShowObjectSetting(key) {
     let showedSettings = [...selectedSettingKeys];

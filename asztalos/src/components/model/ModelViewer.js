@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import * as TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { DragControls } from "three/examples/jsm/controls/DragControls"; // Importáljuk a DragControls modult
+import store from "../data/store/store";
 
 function ModelViewer() {
   const mountRef = useRef(null);
@@ -12,7 +14,6 @@ function ModelViewer() {
   const selectedObject = useSelector((state) => state.selectedObject);
   const MM_TO_M = 0.003;
 
-  // Room dimensions and initial offsets
   let roomHeight = 2000 * MM_TO_M;
   let roomWidth = 5000 * MM_TO_M;
   let roomDepth = 2500 * MM_TO_M;
@@ -21,6 +22,9 @@ function ModelViewer() {
   let offsetY = roomHeight / 2;
 
   useEffect(() => {
+    store.subscribe(() => {
+      //    console.log("State changed:", store.getState());
+    });
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xeeeeee);
 
@@ -32,8 +36,8 @@ function ModelViewer() {
     );
     camera.position.set(0, 0, 7);
     let currentPosition = new THREE.Vector3(0, 0, 0);
-
-    let maxRowHeight = 0; // Maximum row height
+    let furnitureMeshes = [];
+    let maxRowHeight = 0;
     if (furnitureData) {
       furnitureData.forEach((item) => {
         if (item.name !== "All") {
@@ -45,7 +49,6 @@ function ModelViewer() {
             const convertedHeight = height * MM_TO_M;
             const convertedDepth = depth * MM_TO_M;
 
-            // Creating cabinet frame
             const cabinetGeometry = new THREE.BoxGeometry(
               convertedWidth,
               convertedHeight,
@@ -57,7 +60,6 @@ function ModelViewer() {
               new THREE.LineBasicMaterial({ color: 0x8b4513 })
             );
 
-            // Creating door frames
             const doorGeometry = new THREE.BoxGeometry(
               convertedWidth / 2,
               convertedHeight,
@@ -73,18 +75,15 @@ function ModelViewer() {
               new THREE.LineBasicMaterial({ color: 0x8b4513 })
             );
 
-            // Closed position
             doorLine1.position.set(-convertedWidth / 4, 0, convertedDepth / 2);
             doorLine2.position.set(convertedWidth / 4, 0, convertedDepth / 2);
 
-            // Labeling the door objects for identification
             doorLine1.userData.isDoor = true;
             doorLine2.userData.isDoor = true;
 
             cabinetLine.add(doorLine1);
             cabinetLine.add(doorLine2);
 
-            // Adding shelves
             const shelfFrameGeometry = new THREE.BoxGeometry(
               convertedWidth,
               convertedDepth,
@@ -101,30 +100,17 @@ function ModelViewer() {
             shelfFrame.rotateX(1.55);
             cabinetLine.add(shelfFrame);
 
-            // Setting position
-
-            cabinetLine.position.x = offsetX + convertedWidth / 2;
-            cabinetLine.position.z = offsetZ + convertedDepth / 2;
-            cabinetLine.position.y = offsetY - convertedDepth * 1.5;
-            currentPosition.x += convertedWidth;
-            const margin = 0.05;
-
-            if (convertedHeight > maxRowHeight) {
-              maxRowHeight = convertedHeight;
-            }
-
-            if (currentPosition.x + convertedWidth > window.innerWidth) {
-              currentPosition.x = 0;
-              currentPosition.y -= maxRowHeight;
-              maxRowHeight = convertedHeight;
-            }
-
-            offsetX += convertedWidth + margin;
-            if (offsetX + convertedWidth > window.innerWidth) {
-              offsetX = 0;
-              offsetY += convertedHeight + margin;
-            }
-
+            cabinetLine.position.set(
+              values.position.x * MM_TO_M,
+              values.position.y * MM_TO_M,
+              values.position.z * MM_TO_M
+            );
+            cabinetLine.rotation.set(
+              (values.rotation.x * Math.PI) / 180,
+              (values.rotation.y * Math.PI) / 180,
+              (values.rotation.z * Math.PI) / 180
+            );
+            furnitureMeshes.push(cabinetLine);
             scene.add(cabinetLine);
           }
         }
@@ -134,7 +120,6 @@ function ModelViewer() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     mountRef.current.appendChild(renderer.domElement);
 
-    // Room frame
     const roomGeometry = new THREE.BoxGeometry(
       roomWidth,
       roomHeight,
@@ -151,16 +136,26 @@ function ModelViewer() {
     light.position.set(5, 5, 5);
     scene.add(light);
 
-    // OrbitControls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.update();
 
+    const dragControls = new DragControls(
+      furnitureMeshes, // Csak a bútorok mesh-ei
+      camera,
+      renderer.domElement
+    );
+    dragControls.addEventListener("dragstart", function (event) {
+      controls.enabled = false;
+    });
+
+    dragControls.addEventListener("dragend", function (event) {
+      controls.enabled = true;
+    });
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
-      TWEEN.update();
       renderer.render(scene, camera);
     };
 
@@ -176,12 +171,11 @@ function ModelViewer() {
 
     return () => {
       if (mountRef.current) {
-        // Ha a mountRef.current nem null, akkor hajtsd végre az eltávolítást
         mountRef.current.removeChild(renderer.domElement);
         window.removeEventListener("resize", handleResize);
       }
     };
-  }, [furnitureData, selectedObject]);
+  }, [furnitureData, selectedObject, store]);
 
   return <div ref={mountRef} style={{ width: "100%", height: "100vh" }} />;
 }

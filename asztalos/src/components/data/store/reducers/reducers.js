@@ -142,7 +142,7 @@ const objectsReducer = (state = [], action) => {
   }
 };
 
-const selectedObjectReducer = (state = null, action) => {
+const selectedObjectReducer = (state = "0", action) => {
   switch (action.type) {
     case SELECT_OBJECT:
       return action.payload;

@@ -152,5 +152,4 @@ export const loadScripts = () => {
   });
 };
 
-// Hívjuk meg a loadScripts függvényt
 loadScripts();

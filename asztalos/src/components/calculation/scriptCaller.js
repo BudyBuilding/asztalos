@@ -126,7 +126,24 @@ export default function ScriptCaller({ newObject }) {
       const object = {
         name: selectedScript.scriptName,
         key: 999,
-        values: currentConfig,
+        values: {
+          currentConfig,
+          size: {
+            width: measurements.width,
+            height: measurements.height,
+            depth: measurements.depth,
+          },
+          position: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
+          rotation: {
+            x: 0,
+            y: 0,
+            z: 0,
+          },
+        },
         items: result,
       };
       newObject(object);
@@ -166,9 +183,6 @@ export default function ScriptCaller({ newObject }) {
 
   return (
     <>
-      {/** {/*showForm && (
-          
-          )} */}
       {!selectedScript ? (
         <Container className="mt-4">
           <Container fluid className="mt-4">

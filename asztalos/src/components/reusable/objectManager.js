@@ -50,6 +50,16 @@ const objects = [
         height: 700,
         depth: 250,
       },
+      position: {
+        x: -2150,
+        y: 650,
+        z: -1125,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
     },
     items: {
       0: {
@@ -90,6 +100,16 @@ const objects = [
         width: 500,
         height: 700,
         depth: 250,
+      },
+      position: {
+        x: -1550,
+        y: 650,
+        z: -1125,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
       },
     },
     items: {
@@ -132,6 +152,16 @@ const objects = [
         height: 700,
         depth: 250,
       },
+      position: {
+        x: -1050,
+        y: 650,
+        z: -1125,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
     },
     items: {
       0: {
@@ -173,6 +203,16 @@ const objects = [
         height: 700,
         depth: 250,
       },
+      position: {
+        x: -550,
+        y: 650,
+        z: -1125,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
+      },
     },
     items: {
       0: {
@@ -213,6 +253,16 @@ const objects = [
         width: 500,
         height: 700,
         depth: 250,
+      },
+      position: {
+        x: -50,
+        y: 650,
+        z: -1125,
+      },
+      rotation: {
+        x: 0,
+        y: 0,
+        z: 0,
       },
     },
     items: {
