@@ -1,14 +1,12 @@
-import React from "react";
-import { Container, Row, Col, Dropdown } from "react-bootstrap";
+import React, { useState } from "react";
+import { Form, Container, Row, Col } from "react-bootstrap";
 
-export default function Item({ item }) {
-  console.log(item);
-  const { length, width, cantType, longCant, shortCant, pcs, type } = item;
-  console.log(length, width, cantType, longCant, shortCant, pcs, type);
-  const getCharacter = (value) => {
-    if (value === 1) return "-";
-    if (value === 2) return "=";
-    return ""; // Ha value nem 1 vagy 2, akkor nincs jel
+export default function Item({ Item, onItemChange, objectID }) {
+  const [item, setItem] = useState(Item); // Állapot létrehozása és inicializálása
+
+  const handleItemChange = (updatedItem) => {
+    setItem(updatedItem); // Frissítjük az állapotot az új elemmel
+    onItemChange(updatedItem, objectID); // Változások továbbítása a szülő komponens felé
   };
 
   return (
@@ -17,40 +15,110 @@ export default function Item({ item }) {
         <Col xs={9}>
           <Row>
             <Col className="d-flex">
-              <div className="m-2 text-center d-flex flex-column">
-                <span>{length}</span>
-                <span>{getCharacter(longCant)}</span>
-              </div>
-              <span className="m-2">x</span>
-
-              <div className="m-2 text-center d-flex flex-column">
-                <span>{width}</span>
-                <span>{getCharacter(shortCant)}</span>
-              </div>
-              <span className="m-2">=</span>
-              <span className="m-2">{pcs}</span>
+              <Form.Group as={Col}>
+                <Form.Control
+                  className="border-0 p-0 text-center m-0"
+                  value={item.length}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, length: e.target.value })
+                  }
+                />
+              </Form.Group>
+              <span className="me-2 ms-2 p-0 text-center">x</span>
+              <Form.Group as={Col}>
+                <Form.Control
+                  className="border-0 p-0 text-center m-0"
+                  value={item.width}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, width: e.target.value })
+                  }
+                />
+              </Form.Group>
+              <span className="me-2 ms-2 p-0 text-center">=</span>
+              <Form.Group as={Col}>
+                <Form.Control
+                  className="border-0 p-0 text-center m-0"
+                  value={item.pcs}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, pcs: e.target.value })
+                  }
+                />
+              </Form.Group>
             </Col>
           </Row>
         </Col>
         <Col xs={3}>
           <Row>
-            {/*<Col className="text-end">{renderRotateButton()}</Col>
-             */}
-            <Col className="me-2">
-              <Dropdown className="text-end">
-                <Dropdown.Toggle variant="secondary" id="dropdown-basic">
-                  {cantType}
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <Dropdown.Item href="#">-</Dropdown.Item>
-                  <Dropdown.Item href="#">04</Dropdown.Item>
-                  <Dropdown.Item href="#">2</Dropdown.Item>
-                  <Dropdown.Item href="#">42</Dropdown.Item>
-                  <Dropdown.Item href="#">1</Dropdown.Item>
-                </Dropdown.Menu>
-              </Dropdown>
+            <Col className="me-2 p-0">
+              <Form.Group>
+                <Form.Control
+                  as="select"
+                  className="p-0 text-center m-0 w-50"
+                  value={item.cantType}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, cantType: e.target.value })
+                  }
+                >
+                  <option>-</option>
+                  <option>04</option>
+                  <option>2</option>
+                  <option>42</option>
+                  <option>1</option>
+                </Form.Control>
+              </Form.Group>
             </Col>
           </Row>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <Form.Group as={Row}>
+            <Col className="me-2">
+              <Form.Group>
+                <Form.Control
+                  className="border-0 p-0 text-center m-0"
+                  as="select"
+                  value={item.longCant}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, longCant: e.target.value })
+                  }
+                >
+                  <option>0</option>
+                  <option>1</option>
+                  <option>2</option>
+                </Form.Control>
+              </Form.Group>
+            </Col>
+            <Col className="me-2">
+              <Form.Group>
+                <Form.Control
+                  className="border-0 p-0 text-center m-0"
+                  as="select"
+                  value={item.shortCant}
+                  onChange={(e) =>
+                    handleItemChange({ ...item, shortCant: e.target.value })
+                  }
+                >
+                  <option>0</option>
+                  <option>1</option>
+                  <option>2</option>
+                </Form.Control>
+              </Form.Group>
+            </Col>
+          </Form.Group>
+        </Col>
+        <Col>
+          <Form.Group as={Row}>
+            <Col>
+              <Form.Control
+                className="border-0 p-0 text-center m-0"
+                value={item.type}
+                onChange={(e) =>
+                  handleItemChange({ ...item, type: e.target.value })
+                }
+              />
+            </Col>
+          </Form.Group>
         </Col>
       </Row>
     </Container>

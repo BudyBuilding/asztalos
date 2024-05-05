@@ -9,6 +9,7 @@ import {
   GET_OBJECT_SUCCESS,
   ADD_OBJECT_SUCCESS,
   SELECT_OBJECT,
+  MODIFY_OBJECT_SUCCESS,
 } from "../constants";
 
 export const getClientsSuccess = (clients) => ({
@@ -112,4 +113,10 @@ export const addObjectSuccess = (object) => ({
 export const selectObject = (objectKey) => ({
   type: SELECT_OBJECT,
   payload: objectKey,
+});
+
+export const modifyObjectSuccess = (modifiedObject) => ({
+  // Új művelet definiálása
+  type: MODIFY_OBJECT_SUCCESS,
+  payload: modifiedObject,
 });

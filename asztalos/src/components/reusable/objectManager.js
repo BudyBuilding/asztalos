@@ -10,8 +10,9 @@ const objects = [
       table: 3,
       chair: 8,
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -20,7 +21,9 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -29,7 +32,9 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -38,7 +43,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
   {
     name: "Sofa",
@@ -61,8 +66,9 @@ const objects = [
         z: 0,
       },
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -71,7 +77,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -80,7 +87,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -89,7 +97,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
   {
     name: "Bed",
@@ -112,8 +120,9 @@ const objects = [
         z: 0,
       },
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -122,7 +131,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -131,7 +141,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -140,7 +151,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
   {
     name: "Bed1",
@@ -163,8 +174,9 @@ const objects = [
         z: 0,
       },
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -173,7 +185,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -182,7 +195,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -191,7 +205,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
   {
     name: "Bed2",
@@ -214,8 +228,9 @@ const objects = [
         z: 0,
       },
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -224,7 +239,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -233,7 +249,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -242,7 +259,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
   {
     name: "Bed3",
@@ -265,8 +282,9 @@ const objects = [
         z: 0,
       },
     },
-    items: {
-      0: {
+    items: [
+      {
+        itemKey: 0,
         length: 464,
         width: 318,
         cantType: "2",
@@ -275,7 +293,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      1: {
+      {
+        itemKey: 1,
         length: 464,
         width: 318,
         cantType: "2",
@@ -284,7 +303,8 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-      2: {
+      {
+        itemKey: 2,
         length: 464,
         width: 318,
         cantType: "2",
@@ -293,7 +313,7 @@ const objects = [
         pcs: 2,
         type: "121 FS 01",
       },
-    },
+    ],
   },
 ];
 

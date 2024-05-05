@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
 import Item from "../reusable/item";
 
-export default function ScriptCaller({ newObject }) {
+export default function ScriptCaller({ newObject, newObjectKey }) {
   const [selectedScript, setSelectedScript] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
@@ -82,50 +82,10 @@ export default function ScriptCaller({ newObject }) {
       const result = processScript(updatedScript, measurements, thickness);
       console.log("Generated result:", result);
       setResults(result);
-      /**  {
-      name: "All",
-      key: 0,
-      values: {
-        red: 5,
-        blue: 10,
-        table: 3,
-        chair: 8,
-      },
-      items: {
-        0: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        1: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 2,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-        2: {
-          length: 464,
-          width: 318,
-          cantType: "2",
-          longCant: 1,
-          shortCant: 0,
-          pcs: 2,
-          type: "121 FS 01",
-        },
-      },
-    },
-   */
 
       const object = {
         name: selectedScript.scriptName,
-        key: 999,
+        key: newObjectKey,
         values: {
           currentConfig,
           size: {
@@ -303,7 +263,7 @@ export default function ScriptCaller({ newObject }) {
             <h3 className="fw-bold">Results</h3>
             {results.resultItems &&
               results.resultItems.map((result, index) => {
-                return <Item key={result.key || index} item={result} />;
+                return <Item key={result.key || index} Item={result} />;
               })}
           </Container>
         </div>

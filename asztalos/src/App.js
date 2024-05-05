@@ -22,9 +22,9 @@ function App() {
       {/**
      * 
       <ModelViewer />
+      <NewWork />
      */}
 
-      <NewWork />
       <BrowserRouter>
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />

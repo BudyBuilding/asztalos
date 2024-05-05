@@ -34,14 +34,13 @@ function ModelViewer() {
       0.1,
       1000
     );
-    camera.position.set(0, 0, 7);
+    camera.position.set(0, 9, 12);
     let currentPosition = new THREE.Vector3(0, 0, 0);
     let furnitureMeshes = [];
     let maxRowHeight = 0;
     if (furnitureData) {
       furnitureData.forEach((item) => {
         if (item.name !== "All") {
-          console.log(selectedObject);
           if (item.key == selectedObject || selectedObject == 0) {
             const { values } = item;
             const { width, height, depth } = values.size;

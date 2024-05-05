@@ -7,6 +7,7 @@ import {
   GET_SCRIPTS_SUCCESS,
   GET_OBJECT_SUCCESS,
   SELECT_OBJECT,
+  MODIFY_OBJECT_SUCCESS,
 } from "../constants";
 const clientsReducer = (state = [], action) => {
   switch (action.type) {
@@ -137,6 +138,10 @@ const objectsReducer = (state = [], action) => {
       if (!state.some((obj) => obj.key === action.payload.key)) {
         return [...state, action.payload];
       }
+    case MODIFY_OBJECT_SUCCESS: // Új eset hozzáadva a módosított objektumhoz
+      return state.map((obj) =>
+        obj.key === action.payload.key ? action.payload : obj
+      );
     default:
       return state;
   }

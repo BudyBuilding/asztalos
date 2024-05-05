@@ -1,3 +1,4 @@
+//newWork.js
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
@@ -9,10 +10,14 @@ import Item from "./item";
 import { loadScripts } from "../calculation/script/manageScript";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
-import { addObject, selectingObject } from "../data/firebase/apiService";
+import {
+  selectingObject,
+  modifyObject,
+  getWorks,
+} from "../data/firebase/apiService";
 import addallobjects from "./objectManager";
 
-function NewWork() {
+function NewWork({ closeNewWork, clientId }) {
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
@@ -23,17 +28,57 @@ function NewWork() {
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
-
   const [objects, setObjects] = useState(useSelector((state) => state.objects));
-
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
+  const [modifiedObject, setModifiedObject] = useState(null);
+  let newObjKey = 999;
+
   useEffect(() => {
     selectingObject("0");
   }, []);
 
+  useEffect(() => {
+    if (selectedTab === "0") {
+      let settings = [];
+      let items = [];
+      objects.forEach((object) => {
+        settings.push({
+          name: object.name,
+          key: object.key,
+          values: object.values,
+        });
+        items.push(object);
+      });
+      setSelectedSettings(settings);
+      setSelectedItems(items);
+    } else {
+      const selectedObject = objects.find(
+        (obj) => obj.key === parseInt(selectedTab)
+      );
+      if (selectedObject) {
+        setSelectedSettings([
+          {
+            name: selectedObject.name,
+            key: selectedObject.key,
+            values: selectedObject.values,
+            items: selectedObject.items,
+          },
+        ]);
+        setSelectedItems([
+          {
+            name: selectedObject.name,
+            key: selectedObject.key,
+            items: selectedObject.items,
+            values: selectedObject.values,
+          },
+        ]);
+      }
+    }
+  }, [objects, selectedTab]);
+
   store.subscribe(() => {
-    //    console.log("State changed:", store.getState());
+    //console.log("State changed:", store.getState());
   });
   function handleShowObjectSetting(key) {
     let showedSettings = [...selectedSettingKeys];
@@ -57,54 +102,13 @@ function NewWork() {
   function addNewObject(object) {
     // Ellenőrizzük, hogy az új objektum már szerepel-e az állapotban
     if (!objects.some((obj) => obj.key === object.key)) {
-      setObjects([...objects, object]);
-      store.dispatch(addObject(object));
+      console.log(object);
+      //  setObjects([...objects, object]);
+      //store.dispatch(addObject(object));
     } else {
       console.warn("Az objektum már szerepel az állapotban:", object);
     }
   }
-
-  const PFLScript = {
-    items: [
-      [
-        "measurements.height - 5",
-        "measurements.width - 5",
-        "0",
-        "0",
-        "0",
-        "1",
-        "PFL",
-      ],
-    ],
-  };
-  const keretScript = {
-    config: {
-      PFL: true,
-    },
-    items: [
-      ["measurements.height", "measurements.depth", "2", "1", "2", "2", "side"],
-      [
-        "measurements.width - 2 * thickness",
-        "measurements.depth",
-        "2",
-        "1",
-        "0",
-        "2",
-        "roof",
-      ],
-    ],
-    CurrentScripts: ["PFLScript"],
-  };
-
-  const measurements = {
-    height: 1000,
-    width: 500,
-    depth: 320,
-  };
-
-  const thickness = 18;
-
-  const processedScript = processScript(keretScript, measurements, thickness);
 
   useEffect(() => {
     if (selectedTab === "0") {
@@ -135,6 +139,7 @@ function NewWork() {
           {
             name: selectedObject.name,
             key: selectedObject.key,
+            items: selectedObject.items,
             values: selectedObject.values,
           },
         ]);
@@ -142,32 +147,73 @@ function NewWork() {
           {
             name: selectedObject.name,
             key: selectedObject.key,
-            values: selectedObject.items,
+            values: selectedObject.values,
+            items: selectedObject.items,
           },
         ]);
       }
     }
   }, [selectedTab]);
 
-  {
-    const colors = useSelector((state) => state.colors);
-    const dispatch = useDispatch();
+  const colors = useSelector((state) => state.colors);
+  const dispatch = useDispatch();
 
-    function closeSelector() {
-      setShowColorSelector(false);
-    }
-
-    useEffect(() => {
-      dispatch({ type: "LOAD_COLORS" });
-    }, [dispatch]);
+  function closeSelector() {
+    setShowColorSelector(false);
   }
+
+  useEffect(() => {
+    dispatch({ type: "LOAD_COLORS" });
+  }, [dispatch]);
 
   function handleSelectedTab(key) {
     if (key !== selectedTab) {
       setSelectedTab(key);
       selectingObject(key);
+      setSelectedItemKeys([]);
     }
   }
+
+  function saveModify(object) {
+    const objs = objects.map((obj) => (obj.key === object.key ? object : obj));
+    setObjects(objs);
+    dispatch(modifyObject(object));
+  }
+
+  function handleModifiedItem(modifiedItem, objectID) {
+    let object;
+    if (objectID) {
+      object = objects.find((obj) => obj.key === objectID);
+      if (object) {
+        let modifiedItems = object.items.map((item) =>
+          item.itemKey === modifiedItem.itemKey ? modifiedItem : item
+        );
+        const updatedObject = {
+          ...object,
+          items: modifiedItems,
+        };
+        saveModify(updatedObject);
+      }
+    }
+  }
+
+  const handleItemChange = (modifiedItem, objectID) => {
+    handleModifiedItem(modifiedItem, objectID);
+  };
+
+  const handleSave = () => {
+    if (modifiedObject) {
+      setModifiedObject(null);
+    }
+  };
+  const handleRegenerate = () => {
+    // Implementáld az újragenerálás logikáját
+  };
+
+  function handleSaveWork() {
+    closeNewWork();
+  }
+
   return (
     <>
       <Nav
@@ -226,7 +272,7 @@ function NewWork() {
           className="w-25 border m-0 p-0"
           style={{ overflowY: "auto" }}
         >
-          <h3 className="fw-bold">Settin gs</h3>
+          <h3 className="fw-bold">Settings</h3>
           {selectedSettings &&
             selectedSettings.map((obj) => {
               return (
@@ -256,7 +302,9 @@ function NewWork() {
           style={{ overflowY: "auto" }}
         >
           {showModel && <ModelViewer />}
-          {!showModel && showForm && <ScriptCaller newObject={addNewObject} />}
+          {!showModel && showForm && (
+            <ScriptCaller newObjectKey={newObjKey} newObject={addNewObject} />
+          )}
         </Container>
         <Container
           fluid
@@ -279,15 +327,28 @@ function NewWork() {
                   {selectedItemKeys &&
                     selectedItemKeys.includes(itemObj.key) && (
                       <div>
-                        {Object.entries(itemObj.values).map(
-                          ([subKey, item]) => {
-                            return (
-                              <div key={subKey}>
-                                <Item item={item} />
-                              </div>
-                            );
-                          }
-                        )}
+                        {itemObj.items.map((item) => {
+                          return (
+                            <div key={item.itemKey}>
+                              <Item
+                                objectID={itemObj.key}
+                                key={item.itemKey}
+                                Item={item}
+                                onItemChange={handleItemChange}
+                              />
+                            </div>
+                          );
+                        })}
+                        <Button
+                          variant="primary"
+                          className="me-2 ms-2"
+                          onClick={handleSave}
+                        >
+                          Save
+                        </Button>
+                        <Button variant="secondary" onClick={handleRegenerate}>
+                          Regenerate
+                        </Button>
                       </div>
                     )}
                 </div>
