@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./components/modules/login";
@@ -12,11 +12,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { selectClient } from "./components/data/store/actions/actions";
 import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
-import { loadScripts } from "./components/calculation/script/manageScript";
 import ModelViewer from "./components/model/ModelViewer";
+import { manage } from "./components/reusable/managers/storeManager";
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  loadScripts();
+
+  useEffect(() => {
+    manage();
+  }, []);
+
   return (
     <Provider store={store}>
       {/**

@@ -10,12 +10,31 @@ import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
+import { getClients, getWorks } from "../data/firebase/apiService";
+import store from "../data/store/store";
 function Dashboard({ onSelectClient }) {
-  const [works, setWorks] = useState(useSelector((state) => state.works));
-  const clients = useSelector((state) => state.clients);
-  const [showNewClient, setShowNewClient] = useState(false);
   const dispatch = useDispatch();
+
+  // console.log(dispatch(getWorks()));
+  const [works, setWorks] = useState(dispatch(getWorks()));
+  const [clients, setClients] = useState(dispatch(getClients()));
+
+  const [showNewClient, setShowNewClient] = useState(false);
   const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
+
+  useEffect(() => {
+    async function fetchData() {
+      const worksData = await dispatch(getWorks());
+      const clientsData = await dispatch(getClients());
+      setWorks(worksData);
+      setClients(clientsData);
+    }
+    fetchData();
+  }, [showNewClient]);
+
+  store.subscribe(() => {
+    // console.log("State changed:", store.getState());
+  });
 
   const handleSelectClient = (clientId) => {
     dispatch(selectClient(clientId));
@@ -67,9 +86,6 @@ function Dashboard({ onSelectClient }) {
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
           <div>
-            <Button variant="primary" onClick={() => {}} className="me-3">
-              New work
-            </Button>
             <Button
               variant="primary"
               onClick={handleNewClientClick}

@@ -3,14 +3,17 @@ import { Container, Form, Button } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
 import Item from "../reusable/item";
+import { getScripts } from "../data/firebase/apiService";
 
-export default function ScriptCaller({ newObject, newObjectKey }) {
+export default function ScriptCaller({ newObject }) {
+  const dispatch = useDispatch();
   const [selectedScript, setSelectedScript] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
   const [showScripts, setShowScripts] = useState([]);
   const [currentConfig, setCurrentConfig] = useState([]);
-  const scripts = useSelector((state) => state.scripts);
+  const scripts = dispatch(getScripts());
+  const objects = useSelector((state) => state.objects); // Objektumok lekérése a store-ból
   const [measurements, setMeasurements] = useState({
     height: "",
     width: "",
@@ -19,6 +22,10 @@ export default function ScriptCaller({ newObject, newObjectKey }) {
   const [results, setResults] = useState([]);
 
   const [showWarning, setShowWarning] = useState(false);
+
+  const maxKey = Math.max(...objects.map((obj) => obj.key), 0);
+
+  const newObjectKey = maxKey + 1;
 
   const getRoomsWithScripts = () => {
     const roomsWithScripts = [];
@@ -106,6 +113,7 @@ export default function ScriptCaller({ newObject, newObjectKey }) {
         },
         items: result,
       };
+      console.log(object);
       newObject(object);
     } else {
       console.error("Invalid configuration or selected script.");

@@ -6,7 +6,7 @@ import sorting from "./sort";
 import { useParams } from "react-router-dom";
 import NewWork from "./newWork";
 
-function ClientAnalyzer() {
+function ClientAnalyzer({ closeClientAnalyzer }) {
   const { clientId } = useParams();
 
   const [showNewWork, setShowNewWork] = useState(false);
@@ -23,7 +23,6 @@ function ClientAnalyzer() {
     [allClients, clientId]
   );
 
-  console.log(clientId);
   const totalWorks = memoizedWorks.length;
   const activeWorks = memoizedWorks.filter(
     (work) => work.Status === "In Progress"
@@ -41,7 +40,6 @@ function ClientAnalyzer() {
 
   const requestSort = (key) => {
     let direction = 1; // Default direction is ascending
-
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
       direction = 2; // Change to descending if already ascending
     }
@@ -64,7 +62,10 @@ function ClientAnalyzer() {
   return (
     <>
       {showNewWork ? (
-        <NewWork closeNewWork={closeNewWork} client={selectedClient} />
+        <NewWork
+          closeNewWork={closeNewWork}
+          clientId={selectedClient.ClientId}
+        />
       ) : (
         <>
           <div className="container d-xl-block">
@@ -74,6 +75,9 @@ function ClientAnalyzer() {
                 &nbsp; works
               </div>
               <div>
+                <Button onClick={() => closeClientAnalyzer()}>
+                  Back to Dashboard
+                </Button>
                 <Button>Edit Client</Button>
               </div>
             </div>

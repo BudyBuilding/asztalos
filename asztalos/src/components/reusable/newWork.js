@@ -2,22 +2,25 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
-import FurnitureItem from "./furnitureItem";
 import ColorSelector from "./colorSelector"; // Importing ColorSelector
 import store from "../data/store/store";
-import processScript from "../calculation/itemGenerator/processScript";
 import Item from "./item";
-import { loadScripts } from "../calculation/script/manageScript";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
 import {
   selectingObject,
   modifyObject,
+  getObjects,
+  addObject,
+  getClient,
+  addWork,
+  getWork,
   getWorks,
 } from "../data/firebase/apiService";
-import addallobjects from "./objectManager";
 
 function NewWork({ closeNewWork, clientId }) {
+  const dispatch = useDispatch();
+
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
@@ -28,7 +31,7 @@ function NewWork({ closeNewWork, clientId }) {
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
-  const [objects, setObjects] = useState(useSelector((state) => state.objects));
+  const [objects, setObjects] = useState(dispatch(getObjects()));
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
   const [modifiedObject, setModifiedObject] = useState(null);
@@ -102,9 +105,8 @@ function NewWork({ closeNewWork, clientId }) {
   function addNewObject(object) {
     // Ellenőrizzük, hogy az új objektum már szerepel-e az állapotban
     if (!objects.some((obj) => obj.key === object.key)) {
-      console.log(object);
-      //  setObjects([...objects, object]);
-      //store.dispatch(addObject(object));
+      setObjects([...objects, object]);
+      store.dispatch(addObject(object));
     } else {
       console.warn("Az objektum már szerepel az állapotban:", object);
     }
@@ -133,7 +135,6 @@ function NewWork({ closeNewWork, clientId }) {
       const selectedObject = objects.find(
         (obj) => obj.key === parseInt(selectedTab)
       );
-      //      console.log(selectedObject);
       if (selectedObject) {
         setSelectedSettings([
           {
@@ -156,7 +157,6 @@ function NewWork({ closeNewWork, clientId }) {
   }, [selectedTab]);
 
   const colors = useSelector((state) => state.colors);
-  const dispatch = useDispatch();
 
   function closeSelector() {
     setShowColorSelector(false);
@@ -210,9 +210,47 @@ function NewWork({ closeNewWork, clientId }) {
     // Implementáld az újragenerálás logikáját
   };
 
-  function handleSaveWork() {
+  const handleSaveWork = async () => {
+    // Lekérjük az ügyfél adatait
+    const client = await dispatch(getClient(clientId));
+
+    // Lekérjük az összes munkát a store-ból
+    const works = await dispatch(getWorks());
+
+    // Generáljuk a workId-t: kiválasztjuk a legnagyobb workId-t, majd hozzáadunk egyet
+    const maxWorkId = Math.max(...works.map((work) => work.workId));
+    const newWorkId = maxWorkId + 1;
+
+    // Lekérjük a mai dátumot és formázzuk yyyy-mm-dd formátumra
+    const today = new Date();
+    const year = today.getFullYear();
+    let month = today.getMonth() + 1;
+    month = month < 10 ? `0${month}` : month;
+    let day = today.getDate();
+    day = day < 10 ? `0${day}` : day;
+    const currentDate = `${year}-${month}-${day}`;
+
+    // Generálunk két véletlenszerű egész számot a Price és Paid mezőknek
+    const price = Math.floor(Math.random() * 1000);
+    const paid = Math.floor(Math.random() * price); // Paid-nek kisebbnek kell lennie, mint a Price
+
+    // Elkészítjük az új munka objektumot
+    const newWork = {
+      workId: newWorkId,
+      ClientId: clientId,
+      Client: client.Name, // Például csak az ügyfél nevét vesszük fel
+      Date: currentDate,
+      Status: "Pending",
+      Price: price,
+      Paid: paid,
+    };
+
+    // Adjuk hozzá az új munkát a store-hoz
+    dispatch(addWork(newWork));
+
+    // Bezárjuk az új munka felvételét kezelő dialógust
     closeNewWork();
-  }
+  };
 
   return (
     <>
@@ -239,7 +277,6 @@ function NewWork({ closeNewWork, clientId }) {
             New Object
           </Nav.Link>
         </Nav.Item>
-
         {objects.map((obj) => {
           return (
             <Nav.Item key={obj.key}>
@@ -258,6 +295,7 @@ function NewWork({ closeNewWork, clientId }) {
             </Nav.Item>
           );
         })}
+        <Button onClick={handleSaveWork}>Save Work</Button>
       </Nav>
 
       <Container

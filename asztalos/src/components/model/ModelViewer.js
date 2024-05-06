@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import * as TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { DragControls } from "three/examples/jsm/controls/DragControls"; // Importáljuk a DragControls modult
 import store from "../data/store/store";
+import { modifyObject } from "../data/firebase/apiService";
 
 function ModelViewer() {
+  const dispatch = useDispatch();
   const mountRef = useRef(null);
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -58,6 +60,8 @@ function ModelViewer() {
               cabinetEdges,
               new THREE.LineBasicMaterial({ color: 0x8b4513 })
             );
+
+            cabinetLine.userData.key = item.key;
 
             const doorGeometry = new THREE.BoxGeometry(
               convertedWidth / 2,
@@ -151,7 +155,47 @@ function ModelViewer() {
 
     dragControls.addEventListener("dragend", function (event) {
       controls.enabled = true;
+
+      const draggedObject = event.object; // A húzott objektum
+      const draggedObjectKey = draggedObject.userData.key; // A húzott objektum azonosítója
+
+      if (draggedObjectKey) {
+        // A húzott objektum lekérése az objects tömbből az azonosító alapján
+        const draggedObjectData = furnitureData.find(
+          (obj) => obj.key === draggedObjectKey
+        );
+        console.log(draggedObjectData.values.position);
+        const newPosition = draggedObject.position.clone(); // Az új pozíció
+        const newRotation = draggedObject.rotation.clone(); // Az új forgatás
+
+        const modifiedPosition = {
+          x: newPosition.x / MM_TO_M,
+          y: newPosition.y / MM_TO_M,
+          z: newPosition.z / MM_TO_M,
+        };
+
+        const modifiedRotation = {
+          x: THREE.MathUtils.radToDeg(newRotation.x),
+          y: THREE.MathUtils.radToDeg(newRotation.y),
+          z: THREE.MathUtils.radToDeg(newRotation.z),
+        };
+
+        const modifiedObject = {
+          ...draggedObjectData,
+          values: {
+            ...draggedObjectData.values,
+            position: modifiedPosition,
+            rotation: modifiedRotation,
+          },
+        };
+
+        console.log(modifiedPosition);
+
+        // Az objektum módosított változatának dispatchelése a store-ba
+        dispatch(modifyObject(modifiedObject));
+      }
     });
+
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();

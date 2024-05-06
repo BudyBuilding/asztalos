@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addClient } from "../data/firebase/apiService"; // importáljuk az addClient függvényt az apiService-ből
 
 function NewClient({ onClose }) {
@@ -22,17 +22,26 @@ function NewClient({ onClose }) {
     setClientAddress(e.target.value);
   };
 
+  const clients = useSelector((state) => state.clients);
+  const maxClientId = clients.reduce((max, client) => {
+    return client.ClientId > max ? client.ClientId : max;
+  }, 0);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newClientData = {
-      name: clientName,
-      tel: clientTel,
-      address: clientAddress,
+      ClientId: maxClientId + 1,
+      Name: clientName,
+      Tel: clientTel,
+      Address: clientAddress,
     };
 
+    console.log(newClientData);
+
     try {
-      const addedClient = await dispatch(addClient(newClientData));
+      dispatch(addClient(newClientData));
+
       setClientName("");
       setClientTel("");
       setClientAddress("");
