@@ -8,6 +8,7 @@ import {
   ADD_CLIENT_SUCCESS,
   MODIFY_OBJECT_SUCCESS,
 } from "../constants";
+import { act } from "react";
 
 const initialState = {
   colors: {
@@ -169,7 +170,7 @@ const objectsReducer = (state = [], action) => {
         return [...state, action.payload];
       }
 
-    case "MODIFY_OBJECT_SUCCESS": // Új eset hozzáadva a módosított objektumhoz
+    case "MODIFY_OBJECT_SUCCESS":
       return state.map((obj) =>
         obj.key === action.payload.key ? action.payload : obj
       );

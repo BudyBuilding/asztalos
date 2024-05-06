@@ -16,11 +16,60 @@ import {
 const BASE_URL = "https://api.example.com";
 
 const getClients = () => {
-  return store.getState().clients;
+  return (dispatch) => {
+    const clients = store.getState().clients; // Az ügyfelek állapotának lekérése a store-ból
+    return clients; // Visszaadja az ügyfelek adatait
+  };
+};
+
+const getClient = (clientId) => {
+  return (dispatch) => {
+    const clients = store.getState().clients;
+    const client = clients.find((client) => client.ClientId === clientId);
+    return client; // Visszaadja az ügyfelek adatait
+  };
+};
+
+const getWork = (workId) => {
+  return (dispatch) => {
+    const works = store.getState().works;
+    const work = works.find((work) => work.workId === workId);
+    return work; // Visszaadja az ügyfelek adatait
+  };
+};
+const getObject = (objectID) => {
+  return (dispatch) => {
+    const objects = store.getState().objects;
+    const object = objects.find((object) => object.key === objectID);
+    return object; // Visszaadja az ügyfelek adatait
+  };
+};
+const getScript = (scriptId) => {
+  return (dispatch) => {
+    const scripts = store.getState().scripts;
+    const script = scripts.find((script) => script.scriptId === scriptId);
+    return script; // Visszaadja az ügyfelek adatait
+  };
 };
 
 const getWorks = () => {
-  return store.getState().works;
+  return (dispatch) => {
+    const works = store.getState().works; // Az ügyfelek állapotának lekérése a store-ból
+    return works; // Visszaadja az ügyfelek adatait
+  };
+};
+
+const getObjects = () => {
+  return (dispatch) => {
+    const objects = store.getState().objects; // Az ügyfelek állapotának lekérése a store-ból
+    return objects; // Visszaadja az ügyfelek adatait
+  };
+};
+const getScripts = () => {
+  return (dispatch) => {
+    const scripts = store.getState().scripts; // Az ügyfelek állapotának lekérése a store-ból
+    return scripts; // Visszaadja az ügyfelek adatait
+  };
 };
 
 const addClient = (clientData) => {
@@ -97,8 +146,14 @@ export const selectingObject = async (objectKey) => {
 };
 
 export {
+  getClient,
+  getWork,
+  getObject,
+  getScript,
   getClients,
   getWorks,
+  getScripts,
+  getObjects,
   addClient,
   addWork,
   addColor,

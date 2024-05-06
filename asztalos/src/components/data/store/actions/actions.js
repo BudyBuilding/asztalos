@@ -24,7 +24,26 @@ export const getScriptsSuccess = (scripts) => ({
   payload: scripts,
 });
 
-// Setter akciók
+export const getClientSuccess = (client) => ({
+  type: "GET_CLIENT_SUCCESS",
+  payload: client,
+});
+
+export const getObjectSuccess = (object) => ({
+  type: "GET_OBJECT_SUCCESS",
+  payload: object,
+});
+
+export const getWorkSuccess = (work) => ({
+  type: "GET_WORK_SUCCESS",
+  payload: work,
+});
+
+export const getScriptSuccess = (script) => ({
+  type: "GET_SCRIPT_SUCCESS",
+  payload: script,
+});
+
 export const addClientSuccess = (client) => ({
   type: ADD_CLIENT_SUCCESS,
   payload: client,
