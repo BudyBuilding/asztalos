@@ -2,7 +2,6 @@ const sorting = (items, config) => {
   const { key, direction } = config;
 
   const sortableItems = [...items];
-
   const statusSet = new Set();
   items.forEach((work) => {
     statusSet.add(work.Status);
@@ -11,6 +10,19 @@ const sorting = (items, config) => {
   const sortedStatusValues = Array.from(statusSet);
 
   sortableItems.sort((a, b) => {
+    if (key === "Client") {
+      const nameA = a[key].toUpperCase();
+      const nameB = b[key].toUpperCase();
+
+      if (nameA < nameB) {
+        return direction === 1 ? -1 : 1;
+      }
+      if (nameA > nameB) {
+        return direction === 1 ? 1 : -1;
+      }
+      return 0;
+    }
+
     if (key === "Status") {
       const aStatus = a.Status === "In Progress" ? "" : a.Status;
       const bStatus = b.Status === "In Progress" ? "" : b.Status;
