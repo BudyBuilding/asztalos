@@ -117,23 +117,36 @@ function Dashboard({ onSelectClient }) {
 
       <div className="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Recent works</p>
-        <div className="d-flex justify-content-between mb-2">
-          <Button variant="primary" onClick={() => requestSort("Client")}>
-            Client
-          </Button>
-          <Button variant="primary" onClick={() => requestSort("Date")}>
-            Date
-          </Button>
-          <Button variant="primary" onClick={() => requestSort("Status")}>
-            Status
-          </Button>
-          <Button variant="primary" onClick={() => requestSort("Price")}>
-            Price
-          </Button>
-          <Button variant="primary" onClick={() => requestSort("Paid")}>
-            Paid
-          </Button>
-        </div>
+        <ListGroup.Item className="p-0 m-0">
+          <div className="d-flex w-100 m-0 p-3 pb-2 justify-content-between">
+            <div className="w-100  text-start" style={{ width: "25%" }}>
+              <Button variant="primary" onClick={() => requestSort("Client")}>
+                Client
+              </Button>
+            </div>
+            <div className="w-100  text-center" style={{ width: "25%" }}>
+              <Button variant="primary" onClick={() => requestSort("Date")}>
+                Date
+              </Button>
+            </div>
+            <div className="w-100  text-center" style={{ width: "25%" }}>
+              <Button variant="primary" onClick={() => requestSort("Status")}>
+                Status
+              </Button>
+            </div>
+            <div className="w-100  text-center" style={{ width: "25%" }}>
+              <Button variant="primary" onClick={() => requestSort("Price")}>
+                Price
+              </Button>
+            </div>
+            <div className="w-100  text-end" style={{ width: "25%" }}>
+              <Button variant="primary" onClick={() => requestSort("Paid")}>
+                Paid
+              </Button>
+            </div>
+          </div>
+        </ListGroup.Item>
+
         <ListGroup>
           {works.map((work) => (
             <DashboardListItem key={work.workId} work={work} />
