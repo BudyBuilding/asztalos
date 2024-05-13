@@ -1,4 +1,4 @@
-package com.example.asztalos_backend;
+package asztalos;
 
 public class Main {
     public static void main(String[] args) {
