@@ -1,46 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class ColorService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final ColorRepository colorRepository;
+    import asztalos.model.Color;
+import asztalos.repository.ColorRepository;
 
-    @Autowired
-    public ColorService(ColorRepository colorRepository) {
-        this.colorRepository = colorRepository;
-    }
+    @Service
+    public class ColorService {
 
-    // Szín létrehozása
-    public Color createColor(Color color) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return colorRepository.save(color);
-    }
+        @Autowired
+        private ColorRepository colorRepository;
 
-    // Színek lekérdezése
-    public List<Color> getAllColors() {
-        return colorRepository.findAll();
-    }
+        public List<Color> findAll() {
+            return colorRepository.findAll();
+        }
 
-    // Szín keresése azonosító alapján
-    public Color getColorById(Long id) {
-        return colorRepository.findById(id).orElse(null);
-    }
+        public Optional<Color> findById(Long id) {
+            return colorRepository.findById(id);
+        }
 
-    // Szín frissítése
-    public Color updateColor(Long id, Color colorDetails) {
-        Color color = colorRepository.findById(id).orElse(null);
-        if (color != null) {
-            // itt hajtsd végre a frissítési logikát
+        public Color save(Color color) {
             return colorRepository.save(color);
         }
-        return null;
-    }
 
-    // Szín törlése
-    public void deleteColor(Long id) {
-        colorRepository.deleteById(id);
+        public void deleteById(Long id) {
+            colorRepository.deleteById(id);
+        }
+
     }
-}

@@ -1,46 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class ObjectService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final ObjectRepository objectRepository;
+    import asztalos.model.Object;
+import asztalos.repository.ObjectRepository;
 
-    @Autowired
-    public ObjectService(ObjectRepository objectRepository) {
-        this.objectRepository = objectRepository;
-    }
+    @Service
+    public class ObjectService {
 
-    // Objektum létrehozása
-    public Object createObject(Object object) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return objectRepository.save(object);
-    }
+        @Autowired
+        private ObjectRepository objectRepository;
 
-    // Objektumok lekérdezése
-    public List<Object> getAllObjects() {
-        return objectRepository.findAll();
-    }
+        public List<Object> findAll() {
+            return objectRepository.findAll();
+        }
 
-    // Objektum keresése azonosító alapján
-    public Object getObjectById(Long id) {
-        return objectRepository.findById(id).orElse(null);
-    }
+        public Optional<Object> findById(Long id) {
+            return objectRepository.findById(id);
+        }
 
-    // Objektum frissítése
-    public Object updateObject(Long id, Object objectDetails) {
-        Object object = objectRepository.findById(id).orElse(null);
-        if (object != null) {
-            // itt hajtsd végre a frissítési logikát
+        public Object save(Object object) {
             return objectRepository.save(object);
         }
-        return null;
-    }
 
-    // Objektum törlése
-    public void deleteObject(Long id) {
-        objectRepository.deleteById(id);
+        public void deleteById(Long id) {
+            objectRepository.deleteById(id);
+        }
+
     }
-}

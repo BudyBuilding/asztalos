@@ -1,46 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class WorkService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final WorkRepository workRepository;
+    import asztalos.model.Work;
+import asztalos.repository.WorkRepository;
 
-    @Autowired
-    public WorkService(WorkRepository workRepository) {
-        this.workRepository = workRepository;
-    }
+    @Service
+    public class WorkService {
 
-    // Munka létrehozása
-    public Work createWork(Work work) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return workRepository.save(work);
-    }
+        @Autowired
+        private WorkRepository workRepository;
 
-    // Munkák lekérdezése
-    public List<Work> getAllWorks() {
-        return workRepository.findAll();
-    }
+        public List<Work> findAll() {
+            return workRepository.findAll();
+        }
 
-    // Munka keresése azonosító alapján
-    public Work getWorkById(Long id) {
-        return workRepository.findById(id).orElse(null);
-    }
+        public Optional<Work> findById(Long id) {
+            return workRepository.findById(id);
+        }
 
-    // Munka frissítése
-    public Work updateWork(Long id, Work workDetails) {
-        Work work = workRepository.findById(id).orElse(null);
-        if (work != null) {
-            // itt hajtsd végre a frissítési logikát
+        public Work save(Work work) {
             return workRepository.save(work);
         }
-        return null;
-    }
 
-    // Munka törlése
-    public void deleteWork(Long id) {
-        workRepository.deleteById(id);
+        public void deleteById(Long id) {
+            workRepository.deleteById(id);
+        }
+
     }
-}

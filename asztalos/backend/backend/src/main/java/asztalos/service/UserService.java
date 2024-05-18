@@ -1,46 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class UserService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final UserRepository userRepository;
+    import asztalos.model.User;
+    import asztalos.repository.UserRepository;
 
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Service
+    public class UserService {
 
-    // Felhasználó létrehozása
-    public User createUser(User user) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return userRepository.save(user);
-    }
+        @Autowired
+        private UserRepository userRepository;
 
-    // Felhasználók lekérdezése
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
-    }
+        public List<User> findAll() {
+            return userRepository.findAll();
+        }
 
-    // Felhasználó keresése azonosító alapján
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
-    }
+        public Optional<User> findById(Long id) {
+            return userRepository.findById(id);
+        }
 
-    // Felhasználó frissítése
-    public User updateUser(Long id, User userDetails) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user != null) {
-            // itt hajtsd végre a frissítési logikát
+        public User save(User user) {
             return userRepository.save(user);
         }
-        return null;
-    }
 
-    // Felhasználó törlése
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        public void deleteById(Long id) {
+            userRepository.deleteById(id);
+        }
+
     }
-}
