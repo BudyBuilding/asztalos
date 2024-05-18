@@ -1,0 +1,29 @@
+# Maven related
+target/
+!.mvn/wrapper/maven-wrapper.jar  # Keep Maven wrapper
+
+# IDE related
+.idea/
+*.iml
+*.ipr
+*.iws
+*.class
+
+# Temporary files
+*.log
+*.tmp
+*.tmp.*
+*.swp
+
+# Compiled files
+*.class
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# Dependency directories
+repository/
+
+src/main/resources/

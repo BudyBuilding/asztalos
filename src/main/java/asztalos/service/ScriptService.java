@@ -1,46 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class ScriptService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final ScriptRepository scriptRepository;
+    import asztalos.model.Script;
+    import asztalos.repository.ScriptRepository;
 
-    @Autowired
-    public ScriptService(ScriptRepository scriptRepository) {
-        this.scriptRepository = scriptRepository;
-    }
+    @Service
+    public class ScriptService {
 
-    // Script létrehozása
-    public Script createScript(Script script) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return scriptRepository.save(script);
-    }
+        @Autowired
+        private ScriptRepository scriptRepository;
 
-    // Scriptek lekérdezése
-    public List<Script> getAllScripts() {
-        return scriptRepository.findAll();
-    }
+        public List<Script> findAll() {
+            return scriptRepository.findAll();
+        }
 
-    // Script keresése azonosító alapján
-    public Script getScriptById(Long id) {
-        return scriptRepository.findById(id).orElse(null);
-    }
+        public Optional<Script> findById(Long id) {
+            return scriptRepository.findById(id);
+        }
 
-    // Script frissítése
-    public Script updateScript(Long id, Script scriptDetails) {
-        Script script = scriptRepository.findById(id).orElse(null);
-        if (script != null) {
-            // itt hajtsd végre a frissítési logikát
+        public Script save(Script script) {
             return scriptRepository.save(script);
         }
-        return null;
-    }
 
-    // Script törlése
-    public void deleteScript(Long id) {
-        scriptRepository.deleteById(id);
+        public void deleteById(Long id) {
+            scriptRepository.deleteById(id);
+        }
+
     }
-}

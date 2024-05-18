@@ -1,47 +1,34 @@
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+package asztalos.service;
 
-import java.util.List;
+    import java.util.List;
+    import java.util.Optional;
 
-@Service
-public class ClientService {
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Service;
 
-    private final ClientRepository clientRepository;
+    import asztalos.model.Client;
+    import asztalos.repository.ClientRepository;
 
-    @Autowired
-    public ClientService(ClientRepository clientRepository) {
-        this.clientRepository = clientRepository;
-    }
+    @Service
+    public class ClientService {
 
-    // Ügyfél létrehozása
-    public Client createClient(Client client) {
-        // itt hajtsd végre a szükséges ellenőrzéseket vagy üzleti logikát
-        return clientRepository.save(client);
-    }
+        @Autowired
+        private ClientRepository clientRepository;
 
-    // Ügyfelek lekérdezése
-    public List<Client> getAllClients() {
-        return clientRepository.findAll();
-    }
+        public List<Client> findAll() {
+            return clientRepository.findAll();
+        }
 
-    // Ügyfél keresése azonosító alapján
-    public Client getClientById(Long id) {
-        return clientRepository.findById(id).orElse(null);
-    }
+        public Optional<Client> findById(Long id) {
+            return clientRepository.findById(id);
+        }
 
-    // Ügyfél frissítése
-    public Client updateClient(Long id, Client clientDetails) {
-        Client client = clientRepository.findById(id).orElse(null);
-        if (client != null) {
-            // itt hajtsd végre a frissítési logikát
+        public Client save(Client client) {
             return clientRepository.save(client);
         }
-        return null;
-    }
 
-    // Ügyfél törlése
-    public void deleteClient(Long id) {
-        clientRepository.deleteById(id);
+        public void deleteById(Long id) {
+            clientRepository.deleteById(id);
+        }
+
     }
-}
-    
