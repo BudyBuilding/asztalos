@@ -1,72 +1,39 @@
 package asztalos.model;
 
-import java.util.List;
-
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "scripts")
+@Table(name = "script")
 public class Script {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long scriptId;
 
-    // A script azonosítója
-    @Column(name = "script_id")
-    private String scriptID;
-
-    // A felhasználó azonosítója, akihez a script tartozik
-    @Column(name = "user_id")
-    private Long userID;
-
-    // A script neve
     private String name;
 
-    // A scripthez kapcsolódó kép URL-je
-    @Column(name = "img_url")
+    @ManyToOne
+   @JoinColumn(name = "\"user\"")
+    private User user;
+
     private String imgUrl;
 
-    // A script elemek listája
-    @ElementCollection
-    @CollectionTable(name = "script_items", joinColumns = @JoinColumn(name = "script_id"))
-    @Column(name = "item")
-    private List<String> items;
+    // Getters and setters
 
-    // A script beállításainak listája
-    @ElementCollection
-    @CollectionTable(name = "script_settings", joinColumns = @JoinColumn(name = "script_id"))
-    @Column(name = "setting")
-    private List<String> settings;
-
-    // Konstruktor
-    public Script() {
+    public Long getScriptId() {
+        return scriptId;
     }
 
-    // Getterek és setterek
-    // A script azonosítója
-    public Long getId() {
-        return id;
+    public void setScriptId(Long scriptId) {
+        this.scriptId = scriptId;
     }
 
-    // A felhasználó azonosítója, akihez a script tartozik
-    public Long getUserID() {
-        return userID;
-    }
-
-    public void setUserID(Long userID) {
-        this.userID = userID;
-    }
-
-    // A script neve
     public String getName() {
         return name;
     }
@@ -75,39 +42,19 @@ public class Script {
         this.name = name;
     }
 
-    // A script azonosítója
-    public String getScriptID() {
-        return scriptID;
+    public User getUser() {
+        return user;
     }
 
-    public void setScriptID(String scriptID) {
-        this.scriptID = scriptID;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    // A scripthez kapcsolódó kép URL-je
     public String getImgUrl() {
         return imgUrl;
     }
 
     public void setImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
-    }
-
-    // A script elemek listája
-    public List<String> getItems() {
-        return items;
-    }
-
-    public void setItems(List<String> items) {
-        this.items = items;
-    }
-
-    // A script beállításainak listája
-    public List<String> getSettings() {
-        return settings;
-    }
-
-    public void setSettings(List<String> settings) {
-        this.settings = settings;
     }
 }
