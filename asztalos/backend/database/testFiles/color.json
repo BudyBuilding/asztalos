@@ -1,0 +1,8 @@
+{
+  "name": "Red",
+  "materialType": "Plastic",
+  "active": true,
+  "dimension": [10, 20, 30],
+  "rotable": false,
+  "imgUrl": "http://example.com/color.png"
+}

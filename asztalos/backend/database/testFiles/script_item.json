@@ -1,0 +1,11 @@
+{
+  "script": {
+    "scriptId": 1
+  },
+  "name": "Example Script Item",
+  "material": "Metal",
+  "qty": 5,
+  "size": "[50, 100, 150]",
+  "position": "[10, 20, 30]",
+  "rotation": "[0, 0, 0]"
+}

@@ -1,0 +1,14 @@
+{
+  "work": {
+    "workId": 8
+  },
+  "user": {
+    "userId": 1
+  },
+  "client": {
+    "clientId": 5
+  },
+  "name": "Example Work Object",
+  "usedScript": 1,
+  "usedColors": ["Red", "Blue"]
+}

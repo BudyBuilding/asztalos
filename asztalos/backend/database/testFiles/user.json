@@ -1,0 +1,9 @@
+{
+  "name": "John Doe",
+  "username": "johndoe",
+  "address": "1234 Elm Street",
+  "telephone": "555-1234",
+  "email": "john.doe@example.com",
+  "password": "password123",
+  "sold": 5000.0
+}

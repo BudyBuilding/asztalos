@@ -1,0 +1,15 @@
+{
+  "user": {
+    "userId": 7
+  },
+  "client": {
+    "clientId": 7
+  },
+  "name": "Work C",
+  "status": "Pending",
+  "price": 6000,
+  "paid": 2000,
+  "measureDate": "2024-05-10",
+  "orderDate": "2024-05-11",
+  "finishDate": "2024-06-10"
+}

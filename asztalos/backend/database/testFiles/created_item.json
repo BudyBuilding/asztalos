@@ -1,0 +1,15 @@
+{
+  "name": "Example Created Item",
+  "material": "Wood",
+  "qty": 10,
+  "size": "[100, 200, 300]",
+  "position": "[10, 20, 30]",
+  "rotation": "[0, 0, 0]",
+  "color": {
+    "colorId": 1
+  },
+  "rotable": true,
+  "object": {
+    "objectId": 11
+  }
+}

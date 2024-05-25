@@ -1,0 +1,13 @@
+{
+  "user": {
+    "userId": 7
+  },
+  "work": {
+    "workId": 9
+  },
+  "client": {
+    "clientId": 3
+  },
+  "date": "2024-05-24",
+  "sum": 5000
+}
