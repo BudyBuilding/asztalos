@@ -1,6 +1,8 @@
 package asztalos.model;
 
-import jakarta.persistence.Column;
+import java.util.List;
+
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,59 +10,36 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "colors")
+@Table(name = "color")
 public class Color {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    
-    private Long id;
+    private Long colorId;
 
-    // A color azonosítója
-    @Column(name = "color_id")
-    private String colorID;
-
-    // A szín neve
     private String name;
 
-    // A szín típusa
-    private String type;
+    private String materialType;
 
-    // A szín aktivitása
-    private boolean active;
+    private Boolean active;
 
-    // A szín mérete (hossz, szélesség, vastagság)
-    private double length;
-    private double width;
-    private double thickness;
+    @ElementCollection
+    private List<Integer> dimension;
 
-    // A szín elforgatása
-    private double rotation;
+    private Boolean rotable;
 
-    // A szín képének URL-je
-    @Column(name = "img_url")
     private String imgUrl;
 
-    // Konstruktor
-    public Color() {
+    // Getters and setters
+
+    public Long getColorId() {
+        return colorId;
     }
 
-    // Getterek és setterek
-    // A color azonosítója
-    public Long getId() {
-        return id;
+    public void setColorId(Long colorId) {
+        this.colorId = colorId;
     }
 
-    // A color azonosítója
-    public String getColorID() {
-        return colorID;
-    }
-
-    public void setColorID(String colorID) {
-        this.colorID = colorID;
-    }
-
-    // A szín neve
     public String getName() {
         return name;
     }
@@ -69,59 +48,38 @@ public class Color {
         this.name = name;
     }
 
-    // A szín típusa
-    public String getType() {
-        return type;
+    public String getMaterialType() {
+        return materialType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setMaterialType(String materialType) {
+        this.materialType = materialType;
     }
 
-    // A szín aktivitása
-    public boolean isActive() {
+    public Boolean getActive() {
         return active;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(Boolean active) {
         this.active = active;
     }
 
-    // A szín mérete (hossz, szélesség, vastagság)
-    public double getLength() {
-        return length;
+    public List<Integer> getDimension() {
+        return dimension;
     }
 
-    public void setLength(double length) {
-        this.length = length;
+    public void setDimension(List<Integer> dimension) {
+        this.dimension = dimension;
     }
 
-    public double getWidth() {
-        return width;
+    public Boolean getRotable() {
+        return rotable;
     }
 
-    public void setWidth(double width) {
-        this.width = width;
+    public void setRotable(Boolean rotable) {
+        this.rotable = rotable;
     }
 
-    public double getThickness() {
-        return thickness;
-    }
-
-    public void setThickness(double thickness) {
-        this.thickness = thickness;
-    }
-
-    // A szín elforgatása
-    public double getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(double rotation) {
-        this.rotation = rotation;
-    }
-
-    // A szín képének URL-je
     public String getImgUrl() {
         return imgUrl;
     }
