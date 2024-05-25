@@ -2,8 +2,8 @@ package asztalos.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import asztalos.model.Object;
+import asztalos.model.WorkObject;
 
-// Spring Data JPA creates CRUD implementation at runtime automatically.
-public interface ObjectRepository extends JpaRepository<Object, Long> {
+public interface ObjectRepository extends JpaRepository<WorkObject, Long> {
+    // Itt definiálhatsz egyedi lekérdezéseket, ha szükséges
 }
