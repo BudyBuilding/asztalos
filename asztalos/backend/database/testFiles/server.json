@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "asztalos_server",
+      "Group": "asztalos_group",
+      "Host": "pg-1788be0e-nyesteszilv-8efa.c.aivencloud.com",
+      "Port": 13722,
+      "MaintenanceDB": "defaultdb",
+      "Username": "avnadmin",
+      "SSLMode": "require"
+    }
+  }
+}
