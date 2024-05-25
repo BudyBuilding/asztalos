@@ -1,59 +1,73 @@
 package asztalos.model;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "clients")
+@Table(name = "client")
 public class Client {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long clientId;
 
-    // Az ügyfél neve
+   @ManyToOne
+   @JoinColumn(name = "\"user\"")  // Az 'user' oszlop idézőjelek között
+     private User user;
+
+
+    @Column(nullable = false)
+    private double clientSold;
+
+    @Column(nullable = false)
     private String name;
 
-    // Az ügyfél címe
+    private String description;
     private String address;
-
-    // Az ügyfél telefonszáma
     private String telephone;
+
+ @JsonCreator
+ public Client(@JsonProperty("clientID") Long clientId) {
+     this.clientId = clientId;
+ }
     
-    // Az ügyfél azonosítója
-    @Column(name = "client_id")
-    private String clientID;
-
-    // Az ügyfélhez kapcsolódó felhasználó azonosítója
-    @Column(name = "user_id")
-    private Long userID;
-
-    // Az ügyfélhez kapcsolódó munkák azonosítói
-    @ElementCollection
-    @CollectionTable(name = "client_works", joinColumns = @JoinColumn(name = "client_id"))
-    @Column(name = "work_id")
-    private List<Long> workIDs;
-
-    // Konstruktor
-    public Client() {
+ public Client() {
     }
 
-    // Getterek és setterek
-    // Az ügyfél azonosítója
-    public Long getId() {
-        return id;
+    // Getters és setters
+    public Long getClientId() {
+        return clientId;
     }
 
-    // Az ügyfél neve
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public double getClientSold() {
+        return clientSold;
+    }
+
+    public void setClientSold(double clientSold) {
+        this.clientSold = clientSold;
+    }
+
     public String getName() {
         return name;
     }
@@ -62,7 +76,14 @@ public class Client {
         this.name = name;
     }
 
-    // Az ügyfél címe
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -71,39 +92,11 @@ public class Client {
         this.address = address;
     }
 
-    // Az ügyfél telefonszáma
     public String getTelephone() {
         return telephone;
     }
 
     public void setTelephone(String telephone) {
         this.telephone = telephone;
-    }
-
-    // Az ügyfél azonosítója
-    public String getClientID() {
-        return clientID;
-    }
-
-    public void setClientID(String clientID) {
-        this.clientID = clientID;
-    }
-
-    // Az ügyfélhez kapcsolódó felhasználó azonosítója
-    public Long getUserID() {
-        return userID;
-    }
-
-    public void setUserID(Long userID) {
-        this.userID = userID;
-    }
-
-    // Az ügyfélhez kapcsolódó munkák azonosítói
-    public List<Long> getWorkIDs() {
-        return workIDs;
-    }
-
-    public void setWorkIDs(List<Long> workIDs) {
-        this.workIDs = workIDs;
     }
 }
