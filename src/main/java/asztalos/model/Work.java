@@ -1,75 +1,72 @@
 package asztalos.model;
 
-import java.util.List;
+import java.util.Date;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "works")
+@Table(name = "work")
 public class Work {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long workId;
 
-    // A munka azonosítója
-    @Column(name = "work_id")
-    private String workID;
+    @ManyToOne
+    @JoinColumn(name = "\"user\""   )
+     private User user;
 
-    // A munkát végző felhasználó azonosítója
-    @Column(name = "user_id")
-    private Long userID;
+    @ManyToOne
+    @JoinColumn(name = "client")
+    private Client client;
 
-    // A munka neve
     private String name;
 
-    // Az ügyfél azonosítója, akinek a munkát elvégzik
-    @Column(name = "client_id")
-    private Long clientID;
+    @Column(nullable = false)
+    private String status;
 
-    // A munkához kapcsolódó objektumok azonosítói
-    @ElementCollection
-    @CollectionTable(name = "work_objects", joinColumns = @JoinColumn(name = "work_id"))
-    @Column(name = "object_id")
-    private List<Long> objectIDs;
+    @Column(nullable = false)
+    private int price;
 
-    // A munka ára
-    private double price;
+    @Column(nullable = false)
+    private int paid;
 
-    // Fizetett összeg és dátum
-    @ElementCollection
-    @CollectionTable(name = "work_payments", joinColumns = @JoinColumn(name = "work_id"))
-    @Column(name = "payment_info")
-    private List<String> paid;
+    private Date measureDate;
+    private Date orderDate;
+    private Date finishDate;
 
-    // Konstruktor
-    public Work() {
+    // Getters és setters
+    public Long getWorkId() {
+        return workId;
     }
 
-    // Getterek és setterek
-    // A munka azonosítója
-    public Long getId() {
-        return id;
+    public void setWorkId(Long workId) {
+        this.workId = workId;
     }
 
-    // A munkát végző felhasználó azonosítója
-    public Long getUserID() {
-        return userID;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserID(Long userID) {
-        this.userID = userID;
+    public void setUser(User user) {
+        this.user = user;
     }
 
-    // A munka neve
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
     public String getName() {
         return name;
     }
@@ -78,48 +75,52 @@ public class Work {
         this.name = name;
     }
 
-    // Az ügyfél azonosítója, akinek a munkát elvégzik
-    public Long getClientID() {
-        return clientID;
+    public String getStatus() {
+        return status;
     }
 
-    public void setClientID(Long clientID) {
-        this.clientID = clientID;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    // A munkához kapcsolódó objektumok azonosítói
-    public List<Long> getObjectIDs() {
-        return objectIDs;
-    }
-
-    public void setObjectIDs(List<Long> objectIDs) {
-        this.objectIDs = objectIDs;
-    }
-
-    // A munka ára
-    public double getPrice() {
+    public int getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(int price) {
         this.price = price;
     }
 
-    // Fizetett összeg és dátum
-    public List<String> getPaid() {
+    public int getPaid() {
         return paid;
     }
 
-    public void setPaid(List<String> paid) {
+    public void setPaid(int paid) {
         this.paid = paid;
     }
 
-    // A munka azonosítója
-    public String getWorkID() {
-        return workID;
+    public Date getMeasureDate() {
+        return measureDate;
     }
 
-    public void setWorkID(String workID) {
-        this.workID = workID;
+    public void setMeasureDate(Date measureDate) {
+        this.measureDate = measureDate;
+    }
+
+    public Date getOrderDate() {
+        return orderDate;
+    }
+
+    public void setOrderDate(Date orderDate) {
+        this.orderDate = orderDate;
+    }
+
+    public Date getFinishDate() {
+        return finishDate;
+    }
+
+    public void setFinishDate(Date finishDate) {
+        this.finishDate = finishDate;
     }
 }
+
