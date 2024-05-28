@@ -27,3 +27,5 @@ target/
 repository/
 
 src/main/resources/
+
+/target
