@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +49,19 @@ public class ClientController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Client>> getClientsByUserId(@PathVariable("userId") Long userId) {
         Optional<User> user = userService.findById(userId);
+        if (user.isPresent()) {
+            List<Client> clients = clientService.findByUser(user.get());
+            return ResponseEntity.ok(clients);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<Client>> getClientsByAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> user = userService.findByUsername(username);
         if (user.isPresent()) {
             List<Client> clients = clientService.findByUser(user.get());
             return ResponseEntity.ok(clients);
