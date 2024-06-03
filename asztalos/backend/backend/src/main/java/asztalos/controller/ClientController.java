@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.Client;
@@ -31,10 +32,6 @@ public class ClientController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
-    public List<Client> getAllClients() {
-        return clientService.findAll();
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Client> getClientById(@PathVariable Long id) {
@@ -56,17 +53,40 @@ public class ClientController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    @GetMapping("/my")
-    public ResponseEntity<List<Client>> getClientsByAuthenticatedUser() {
+/* 
+@GetMapping("/my")
+public ResponseEntity<List<Client>> getClientsByAuthenticatedUser() {
+Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+String username = authentication.getName();
+Optional<User> user = userService.findByUsername(username);
+if (user.isPresent()) {
+    List<Client> clients = clientService.findByUser(user.get());
+    return ResponseEntity.ok(clients);
+} else {
+    return ResponseEntity.notFound().build();
+}
+}*/
+    
+@GetMapping
+    public ResponseEntity<?> getClients(@RequestParam(required = false) Long clientId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         Optional<User> user = userService.findByUsername(username);
-        if (user.isPresent()) {
+
+        if (!user.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        if (clientId != null) {
+            Optional<Client> client = clientService.findById(clientId);
+            if (client.isPresent() && client.get().getUser().getUserId().equals(user.get().getUserId())) {
+                return ResponseEntity.ok(client.get());
+            } else {
+                return ResponseEntity.status(403).build();
+            }
+        } else {
             List<Client> clients = clientService.findByUser(user.get());
             return ResponseEntity.ok(clients);
-        } else {
-            return ResponseEntity.notFound().build();
         }
     }
 
