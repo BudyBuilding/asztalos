@@ -41,51 +41,64 @@ public class ClientController {
         String username = authentication.getName();
         Optional<User> currentUser = userService.findByUsername(username);
 
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
         if (!currentUser.isPresent()) {
             return ResponseEntity.status(403).build();
         }
 
-        // Az aktuális felhasználó szerepének ellenőrzése
+        // checking if the user is admin
         if (currentUser.get().getRole().equals("admin")) {
-            // Az admin szerepű felhasználóknak megjeleníthetjük az összes klienst
-            List<Client> clients = clientService.findAll(); 
+            // if the user who makes the call is an admin
+            // is so he must get all the clients 
+            List<Client> clients = clientService.findAll();
             return ResponseEntity.ok(clients);
         } else {
-            // Az egyéb felhasználóknak csak a saját klienseiket mutatjuk meg
+            // in that case if the user is not admin then it must get only his clients
             List<Client> clients = clientService.findByUser(currentUser.get());
             return ResponseEntity.ok(clients);
-        }   
+        }
     }
 
+    // creating new client
     @PostMapping
     public ResponseEntity<?> createClient(@RequestBody Client client) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         Optional<User> currentUser = userService.findByUsername(username);
 
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
         if (!currentUser.isPresent()) {
             return ResponseEntity.status(403).build();
         }
-        
-        // Beállítjuk az új ügyfél felhasználóját az aktuális felhasználóra
+
+        // setting up the new clients user
         client.setUser(currentUser.get());
 
-        // Ügyfél létrehozása
+        // creating the new client object and filling up with the data
         Client createdClient = clientService.save(client);
         return ResponseEntity.ok(createdClient);
     }
 
+    // modifying a client
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
         Optional<Client> clientOptional = clientService.findById(id);
+
+        // searching if there is a client with that id
         if (clientOptional.isPresent()) {
-            Client existingClient = clientOptional.get();        
+
+            // if there is a client then making a Client object from the Optional
+            Client existingClient = clientOptional.get();
+            
+            //updating some data about it
             existingClient.setName(clientDetails.getName());
             existingClient.setAddress(clientDetails.getAddress());
             existingClient.setTelephone(clientDetails.getTelephone());
-            // Az existingClient további tulajdonságait is frissítheted szükség szerint
+            // todo making more updates if it's neccessary
 
-            // A frissített klienst elmentjük
+            // saving the updated client object
             Client updatedClient = clientService.save(existingClient);
             return ResponseEntity.ok(updatedClient);
         } else {
@@ -93,27 +106,33 @@ public class ClientController {
         }
     }
 
-
+    // deleting a client
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         Optional<User> user = userService.findByUsername(username);
 
+        // searching if there is an user with that username from the token
         if (!user.isPresent()) {
             return ResponseEntity.status(403).build();
         }
 
         Optional<Client> client = clientService.findById(id);
+        
+        // checking if there is a client record with that clientID
         if (client.isPresent() && client.get().getUser().getUserId().equals(user.get().getUserId())) {
-            // A kliens felhasználóját megváltoztatjuk az adatbázisban
-            client.get().setUser(userService.findById(-1L).get()); // -1L a kívánt user ID
-            clientService.save(client.get()); // Mentsük el a módosított klienst
+            
+            //if there is a client then we must change his user attribute to the -1 user
+            //we load that user and update with his data
+            client.get().setUser(userService.findById(-1L).get());
+            
+            //saving the updates
+            clientService.save(client.get()); 
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.status(403).build();
         }
     }
-
 }
 
