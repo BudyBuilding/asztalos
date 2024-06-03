@@ -35,30 +35,45 @@ public class ClientController {
     // Loading only one or all client related for an user with token   
     // Considerating that if the user is an admin
     // for the admins all the clients must be visible 
-    @GetMapping
+   @GetMapping
     public ResponseEntity<?> getClients(@RequestParam(required = false) Long clientId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         Optional<User> currentUser = userService.findByUsername(username);
-
+        
         // checking if the user from the token is available
         // cannot give problem (but who de hell knows)
         if (!currentUser.isPresent()) {
             return ResponseEntity.status(403).build();
         }
 
-        // checking if the user is admin
-        if (currentUser.get().getRole().equals("admin")) {
-            // if the user who makes the call is an admin
-            // is so he must get all the clients 
-            List<Client> clients = clientService.findAll();
-            return ResponseEntity.ok(clients);
+        // checking if the user wants only one or more client to load
+        if (clientId != null) {
+            Optional<Client> client = clientService.findById(clientId);
+
+            // if only one, so the user gave a clientId we must check if the user is the same with the user in the token
+            // so no one could check the others clients
+            if (client.isPresent() && client.get().getUser().getUserId().equals(currentUser.get().getUserId())) {
+                return ResponseEntity.ok(client.get());
+            } else {
+                // if there is no client or the user cannot check that client 
+                return ResponseEntity.status(403).build();
+            }
         } else {
-            // in that case if the user is not admin then it must get only his clients
-            List<Client> clients = clientService.findByUser(currentUser.get());
-            return ResponseEntity.ok(clients);
+            // if the user want to get all the client
+            // we must check if the user is admin or not
+            if (currentUser.get().getRole().equals("admin")) {
+                //if is admin then we must give them all the clients
+                List<Client> clients = clientService.findAll();
+                return ResponseEntity.ok(clients);
+            } else {
+                // if is not admin then we must show them only their clients
+                List<Client> clients = clientService.findByUser(currentUser.get());
+                return ResponseEntity.ok(clients);
+            }
         }
     }
+
 
     // creating new client
     @PostMapping
@@ -84,21 +99,34 @@ public class ClientController {
     // modifying a client
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> currentUser = userService.findByUsername(username);
+
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
+        if (!currentUser.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        // searching for the original client
         Optional<Client> clientOptional = clientService.findById(id);
 
-        // searching if there is a client with that id
+        // checking if there is any client to modify
         if (clientOptional.isPresent()) {
-
-            // if there is a client then making a Client object from the Optional
             Client existingClient = clientOptional.get();
             
-            //updating some data about it
+            // Checking if the client belongs to the current user
+             if (!existingClient.getUser().getUserId().equals(currentUser.get().getUserId()) && !currentUser.get().getRole().equals("admin")) {
+           return ResponseEntity.status(403).build(); // Unauthorized
+            }
+
+            // Updating client details
             existingClient.setName(clientDetails.getName());
             existingClient.setAddress(clientDetails.getAddress());
             existingClient.setTelephone(clientDetails.getTelephone());
-            // todo making more updates if it's neccessary
 
-            // saving the updated client object
+            // Saving the updated client object
             Client updatedClient = clientService.save(existingClient);
             return ResponseEntity.ok(updatedClient);
         } else {
@@ -119,20 +147,21 @@ public class ClientController {
         }
 
         Optional<Client> client = clientService.findById(id);
-        
+
         // checking if there is a client record with that clientID
-        if (client.isPresent() && client.get().getUser().getUserId().equals(user.get().getUserId())) {
-            
+             if (client.isPresent() && (client.get().getUser().getUserId().equals(user.get().getUserId()) || user.get().getRole().equals("admin"))) {
+
             //if there is a client then we must change his user attribute to the -1 user
             //we load that user and update with his data
             client.get().setUser(userService.findById(-1L).get());
-            
+
             //saving the updates
-            clientService.save(client.get()); 
+            clientService.save(client.get());
             return ResponseEntity.noContent().build();
         } else {
             return ResponseEntity.status(403).build();
         }
     }
+    
 }
 
