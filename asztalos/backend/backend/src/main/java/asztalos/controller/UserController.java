@@ -1,14 +1,15 @@
 package asztalos.controller;
 
-import java.util.List;
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,45 +25,130 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.findAll();
+     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+@PutMapping("/{id}")
+public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
+
+    // Checking if the user is authenticated
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(user.get());
-        } else {
-            return ResponseEntity.notFound().build();
+    // Checking if the authenticated user is admin
+    if (!currentUser.get().getRole().equals("admin")) {
+        // If not admin, check if id is provided
+        if (id != null && !currentUser.get().getUserId().equals(id)) {
+            return ResponseEntity.status(403).build();
         }
     }
 
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.save(user);
+    var userIdToUpdate = id; // Use the provided ID if present
+
+    // If the ID is not provided in the path variable, use the ID of the authenticated user
+    if (userIdToUpdate == null) {
+        userIdToUpdate = currentUser.get().getUserId();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-        Optional<User> user = userService.findById(id);
-        if (user.isPresent()) {
-            User updatedUser = user.get();
-            updatedUser.setName(userDetails.getName());
-            updatedUser.setAddress(userDetails.getAddress());
-            updatedUser.setTelephone(userDetails.getTelephone());
-            updatedUser.setUsername(userDetails.getUsername());
-            updatedUser.setSold(userDetails.getSold());
-            return ResponseEntity.ok(userService.save(updatedUser));
-        } else {
-            return ResponseEntity.notFound().build();
+    Optional<User> user = userService.findById(userIdToUpdate);
+    if (user.isPresent()) {
+        User updatedUser = user.get();
+
+        try {
+            // Get all fields of the User class
+            Field[] fields = User.class.getDeclaredFields();
+
+            // Iterate through the fields
+            for (Field field : fields) {
+                field.setAccessible(true); // Set field accessible
+                Object value = field.get(userDetails); // Get value of the field from userDetails
+                if (value != null) {
+                    field.set(updatedUser, value); // Set the field value in updatedUser
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace(); // Handle IllegalAccessException
         }
-    }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(userService.save(updatedUser));
+    } else {
+        return ResponseEntity.notFound().build();
     }
+}
+
+
+@PutMapping
+public ResponseEntity<User> updateSelf(@RequestBody User userDetails) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
+
+    // Checking if the user is authenticated
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
+    }
+    
+    long userIdToUpdate = currentUser.get().getUserId();
+    
+    Optional<User> user = userService.findById(userIdToUpdate);
+    if (user.isPresent()) {
+        User updatedUser = user.get();
+
+        try {
+            // Get all fields of the User class
+            Field[] fields = User.class.getDeclaredFields();
+
+            // Iterate through the fields
+            for (Field field : fields) {
+                field.setAccessible(true); // Set field accessible
+                Object value = field.get(userDetails); // Get value of the field from userDetails
+                if (value != null) {
+                    field.set(updatedUser, value); // Set the field value in updatedUser
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace(); // Handle IllegalAccessException
+        }
+
+        return ResponseEntity.ok(userService.save(updatedUser));
+    } else {
+        return ResponseEntity.notFound().build();
+    }
+}
+
+@DeleteMapping("/{id}")
+public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
+
+    // Checking if the user is authenticated
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
+    }
+    
+    // Checking if the authenticated user is admin
+    if (!currentUser.get().getRole().equals("admin")) {
+        return ResponseEntity.status(403).build();
+    }
+    
+    Optional<User> userToDelete = userService.findById(id);
+    if (!userToDelete.isPresent()) {
+        return ResponseEntity.notFound().build();
+    }
+    
+    // Setting the password to "deletedUser"
+    User deletedUser = userToDelete.get();
+    deletedUser.setUsername(deletedUser.getUsername() + "-deletedUser");
+    deletedUser.setPassword(passwordEncoder.encode("deletedUser"));
+    
+    // Saving the updated user
+    userService.save(deletedUser);   
+    return ResponseEntity.noContent().build();
+}
+
 }
