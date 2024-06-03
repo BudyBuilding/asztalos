@@ -32,7 +32,9 @@ public class ClientController {
     @Autowired
     private UserService userService;
 
-    //Loading only one or all client related for an user with token    
+    // Loading only one or all client related for an user with token   
+    // Considerating that if the user is an admin
+    // for the admins all the clients must be visible 
     @GetMapping
     public ResponseEntity<?> getClients(@RequestParam(required = false) Long clientId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -73,21 +75,24 @@ public class ClientController {
         return ResponseEntity.ok(createdClient);
     }
 
-
     @PutMapping("/{id}")
     public ResponseEntity<Client> updateClient(@PathVariable Long id, @RequestBody Client clientDetails) {
-        Optional<Client> client = clientService.findById(id);
-        if (client.isPresent()) {
-            Client updatedClient = client.get();
-            updatedClient.setUser(clientDetails.getUser());
-            updatedClient.setName(clientDetails.getName());
-            updatedClient.setAddress(clientDetails.getAddress());
-            updatedClient.setTelephone(clientDetails.getTelephone());
-            return ResponseEntity.ok(clientService.save(updatedClient));
+        Optional<Client> clientOptional = clientService.findById(id);
+        if (clientOptional.isPresent()) {
+            Client existingClient = clientOptional.get();        
+            existingClient.setName(clientDetails.getName());
+            existingClient.setAddress(clientDetails.getAddress());
+            existingClient.setTelephone(clientDetails.getTelephone());
+            // Az existingClient további tulajdonságait is frissítheted szükség szerint
+
+            // A frissített klienst elmentjük
+            Client updatedClient = clientService.save(existingClient);
+            return ResponseEntity.ok(updatedClient);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteClient(@PathVariable("id") Long id) {
