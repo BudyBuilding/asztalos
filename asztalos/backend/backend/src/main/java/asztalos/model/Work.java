@@ -20,8 +20,8 @@ public class Work {
     private Long workId;
 
     @ManyToOne
-    @JoinColumn(name = "\"user\""   )
-     private User user;
+    @JoinColumn(name = "\"user\"")
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "client")

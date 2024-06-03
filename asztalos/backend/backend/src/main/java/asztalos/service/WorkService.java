@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import asztalos.model.User;
 import asztalos.model.Work;
 import asztalos.repository.WorkRepository;
 
@@ -22,6 +23,11 @@ public class WorkService {
     public Optional<Work> findById(Long id) {
         return workRepository.findById(id);
     }
+
+    public List<Work> findByUser(User user) {
+    return workRepository.findByUser(user);
+}
+
 
     public Work save(Work work) {
         return workRepository.save(work);
