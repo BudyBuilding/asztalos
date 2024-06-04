@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -85,7 +86,7 @@ public class WorkController {
         if (!currentUser.isPresent()) {
             return ResponseEntity.status(403).build();
         }
-        
+
         // searching for the original work
         Optional<Work> workOptional = workService.findById(id);
 
@@ -93,9 +94,10 @@ public class WorkController {
         if (workOptional.isPresent()) {
             Work existingwork = workOptional.get();
             Work updatedWork = workOptional.get();
-            
+
             // Checking if the work belongs to the current user
-            if (!existingwork.getUser().getUserId().equals(currentUser.get().getUserId()) && !currentUser.get().getRole().equals("admin")) {
+            if (!existingwork.getUser().getUserId().equals(currentUser.get().getUserId())
+                    && !currentUser.get().getRole().equals("admin")) {
                 return ResponseEntity.status(403).build(); // Unauthorized
             }
 
@@ -121,4 +123,34 @@ public class WorkController {
             return ResponseEntity.notFound().build();
         }
     }
+    
+    // deleting a work
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWork(@PathVariable("id") Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> user = userService.findByUsername(username);
+
+        // searching if there is an user with that username from the token
+        if (!user.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<Work> work = workService.findById(id);
+
+        // checking if there is a work record with that workID
+             if (work.isPresent() && (work.get().getUser().getUserId().equals(user.get().getUserId()) || user.get().getRole().equals("admin"))) {
+
+            //if there is a work then we must change his user attribute to the -1 user
+            //we load that user and update with his data
+            work.get().setUser(userService.findById(-1L).get());
+
+            //saving the updates
+            workService.save(work.get());
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.status(403).build();
+        }
+    }
+
 }
