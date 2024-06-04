@@ -11,14 +11,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import asztalos.model.Client;
 import asztalos.model.User;
 import asztalos.model.Work;
+import asztalos.service.ClientService;
 import asztalos.service.UserService;
 import asztalos.service.WorkService;
 
@@ -31,6 +34,9 @@ public class WorkController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ClientService clientService;
 
     // Loading only one or all work related for an user with token   
     // Considerating that if the user is an admin
@@ -139,7 +145,8 @@ public class WorkController {
         Optional<Work> work = workService.findById(id);
 
         // checking if there is a work record with that workID
-             if (work.isPresent() && (work.get().getUser().getUserId().equals(user.get().getUserId()) || user.get().getRole().equals("admin"))) {
+        if (work.isPresent() && (work.get().getUser().getUserId().equals(user.get().getUserId())
+                || user.get().getRole().equals("admin"))) {
 
             //if there is a work then we must change his user attribute to the -1 user
             //we load that user and update with his data
@@ -151,6 +158,33 @@ public class WorkController {
         } else {
             return ResponseEntity.status(403).build();
         }
+    }
+    
+    // creating new work
+    @PostMapping
+    public ResponseEntity<?> createWork(@RequestBody Work work) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> currentUser = userService.findByUsername(username);
+        Optional<Client> currentClient = clientService.findById(work.getClient().getClientId());
+        if (!currentClient.isPresent()) {
+            return ResponseEntity.status(404).build();
+        }
+
+
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
+        if (!currentUser.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // setting up the new works user
+        work.setUser(currentUser.get());
+        work.setClient(currentClient.get());
+
+        // creating the new work object and filling up with the data
+        Work createdwork = workService.save(work);
+        return ResponseEntity.ok(createdwork);
     }
 
 }

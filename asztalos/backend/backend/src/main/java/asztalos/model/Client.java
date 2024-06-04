@@ -35,12 +35,12 @@ public class Client {
     private String address;
     private String telephone;
 
- @JsonCreator
- public Client(@JsonProperty("clientID") Long clientId) {
-     this.clientId = clientId;
- }
-    
- public Client() {
+    @JsonCreator
+    public Client(@JsonProperty("clientId") Long clientId) {
+        this.clientId = clientId;
+    }
+        
+    public Client() {
     }
 
     // Getters és setters
