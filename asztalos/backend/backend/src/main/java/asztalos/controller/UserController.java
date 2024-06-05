@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import asztalos.model.User;
 import asztalos.service.UserService;
 
+/**
+ *
+ * @author Ai
+ */
 @RestController
 @RequestMapping("/users")
 public class UserController {

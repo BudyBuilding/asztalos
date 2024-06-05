@@ -1,6 +1,7 @@
 package asztalos.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,19 +15,19 @@ public class ScriptItemService {
     @Autowired
     private ScriptItemRepository scriptItemRepository;
 
-    public ScriptItem saveScriptItem(ScriptItem scriptItem) {
+     public ScriptItem saveScriptItem(ScriptItem scriptItem) {
         return scriptItemRepository.save(scriptItem);
     }
 
-    public ScriptItem getScriptItemById(Long id) {
-        return scriptItemRepository.findById(id).orElse(null);
+    public Optional<ScriptItem> findById(Long itemId) {
+        return scriptItemRepository.findById(itemId);
     }
 
-    public List<ScriptItem> getAllScriptItems() {
-        return scriptItemRepository.findAll();
+    public List<ScriptItem> findByScriptId(Long scriptId) {
+        return scriptItemRepository.findByScriptScriptId(scriptId);
     }
 
-    public void deleteScriptItem(Long id) {
-        scriptItemRepository.deleteById(id);
+    public void deleteScriptItem(Long itemId) {
+        scriptItemRepository.deleteById(itemId);
     }
 }

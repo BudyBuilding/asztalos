@@ -1,8 +1,5 @@
 package asztalos.model;
 
-import java.util.List;
-
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,8 +20,7 @@ public class Color {
 
     private Boolean active;
 
-    @ElementCollection
-    private List<Integer> dimension;
+    private String dimension;
 
     private Boolean rotable;
 
@@ -64,11 +60,11 @@ public class Color {
         this.active = active;
     }
 
-    public List<Integer> getDimension() {
+    public String getDimension() {
         return dimension;
     }
 
-    public void setDimension(List<Integer> dimension) {
+    public void setDimension(String dimension) {
         this.dimension = dimension;
     }
 
