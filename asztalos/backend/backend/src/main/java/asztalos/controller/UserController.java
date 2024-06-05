@@ -70,6 +70,9 @@ public class UserController {
                     field.setAccessible(true); // Set field accessible
                     Object value = field.get(userDetails); // Get value of the field from userDetails
                     if (value != null) {
+                        if ("password".equals(field.getName())) {
+                        value = passwordEncoder.encode((String) value);
+                    }
                         field.set(updatedUser, value); // Set the field value in updatedUser
                     }
                 }
