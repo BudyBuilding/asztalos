@@ -1,9 +1,13 @@
 package asztalos.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import asztalos.model.User;
 import asztalos.model.WorkObject;
 
 public interface ObjectRepository extends JpaRepository<WorkObject, Long> {
-    // Itt definiálhatsz egyedi lekérdezéseket, ha szükséges
+
+    public List<WorkObject> findByUser(User user);
 }

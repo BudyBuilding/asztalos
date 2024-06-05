@@ -39,7 +39,6 @@ public class WorkObject {
    // private Script usedScript;
 
     @ElementCollection
-  //  @CollectionTable(name = "object_colors", joinColumns = @JoinColumn(name = "object_id"))
     @Column(name = "color")
     private List<String> usedColors;
 
