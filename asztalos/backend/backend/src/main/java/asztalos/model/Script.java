@@ -1,5 +1,8 @@
 package asztalos.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +29,15 @@ public class Script {
 
     // Getters and setters
 
+    @JsonCreator
+    public Script(@JsonProperty("scriptId") Long scriptId) {
+        this.scriptId = scriptId;
+    }
+
+    public Script() {
+        
+    }
+ 
     public Long getScriptId() {
         return scriptId;
     }

@@ -18,7 +18,7 @@ public class ColorService {
         return colorRepository.save(color);
     }
 
-    public Color getColorById(Long id) {
+    public Color findById(Long id) {
         return colorRepository.findById(id).orElse(null);
     }
 
