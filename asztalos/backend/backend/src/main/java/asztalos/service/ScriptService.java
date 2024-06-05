@@ -14,11 +14,11 @@ public class ScriptService {
     @Autowired
     private ScriptRepository scriptRepository;
 
-    public Script saveScript(Script script) {
+    public Script save(Script script) {
         return scriptRepository.save(script);
     }
 
-    public Script getScriptById(Long id) {
+    public Script findById(Long id) {
         return scriptRepository.findById(id).orElse(null);
     }
 

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import asztalos.model.User;
 import asztalos.model.WorkObject;
 import asztalos.repository.ObjectRepository;
 
@@ -29,5 +30,9 @@ public class ObjectService {
 
     public void deleteById(Long id) {
         objectRepository.deleteById(id);
+    }
+
+    public List<WorkObject> findByUser(User user) {
+        return objectRepository.findByUser(user);
     }
 }
