@@ -1,10 +1,12 @@
 package asztalos.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import asztalos.model.User;
 import asztalos.model.UserPayment;
 import asztalos.repository.UserPaymentRepository;
 
@@ -14,19 +16,22 @@ public class UserPaymentService {
     @Autowired
     private UserPaymentRepository userPaymentRepository;
 
-    public UserPayment saveUserPayment(UserPayment userPayment) {
+    public UserPayment save(UserPayment userPayment) {
         return userPaymentRepository.save(userPayment);
     }
 
-    public UserPayment getUserPaymentById(Long id) {
-        return userPaymentRepository.findById(id).orElse(null);
+    public Optional<UserPayment> findById(Long id) {
+        return userPaymentRepository.findById(id);
     }
 
-    public List<UserPayment> getAllUserPayments() {
+    public List<UserPayment> findAll() {
         return userPaymentRepository.findAll();
     }
+    public List<UserPayment> findByUser(User user) {
+        return userPaymentRepository.findByUser(user);
+    }
 
-    public void deleteUserPayment(Long id) {
+    public void delete(Long id) {
         userPaymentRepository.deleteById(id);
     }
 }
