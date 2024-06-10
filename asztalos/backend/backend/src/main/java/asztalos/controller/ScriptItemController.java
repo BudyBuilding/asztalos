@@ -68,7 +68,6 @@ public class ScriptItemController {
         Optional<ScriptItem> scriptItemOptional = scriptItemService.findById(itemId);
 
         if (scriptItemOptional.isPresent()) {
-            ScriptItem scriptItem = scriptItemOptional.get();
 
             if (!currentUser.get().getRole().equals("admin")) {
                 return ResponseEntity.status(403).build();
@@ -114,9 +113,8 @@ public class ScriptItemController {
                     }
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace(); // Handle IllegalAccessException
+                    throw new RuntimeException("An error occurred while updating script item details", e);
             }
-          
             scriptItemService.saveScriptItem(existingScriptItem);
             return ResponseEntity.ok(existingScriptItem);
         } else {

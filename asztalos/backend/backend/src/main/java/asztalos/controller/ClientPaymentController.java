@@ -146,7 +146,7 @@ public class ClientPaymentController {
         return ResponseEntity.ok(clientPayments);
     }
 
- @GetMapping("/user")
+@GetMapping("/user")
 public ResponseEntity<?> getClientPaymentByUser(@RequestParam(required = false) Long userId) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String username = authentication.getName();
@@ -157,18 +157,18 @@ public ResponseEntity<?> getClientPaymentByUser(@RequestParam(required = false) 
         return ResponseEntity.status(403).build();
     }
 
-    User tokenUser = currentUser.get();
-    User user = null; // Initialize user to null
+    User user; // Declare the variable here
 
     // checking if the user wants only one or more client to load
     if (userId != null) {
+        User tokenUser = currentUser.get(); // Get the user from the token
         if (tokenUser.getRole().equalsIgnoreCase("admin")) {
             user = userService.findById(userId).orElse(null);
         } else {
             return ResponseEntity.status(403).build();
         }
     } else {
-        user = tokenUser;
+        user = currentUser.get(); // If userId is null, use the user from the token
     }
 
     if (user != null) {
@@ -251,8 +251,8 @@ public ResponseEntity<ClientPayment> updateClientPayment(@PathVariable Long id,
             }
         }
     } catch (IllegalAccessException e) {
-        e.printStackTrace();
-    }
+                    throw new RuntimeException("An error occurred while updating client payment details", e);
+            }
 
     return ResponseEntity.ok(clientPaymentService.save(existingClientPayment));
 }

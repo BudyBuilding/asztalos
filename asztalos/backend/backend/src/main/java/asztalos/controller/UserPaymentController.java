@@ -132,8 +132,8 @@ public class UserPaymentController {
                 }
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+                    throw new RuntimeException("An error occurred while updating user payment details", e);
+            }
 
         return ResponseEntity.ok(userPaymentService.save(userPayment.get()));
     }
