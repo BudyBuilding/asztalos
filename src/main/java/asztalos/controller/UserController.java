@@ -81,7 +81,7 @@ public class UserController {
                     }
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace(); // Handle IllegalAccessException
+                    throw new RuntimeException("An error occurred while updating user details", e);
             }
 
             return ResponseEntity.ok(userService.save(updatedUser));
@@ -114,8 +114,8 @@ public class UserController {
                     }
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace(); // Handle IllegalAccessException
-            }
+                    throw new RuntimeException("An error occurred while updating user details", e);
+                    }
 
             return ResponseEntity.ok(userService.save(updatedUser));
         } else {
