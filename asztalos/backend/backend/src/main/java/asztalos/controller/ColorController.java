@@ -94,7 +94,7 @@ public class ColorController {
                     }
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace(); // Handle IllegalAccessException
+                    throw new RuntimeException("An error occurred while updating color details", e);
             }
 
             return ResponseEntity.ok(colorService.saveColor(color));
