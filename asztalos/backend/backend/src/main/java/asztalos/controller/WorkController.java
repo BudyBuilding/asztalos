@@ -79,6 +79,36 @@ public class WorkController {
            }
        }
    }
+
+   @GetMapping("/client/{clientId}")
+    public ResponseEntity<?> getWorksByClient(@PathVariable Long clientId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> currentUser = userService.findByUsername(username);
+
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
+        if (!currentUser.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // Check if the client exists
+        Optional<Client> client = clientService.findById(clientId);
+        if (!client.isPresent()) {
+            return ResponseEntity.status(404).build();
+        }
+
+        // Check if the client belongs to the current user
+        if (!client.get().getUser().getUserId().equals(currentUser.get().getUserId())
+                && !currentUser.get().getRole().equals("admin")) {
+            return ResponseEntity.status(403).build(); // Unauthorized
+        }
+
+        // Fetch works associated with the client
+        List<Work> works = workService.findByClient(client.get());
+        return ResponseEntity.ok(works);
+    }
+
     
        // modifying a work
     @PutMapping("/{id}")
