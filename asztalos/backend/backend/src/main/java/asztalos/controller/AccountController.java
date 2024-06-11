@@ -17,6 +17,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,7 +51,7 @@ public class AccountController {
     @Autowired
     private UserRepository userRepository;
 
-
+    @CrossOrigin
     @PostMapping("/checkToken")
     public ResponseEntity<Object> checkToken(@RequestBody Map<String, String> request) {
         String token = request.get("token");
@@ -77,7 +78,7 @@ public class AccountController {
         }
     }
 
-
+    @CrossOrigin
     @GetMapping("/profile")
     public ResponseEntity<Object> profile(Authentication auth) {
         var response = new HashMap<String, Object>();
@@ -93,10 +94,11 @@ public class AccountController {
             return ResponseEntity.badRequest().body("User not found");
         }
     }
-
+    
+    @CrossOrigin
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginDto loginDto, BindingResult result) {
-        
+
         if (result.hasErrors()) {
             var errorsList = result.getAllErrors();
             var errorsMap = new HashMap<String, String>();
@@ -111,21 +113,21 @@ public class AccountController {
 
         try {
             authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
+                    .authenticate(
+                            new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
 
             Optional<User> userOptional = userRepository.findByUsername(loginDto.getUsername());
-    if (userOptional.isPresent()) {
-        User user = userOptional.get();
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
                 String jwtToken = createJwtToken(user);
 
-            var response = new HashMap<String, Object>();
-            response.put("token", jwtToken);
-            response.put("user", user);
-            return ResponseEntity.ok(response);
-    } else {
-        return ResponseEntity.badRequest().body("User not found");
-    }
-
+                var response = new HashMap<String, Object>();
+                response.put("token", jwtToken);
+                response.put("user", user);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("User not found");
+            }
 
         } catch (AuthenticationException e) {
             System.out.println("There was an error");
@@ -133,7 +135,8 @@ public class AccountController {
 
         return ResponseEntity.badRequest().body("Bad username or password");
     }
-
+    
+    @CrossOrigin
     @PostMapping("/register")
     public ResponseEntity<Object> register(
         @Valid @RequestBody RegisterDto registerDto,
