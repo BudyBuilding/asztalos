@@ -30,9 +30,8 @@ public class SecurityConfig {
 
     @Autowired
     private UserService userService;
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
@@ -43,7 +42,37 @@ public class SecurityConfig {
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .build();
+}
+
+/* 
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // CSRF védelem letiltása
+            .cors().and() // CORS engedélyezése
+            .authorizeRequests()
+                .antMatchers("/account/register", "/account/login", "/account/checkToken").permitAll()
+                .anyRequest().authenticated()
+                .and()
+            .oauth2ResourceServer()
+                .jwt().jwtAuthenticationConverter(jwtAuthenticationConverter())
+                .and()
+            .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
+
+
+        @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Collections.singletonList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(Collections.singletonList("*"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+*/
 
     @Bean
     public JwtDecoder jwtDecoder() {
