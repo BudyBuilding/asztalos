@@ -8,6 +8,7 @@ import {
   getWorksSuccess,
   addClientSuccess,
   getScriptsSuccess,
+  deleteClientSuccess,
   addScriptSuccess,
   addObjectSuccess,
   modifyObjectSuccess,
@@ -99,6 +100,9 @@ const logout = () => {
 
 ///////////////////
 // Data fetching actions
+
+////////////////////
+//getters for clients
 const getClients = () => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
@@ -175,6 +179,36 @@ const getScripts = () => {
   return (dispatch) => {
     const scripts = store.getState().scripts; // Az ügyfelek állapotának lekérése a store-ból
     return scripts; // Visszaadja az ügyfelek adatait
+  };
+};
+
+///////////////////////
+//Deleting section
+const deleteClient = (clientId) => {
+  return async (dispatch) => {
+    try {
+      await axiosInstance.delete(`/clients/${clientId}`);
+      dispatch(deleteClientSuccess(clientId));
+    } catch (error) {
+      console.error("Error while deleting client:", error);
+      throw error;
+    }
+  };
+};
+
+////////////////////
+// Updating section
+const updateClient = (clientId, updatedClientData) => {
+  return async (dispatch) => {
+    try {
+      await axiosInstance.put(`/clients/${clientId}`, updatedClientData);
+      // itt érdemes lehet frissíteni a helyi állapotot is
+      // de erre csak akkor van szükség, ha azonnali frissítést akarunk
+      // például frissítés után a módosított klienst megjelenítjük a felületen
+    } catch (error) {
+      console.error("Error while updating client:", error);
+      throw error;
+    }
   };
 };
 
@@ -263,9 +297,11 @@ export {
   getWorks,
   getScripts,
   getObjects,
+  deleteClient,
   addClient,
   addWork,
   addColor,
+  updateClient,
   addScript,
   addObject,
   modifyObject,

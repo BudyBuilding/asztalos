@@ -121,6 +121,11 @@ export const addColorFailure = (error) => ({
   payload: error,
 });
 
+export const deleteClientSuccess = (clientId) => ({
+  type: "DELETE_CLIENT_SUCCESS",
+  payload: clientId,
+});
+
 export const login = (userData) => {
   return (dispatch) => {
     dispatch(loginStart());
