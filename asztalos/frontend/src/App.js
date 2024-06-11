@@ -40,7 +40,7 @@ function App() {
     } else {
       navigate("/login");
     }
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn]);
 
   return (
     <Provider store={store}>

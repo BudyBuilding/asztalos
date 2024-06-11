@@ -6,7 +6,7 @@ import sorting from "./sort";
 import { useParams } from "react-router-dom";
 import NewWork from "./newWork";
 
-function ClientAnalyzer({ closeClientAnalyzer }) {
+function ClientAnalyzer() {
   const { clientId } = useParams();
 
   const [showNewWork, setShowNewWork] = useState(false);
@@ -19,7 +19,7 @@ function ClientAnalyzer({ closeClientAnalyzer }) {
     [allWorks, clientId]
   );
   const selectedClient = useMemo(
-    () => allClients.find((c) => c.ClientId == clientId),
+    () => allClients.find((c) => c.clientId == clientId),
     [allClients, clientId]
   );
 
@@ -59,25 +59,24 @@ function ClientAnalyzer({ closeClientAnalyzer }) {
   const closeNewWork = () => {
     setShowNewWork(false);
   };
+
+  console.log(selectedClient);
   return (
     <>
       {showNewWork ? (
         <NewWork
           closeNewWork={closeNewWork}
-          clientId={selectedClient.ClientId}
+          clientId={selectedClient.clientId}
         />
       ) : (
         <>
           <div className="container d-xl-block">
             <div className="fs-3  text-start d-flex justify-content-between">
               <div>
-                <span className="fs-1 fw-bold">{selectedClient?.Name}</span>
+                <span className="fs-1 fw-bold">{selectedClient?.name}</span>
                 &nbsp; works
               </div>
               <div>
-                <Button onClick={() => closeClientAnalyzer()}>
-                  Back to Dashboard
-                </Button>
                 <Button>Edit Client</Button>
               </div>
             </div>
@@ -87,12 +86,12 @@ function ClientAnalyzer({ closeClientAnalyzer }) {
             <div className="row">
               <div className="col-md-6">
                 <p className="fs-5 text-start">
-                  Tel: <span>{selectedClient?.Tel}</span>
+                  Tel: <span>{selectedClient?.telephone}</span>
                 </p>
               </div>
               <div className="col-md-6">
                 <p className="fs-5 text-start">
-                  Address: <span>{selectedClient?.Address}</span>
+                  Address: <span>{selectedClient?.address}</span>
                 </p>
               </div>
               <div className="col-md-6">
