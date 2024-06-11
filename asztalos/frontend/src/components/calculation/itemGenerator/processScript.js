@@ -1,4 +1,3 @@
-import React from "react";
 const keretScript = {
   config: {
     PFL: true,
