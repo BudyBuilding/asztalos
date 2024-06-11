@@ -46,7 +46,7 @@ function Dashboard({ onSelectClient }) {
       setLoading(false);
     }
     fetchData();
-  }, [dispatch, showDeleteConfirmation, showClientUpdateModal]);
+  }, [dispatch, showDeleteConfirmation, showClientUpdateModal, showNewClient]);
 
   store.subscribe(() => {
     // console.log("State changed:", store.getState());
@@ -130,10 +130,6 @@ function Dashboard({ onSelectClient }) {
 
   const handleConfirmDelete = async () => {
     await dispatch(deleteClient(clientIdToDelete));
-    /* const updatedClients = clients.filter(
-      (client) => client.clientId !== clientIdToDelete
-    );
-    setClients(updatedClients);*/
     setShowDeleteConfirmation(false);
   };
 

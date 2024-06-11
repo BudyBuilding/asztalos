@@ -188,7 +188,9 @@ const getScripts = () => {
 const deleteClient = (clientId) => {
   return async (dispatch) => {
     try {
+      console.log(clientId);
       await axiosInstance.delete(`/clients/${clientId}`);
+      console.log("Client deleted successfully.");
       dispatch(deleteClientSuccess(clientId));
     } catch (error) {
       console.error("Error while deleting client:", error);
@@ -196,6 +198,8 @@ const deleteClient = (clientId) => {
     }
   };
 };
+
+export default deleteClient;
 
 ////////////////////
 // Updating section
@@ -214,8 +218,13 @@ const updateClient = (clientId, updatedClientData) => {
 const addClient = (clientData) => {
   return async (dispatch) => {
     try {
-      dispatch(addClientSuccess(clientData));
-      return clientData;
+      const response = await axiosInstance.post(`/clients`, clientData);
+      console.log("Client added successfully:", response.data);
+
+      // Frissítjük a kliensek állapotát a frissen hozzáadott klienssel
+      dispatch(getClientsSuccess([...store.getState().clients, response.data]));
+
+      return response.data;
     } catch (error) {
       console.error("Error while adding client:", error);
       throw error;
