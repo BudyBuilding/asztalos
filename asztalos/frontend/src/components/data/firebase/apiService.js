@@ -16,9 +16,10 @@ import {
   selectObject,
   loginSuccess,
   logoutSuccess,
+  modifyClientSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
-const amazonDNS = "ec2-3-87-74-221.compute-1.amazonaws.com";
+const amazonDNS = "ec2-54-87-7-245.compute-1.amazonaws.com";
 
 const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
 
@@ -120,7 +121,7 @@ const getClients = () => {
 const getClientFromStore = (clientId) => {
   return (dispatch) => {
     const clients = store.getState().clients;
-    const client = clients.find((client) => client.ClientId === clientId);
+    const client = clients.find((client) => client.clientId === clientId);
     return client; // Visszaadja az ügyfelek adatait
   };
 };
@@ -202,9 +203,7 @@ const updateClient = (clientId, updatedClientData) => {
   return async (dispatch) => {
     try {
       await axiosInstance.put(`/clients/${clientId}`, updatedClientData);
-      // itt érdemes lehet frissíteni a helyi állapotot is
-      // de erre csak akkor van szükség, ha azonnali frissítést akarunk
-      // például frissítés után a módosított klienst megjelenítjük a felületen
+      dispatch(modifyClientSuccess(updatedClientData));
     } catch (error) {
       console.error("Error while updating client:", error);
       throw error;
