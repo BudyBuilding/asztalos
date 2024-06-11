@@ -1,30 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { login } from "../data/store/actions/actions";
+import { login, loginStart } from "../data/store/actions/actions";
+import { loginApi } from "../data/firebase/apiService";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const storedEmail = localStorage.getItem("rememberMeEmail");
+    const storedUsername = localStorage.getItem("rememberMeUsername");
     const storedPassword = localStorage.getItem("rememberMePassword");
     const storedRememberMe = localStorage.getItem("rememberMe") === "true";
 
-    if (storedEmail && storedPassword && storedRememberMe) {
-      setEmail(storedEmail);
+    if (storedUsername && storedPassword && storedRememberMe) {
+      setUsername(storedUsername);
       setPassword(storedPassword);
       setRememberMe(storedRememberMe);
-      dispatch(login({ email: storedEmail, password: storedPassword }));
+      dispatch(login({ username: storedUsername, password: storedPassword }));
     }
   }, []);
+  /*
+  const handleLogin = (e) => {
+    e.preventDefault();
+    dispatch(login({ username, password }));
+  };*/
 
   const handleLogin = (e) => {
     e.preventDefault();
-    dispatch(login({ email, password }));
+    loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
+    dispatch(login({ username, password }));
   };
 
   const handleRememberMe = () => {
@@ -33,11 +40,11 @@ const Login = () => {
 
   useEffect(() => {
     if (rememberMe) {
-      localStorage.setItem("rememberMeEmail", email);
+      localStorage.setItem("rememberMeUsername", username);
       localStorage.setItem("rememberMePassword", password);
       localStorage.setItem("rememberMe", "true");
     } else {
-      localStorage.removeItem("rememberMeEmail");
+      localStorage.removeItem("rememberMeUsername");
       localStorage.removeItem("rememberMePassword");
       localStorage.removeItem("rememberMe");
     }
@@ -50,13 +57,13 @@ const Login = () => {
           <div className="Auth-form-content">
             <h3 className="Auth-form-title">Sign In</h3>
             <div className="form-group mt-3">
-              <label>Email address</label>
+              <label>Username</label>
               <input
-                type="email"
+                type="text"
                 className="form-control mt-1"
-                placeholder="Enter email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div className="form-group mt-3">

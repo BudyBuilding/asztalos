@@ -8,40 +8,56 @@ import WorkAnalyzer from "./components/reusable/workAnalyzer";
 import { Provider } from "react-redux";
 import store from "./components/data/store/store";
 import { useSelector, useDispatch } from "react-redux";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { selectClient } from "./components/data/store/actions/actions";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
 import ModelViewer from "./components/model/ModelViewer";
 import { manage } from "./components/reusable/managers/storeManager";
+import { checkToken } from "./components/data/firebase/apiService";
+
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  const navigate = useNavigate();
 
   useEffect(() => {
     manage();
-  }, []);
+
+    // Ellenőrizzük a localStorage-ban lévő rememberToken-t
+    const rememberToken = localStorage.getItem("rememberToken");
+    if (rememberToken) {
+      // Ha van rememberToken, hívjuk meg a checkToken függvényt
+      checkToken(rememberToken).then((isValid) => {
+        if (isValid) {
+          navigate("/dashboard");
+        }
+      });
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/dashboard");
+    }
+  }, [isLoggedIn, navigate]);
 
   return (
     <Provider store={store}>
-      {/**
-     * 
-      <ModelViewer />
-      <NewWork />
-     */}
-
-      <BrowserRouter>
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route
-            path="/clientAnalyzer/:clientId"
-            element={<ClientAnalyzer />}
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+      </Routes>
     </Provider>
   );
 }
 
-export default App;
+function AppWrapper() {
+  return (
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  );
+}
+
+export default AppWrapper;

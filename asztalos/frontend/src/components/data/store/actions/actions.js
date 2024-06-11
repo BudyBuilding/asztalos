@@ -124,16 +124,6 @@ export const addColorFailure = (error) => ({
 export const login = (userData) => {
   return (dispatch) => {
     dispatch(loginStart());
-    setTimeout(async () => {
-      if (userData.email === "a@gmail.com" && userData.password === "a") {
-        const user = { id: 1, name: "John Doe", email: userData.email };
-        getClients(user.id);
-        getWorks(user.id);
-        dispatch(loginSuccess(user));
-      } else {
-        dispatch(loginFailure("Invalid email or password"));
-      }
-    }, 1000);
   };
 };
 

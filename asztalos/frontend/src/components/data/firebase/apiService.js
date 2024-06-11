@@ -1,5 +1,6 @@
 //apiService.js
 import store from "../store/store"; // Redux store importálása
+import axios from "axios";
 
 import {
   getClientsSuccess,
@@ -11,10 +12,61 @@ import {
   modifyObjectSuccess,
   addWorkSuccess,
   selectObject,
+  loginSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
-const BASE_URL = "https://api.example.com";
+const amazonDNS = "ec2-54-160-166-216.compute-1.amazonaws.com";
 
+const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
+
+///////////////////
+//account crud actions
+
+const loginApi = async (username, password, beRemembered) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/account/login`, {
+      username,
+      password,
+    });
+
+    console.log("Server response:", response);
+
+    const { token } = response.data;
+
+    if (beRemembered && response.status === 200) {
+      localStorage.setItem("rememberToken", token);
+    }
+
+    if (response.status === 200) {
+      store.dispatch(loginSuccess()); // Dispatch login success action
+    }
+  } catch (error) {
+    console.error("Error during login:", error);
+    // Dispatch login failure action or handle error
+    throw error; // Rethrow the error for component to handle
+  }
+};
+
+const checkToken = async (token) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/account/checkToken`, {
+      token,
+    });
+
+    console.log("Token check response:", response);
+
+    if (response.status === 200) {
+      store.dispatch(loginSuccess()); // Dispatch login success action
+    }
+    // Handle response as needed
+  } catch (error) {
+    console.error("Error during token check:", error);
+    // Handle error
+    throw error;
+  }
+};
+
+///////////////////
 const getClients = () => {
   return (dispatch) => {
     const clients = store.getState().clients; // Az ügyfelek állapotának lekérése a store-ból
@@ -146,6 +198,8 @@ export const selectingObject = async (objectKey) => {
 };
 
 export {
+  loginApi,
+  checkToken,
   getClient,
   getWork,
   getObject,
