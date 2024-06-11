@@ -15,7 +15,7 @@ import {
   getClientFromStore,
   addWork,
   getWork,
-  getWorks,
+  getAllWorks,
 } from "../data/firebase/apiService";
 
 function NewWork({ closeNewWork, clientId }) {
@@ -215,7 +215,7 @@ function NewWork({ closeNewWork, clientId }) {
     const client = await dispatch(getClientFromStore(clientId));
 
     // Lekérjük az összes munkát a store-ból
-    const works = await dispatch(getWorks());
+    const works = await dispatch(getAllWorks());
 
     // Generáljuk a workId-t: kiválasztjuk a legnagyobb workId-t, majd hozzáadunk egyet
     const maxWorkId = Math.max(...works.map((work) => work.workId));

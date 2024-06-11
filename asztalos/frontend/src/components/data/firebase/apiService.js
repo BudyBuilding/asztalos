@@ -19,7 +19,7 @@ import {
   modifyClientSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
-const amazonDNS = "ec2-54-87-7-245.compute-1.amazonaws.com";
+const amazonDNS = "ec2-100-27-218-52.compute-1.amazonaws.com";
 
 const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
 
@@ -103,7 +103,7 @@ const logout = () => {
 // Data fetching actions
 
 ////////////////////
-//getters for clients
+//Getters for clients
 const getClients = () => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
@@ -140,14 +140,47 @@ const getClientFromBackend = (clientId) => {
   };
 };
 
-//////////////////
-const getWork = (workId) => {
-  return (dispatch) => {
-    const works = store.getState().works;
-    const work = works.find((work) => work.workId === workId);
-    return work; // Visszaadja az ügyfelek adatait
+// Getters for works
+const getWorkById = (workId) => {
+  return async (dispatch) => {
+    try {
+      const response = await axiosInstance.get(`/works/${workId}`);
+      dispatch(getWorksSuccess(response.data)); // Adatok diszpatchelése a store-ba
+    } catch (error) {
+      console.error(`Error fetching work ${workId}:`, error);
+      throw error;
+    }
   };
 };
+
+const getAllWorks = () => {
+  return async (dispatch) => {
+    try {
+      const response = await axiosInstance.get("/works");
+      console.log(response.data);
+      dispatch(getWorksSuccess(response.data));
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching all works:", error);
+      throw error;
+    }
+  };
+};
+
+const getWorksByClient = (clientId) => {
+  return async (dispatch) => {
+    try {
+      const response = await axiosInstance.get(`/clients/${clientId}/works`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching works for client ${clientId}:`, error);
+      throw error;
+    }
+  };
+};
+
+//////////////////
+
 const getObject = (objectID) => {
   return (dispatch) => {
     const objects = store.getState().objects;
@@ -162,14 +195,14 @@ const getScript = (scriptId) => {
     return script; // Visszaadja az ügyfelek adatait
   };
 };
-
+/*
 const getWorks = () => {
   return (dispatch) => {
     const works = store.getState().works; // Az ügyfelek állapotának lekérése a store-ból
     return works; // Visszaadja az ügyfelek adatait
   };
 };
-
+*/
 const getObjects = () => {
   return (dispatch) => {
     const objects = store.getState().objects; // Az ügyfelek állapotának lekérése a store-ból
@@ -298,11 +331,12 @@ export {
   checkToken,
   getClientFromStore,
   getClientFromBackend,
-  getWork,
+  getWorkById,
+  getAllWorks,
+  getWorksByClient,
   getObject,
   getScript,
   getClients,
-  getWorks,
   getScripts,
   getObjects,
   deleteClient,

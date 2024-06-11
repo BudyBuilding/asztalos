@@ -14,7 +14,7 @@ import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
 import {
   getClients,
-  getWorks,
+  getAllWorks,
   logout,
   getClientFromStore,
   deleteClient,
@@ -39,7 +39,7 @@ function Dashboard({ onSelectClient }) {
 
   useEffect(() => {
     async function fetchData() {
-      const worksData = await dispatch(getWorks());
+      const worksData = await dispatch(getAllWorks());
       const clientsData = await dispatch(getClients());
       setWorks(worksData);
       setClients(clientsData);
@@ -49,7 +49,7 @@ function Dashboard({ onSelectClient }) {
   }, [dispatch, showDeleteConfirmation, showClientUpdateModal, showNewClient]);
 
   store.subscribe(() => {
-    // console.log("State changed:", store.getState());
+    //console.log("State changed:", store.getState());
   });
 
   const handleSelectClient = async (clientId) => {
