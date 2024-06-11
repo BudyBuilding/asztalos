@@ -35,6 +35,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.validation.Valid;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/account")
 public class AccountController {
@@ -51,7 +52,6 @@ public class AccountController {
     @Autowired
     private UserRepository userRepository;
 
-    @CrossOrigin
     @PostMapping("/checkToken")
     public ResponseEntity<Object> checkToken(@RequestBody Map<String, String> request) {
         String token = request.get("token");
@@ -78,7 +78,6 @@ public class AccountController {
         }
     }
 
-    @CrossOrigin
     @GetMapping("/profile")
     public ResponseEntity<Object> profile(Authentication auth) {
         var response = new HashMap<String, Object>();
@@ -95,7 +94,6 @@ public class AccountController {
         }
     }
     
-    @CrossOrigin
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginDto loginDto, BindingResult result) {
 
@@ -136,7 +134,6 @@ public class AccountController {
         return ResponseEntity.badRequest().body("Bad username or password");
     }
     
-    @CrossOrigin
     @PostMapping("/register")
     public ResponseEntity<Object> register(
         @Valid @RequestBody RegisterDto registerDto,
