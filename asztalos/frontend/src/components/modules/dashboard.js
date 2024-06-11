@@ -12,12 +12,15 @@ import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
 import { getClients, getWorks, logout } from "../data/firebase/apiService";
 import store from "../data/store/store";
+import Loading from "../reusable/Loading"; // Importáljuk a Loading komponenst
+
 function Dashboard({ onSelectClient }) {
   const dispatch = useDispatch();
 
   // console.log(dispatch(getWorks()));
   const [works, setWorks] = useState([]);
   const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true); // Állapot a betöltés jelzéséhez
 
   const [showNewClient, setShowNewClient] = useState(false);
   const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
@@ -29,6 +32,7 @@ function Dashboard({ onSelectClient }) {
       setWorks(worksData);
       console.log(clientsData);
       setClients(clientsData);
+      setLoading(false);
     }
     fetchData();
   }, []);
@@ -107,20 +111,24 @@ function Dashboard({ onSelectClient }) {
 
       <Container className="d-xl-block">
         <p className="fs-2 fw-bold text-start">Clients</p>
-        <div className="d-flex flex-nowrap overflow-x-scroll">
-          {clients.map((client) => (
-            <div
-              key={client.clientId}
-              className="p-3 border rounded"
-              style={{ minWidth: "200px", margin: "10px" }}
-              onClick={() => handleSelectClient(client.ClientId)}
-            >
-              <p className="fw-bold">{client.name}</p>
-              <p>Tel: {client.telephone}</p>
-              <p>Address: {client.address}</p>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <Loading />
+        ) : (
+          <div className="d-flex flex-nowrap overflow-x-scroll">
+            {clients.map((client) => (
+              <div
+                key={client.clientId}
+                className="p-3 border rounded"
+                style={{ minWidth: "200px", margin: "10px" }}
+                onClick={() => handleSelectClient(client.ClientId)}
+              >
+                <p className="fw-bold">{client.name}</p>
+                <p>Tel: {client.telephone}</p>
+                <p>Address: {client.address}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </Container>
 
       <div className="container d-xl-block">
