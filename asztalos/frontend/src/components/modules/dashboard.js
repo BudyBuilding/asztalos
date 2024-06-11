@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { IonIcon } from "@ionic/react";
+import { pencil, trash } from "ionicons/icons";
+
 import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
@@ -15,6 +18,8 @@ import {
   getWorks,
   logout,
   getClientFromStore,
+  deleteClient,
+  updateClient,
 } from "../data/firebase/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading"; // Importáljuk a Loading komponenst
@@ -26,7 +31,9 @@ function Dashboard({ onSelectClient }) {
   const [works, setWorks] = useState([]);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true); // Állapot a betöltés jelzéséhez
-
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [clientIdToDelete, setClientIdToDelete] = useState(null);
+  const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
   const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
 
@@ -43,7 +50,7 @@ function Dashboard({ onSelectClient }) {
   }, []);
 
   store.subscribe(() => {
-    console.log("State changed:", store.getState());
+    //    console.log("State changed:", store.getState());
   });
 
   const handleSelectClient = async (clientId) => {
@@ -95,6 +102,37 @@ function Dashboard({ onSelectClient }) {
     logout();
   };
 
+  const handleModifyClient = async (clientId, updatedClientData) => {
+    try {
+      await dispatch(updateClient(clientId, updatedClientData));
+      // sikeres módosítás esetén lehetőség van frissíteni a helyi állapotot is
+      // például úgy, hogy lekérjük a frissített klienst a backendről és frissítjük vele a helyi állapotot
+    } catch (error) {
+      console.error("Error while modifying client:", error);
+    }
+  };
+  const handleDeleteClient = (event, clientId) => {
+    event.preventDefault(); // Az alapértelmezett esemény megakadályozása
+    event.stopPropagation(); // Az esemény további terjedésének megakadályozása
+
+    setShowDeleteConfirmation(true);
+    setClientIdToDelete(clientId); // Átadjuk a kiválasztott kliens azonosítóját
+  };
+
+  const handleConfirmDelete = async () => {
+    // A kliens törlése az azonosító alapján
+    await dispatch(deleteClient(clientIdToDelete));
+    const updatedClients = clients.filter(
+      (client) => client.clientId !== clientIdToDelete
+    );
+    setClients(updatedClients);
+    setShowDeleteConfirmation(false);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false);
+  };
+
   return (
     <>
       <Modal show={showNewClient} onHide={handleNewClientClose}>
@@ -104,6 +142,32 @@ function Dashboard({ onSelectClient }) {
         <Modal.Body>
           <NewClient onClose={handleNewClientClose} />
         </Modal.Body>
+      </Modal>
+
+      <ClientUpdateModal
+        show={showClientUpdateModal}
+        handleClose={handleClientUpdateClose}
+        handleUpdate={handleClientUpdate}
+        clientId={selectedClient ? selectedClient.clientId : null}
+        clientData={selectedClient}
+      />
+
+      <Modal show={showDeleteConfirmation} onHide={handleCancelDelete}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this client?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCancelDelete}>
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => handleConfirmDelete(clientIdToDelete)}
+          >
+            Delete
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       <Container className="container d-xl-block">
@@ -139,7 +203,42 @@ function Dashboard({ onSelectClient }) {
               >
                 <p className="fw-bold">{client.name}</p>
                 <p>Tel: {client.telephone}</p>
-                <p>Address: {client.address}</p>
+                <p>Address: {client.address}</p>{" "}
+                <div className="d-flex">
+                  <p className="fs-xs">Id: {client.clientId}</p>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleModifyClient(client.clientId)}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #007bff",
+                      borderRadius: "40%",
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    <IonIcon
+                      icon={pencil}
+                      style={{ fontSize: "20px", color: "#007bff" }}
+                    />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={(event) =>
+                      handleDeleteClient(event, client.clientId)
+                    }
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #dc3545",
+                      borderRadius: "40%",
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    <IonIcon
+                      icon={trash}
+                      style={{ fontSize: "20px", color: "#dc3545" }}
+                    />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -151,7 +250,7 @@ function Dashboard({ onSelectClient }) {
         <ListGroup.Item className="p-0 m-0">
           <div className="d-flex w-100 m-0 p-3 pb-2 justify-content-between">
             <div className="w-100  text-start" style={{ width: "25%" }}>
-              <Button variant="primary" onClick={() => requestSort("Client")}>
+              <Button variant="primary" onClick={() => requestSort("client")}>
                 Client
               </Button>
             </div>
@@ -161,17 +260,17 @@ function Dashboard({ onSelectClient }) {
               </Button>
             </div>
             <div className="w-100  text-center" style={{ width: "25%" }}>
-              <Button variant="primary" onClick={() => requestSort("Status")}>
+              <Button variant="primary" onClick={() => requestSort("status")}>
                 Status
               </Button>
             </div>
             <div className="w-100  text-center" style={{ width: "25%" }}>
-              <Button variant="primary" onClick={() => requestSort("Price")}>
+              <Button variant="primary" onClick={() => requestSort("price")}>
                 Price
               </Button>
             </div>
             <div className="w-100  text-end" style={{ width: "25%" }}>
-              <Button variant="primary" onClick={() => requestSort("Paid")}>
+              <Button variant="primary" onClick={() => requestSort("paid")}>
                 Paid
               </Button>
             </div>

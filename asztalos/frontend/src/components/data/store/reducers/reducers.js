@@ -70,6 +70,8 @@ const clientsReducer = (state = initialState.clients, action) => {
       return state.map((client) =>
         client.ClientId === action.payload.ClientId ? action.payload : client
       );
+    case "DELETE_CLIENT_SUCCESS":
+      return state.filter((client) => client.ClientId !== action.payload);
     default:
       return state;
   }
