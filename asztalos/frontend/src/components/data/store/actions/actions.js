@@ -98,7 +98,7 @@ export const loginFailure = (error) => ({
   payload: error,
 });
 
-export const logout = () => ({
+export const logoutSuccess = () => ({
   type: "auth/logout",
 });
 
