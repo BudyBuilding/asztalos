@@ -1,12 +1,14 @@
 //storeManager.js
 import {
   addClient,
+  getClientsFromStore,
   addObject,
+  getClients,
   addScript,
   addWork,
 } from "../../data/firebase/apiService";
 import store from "../../data/store/store";
-
+/*
 const clients = [
   {
     ClientId: 1,
@@ -128,7 +130,9 @@ const clients = [
     Tel: "+123987456",
     Address: "456 Birch Street, Austin",
   },
-];
+];*/
+
+const clients = getClients();
 
 const works = [
   {
@@ -214,7 +218,7 @@ const works = [
     Price: 2024,
     Paid: 1500,
   },
-  ...Array.from({ length: 19 * 4 }, (_, i) => {
+  ...Array.from({ length: clients.length * 4 }, (_, i) => {
     const randomYear = 2024;
     const randomMonth = Math.floor(Math.random() * 12) + 1; // 1-12 hónap
     const randomDay = Math.floor(Math.random() * 28) + 1; // 1-28 nap (figyelve a hónapokra)
@@ -223,12 +227,11 @@ const works = [
     const randomPaid = Math.floor(Math.random() * randomPrice); // 0-Price között
 
     return {
-      workId: 10 + i,
-      ClientId: (i % 19) + 1,
+      workId: 5 + i,
+      ClientId: (i % clients.length) + 1,
       Date: `${randomYear}-${String(randomMonth).padStart(2, "0")}-${String(
         randomDay
       ).padStart(2, "0")}`,
-      Client: clients[i % 19].Name,
 
       Status:
         i % 3 === 0 ? "Completed" : i % 3 === 1 ? "In Progress" : "Pending",
@@ -700,10 +703,11 @@ const scripts = [
     Scripts: [],
   },
 ];
+
 export const manage = () => {
-  clients.forEach((client) => {
+  /*clients.forEach((client) => {
     store.dispatch(addClient(client));
-  });
+  });*/
 
   works.forEach((work) => {
     store.dispatch(addWork(work));

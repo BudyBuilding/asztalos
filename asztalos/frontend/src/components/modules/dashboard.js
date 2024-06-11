@@ -10,7 +10,12 @@ import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
-import { getClients, getWorks, logout } from "../data/firebase/apiService";
+import {
+  getClients,
+  getWorks,
+  logout,
+  getClientFromStore,
+} from "../data/firebase/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading"; // Importáljuk a Loading komponenst
 
@@ -30,7 +35,7 @@ function Dashboard({ onSelectClient }) {
       const worksData = await dispatch(getWorks());
       const clientsData = await dispatch(getClients());
       setWorks(worksData);
-      console.log(clientsData);
+      //   console.log(clientsData);
       setClients(clientsData);
       setLoading(false);
     }
@@ -38,15 +43,24 @@ function Dashboard({ onSelectClient }) {
   }, []);
 
   store.subscribe(() => {
-    // console.log("State changed:", store.getState());
+    console.log("State changed:", store.getState());
   });
 
-  const handleSelectClient = (clientId) => {
-    dispatch(selectClient(clientId));
-    console.log({ clientId });
+  const handleSelectClient = async (clientId) => {
+    setLoading(true); // Betöltés elindítása
+    try {
+      const clientData = await dispatch(getClientFromStore(clientId));
+      dispatch(selectClient(clientId));
+      console.log({ clientId });
 
-    navigate(`/clientAnalyzer/${clientId}`);
+      navigate(`/clientAnalyzer/${clientId}`);
+      setLoading(false); // Betöltés vége
+    } catch (error) {
+      console.error("Error while selecting client:", error);
+      setLoading(false); // Betöltés vége hiba esetén is
+    }
   };
+
   const handleNewClientClick = () => {
     setShowNewClient(true);
   };
@@ -55,6 +69,7 @@ function Dashboard({ onSelectClient }) {
     setShowNewClient(false);
   };
 
+  //////////////////
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 1,
@@ -120,7 +135,7 @@ function Dashboard({ onSelectClient }) {
                 key={client.clientId}
                 className="p-3 border rounded"
                 style={{ minWidth: "200px", margin: "10px" }}
-                onClick={() => handleSelectClient(client.ClientId)}
+                onClick={() => handleSelectClient(client.clientId)}
               >
                 <p className="fw-bold">{client.name}</p>
                 <p>Tel: {client.telephone}</p>

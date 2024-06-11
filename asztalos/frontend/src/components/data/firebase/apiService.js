@@ -4,6 +4,7 @@ import axios from "axios";
 
 import {
   getClientsSuccess,
+  getClientSuccess,
   getWorksSuccess,
   addClientSuccess,
   getScriptsSuccess,
@@ -97,15 +98,7 @@ const logout = () => {
 };
 
 ///////////////////
-/*const getClients = () => {
-  return (dispatch) => {
-    const clients = store.getState().clients; // Az ügyfelek állapotának lekérése a store-ból
-    return clients; // Visszaadja az ügyfelek adatait
-  };
-};*/
-
 // Data fetching actions
-
 const getClients = () => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
@@ -120,7 +113,7 @@ const getClients = () => {
   };
 };
 
-const getClient = (clientId) => {
+const getClientFromStore = (clientId) => {
   return (dispatch) => {
     const clients = store.getState().clients;
     const client = clients.find((client) => client.ClientId === clientId);
@@ -128,6 +121,21 @@ const getClient = (clientId) => {
   };
 };
 
+const getClientFromBackend = (clientId) => {
+  return async (dispatch) => {
+    // A függvény visszatérési értéke egy aszinkron függvény
+    try {
+      const response = await axiosInstance.get(`/clients/${clientId}`);
+      dispatch(getClientSuccess(response.data)); // API válasz feldolgozása és diszpácselése a store-ba
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      throw error;
+    }
+  };
+};
+
+//////////////////
 const getWork = (workId) => {
   return (dispatch) => {
     const works = store.getState().works;
@@ -246,7 +254,8 @@ export const selectingObject = async (objectKey) => {
 export {
   loginApi,
   checkToken,
-  getClient,
+  getClientFromStore,
+  getClientFromBackend,
   getWork,
   getObject,
   getScript,

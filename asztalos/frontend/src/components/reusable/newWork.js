@@ -12,7 +12,7 @@ import {
   modifyObject,
   getObjects,
   addObject,
-  getClient,
+  getClientFromStore,
   addWork,
   getWork,
   getWorks,
@@ -212,7 +212,7 @@ function NewWork({ closeNewWork, clientId }) {
 
   const handleSaveWork = async () => {
     // Lekérjük az ügyfél adatait
-    const client = await dispatch(getClient(clientId));
+    const client = await dispatch(getClientFromStore(clientId));
 
     // Lekérjük az összes munkát a store-ból
     const works = await dispatch(getWorks());
