@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { IonIcon } from "@ionic/react";
 import { pencil, trash } from "ionicons/icons";
-
 import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
@@ -22,49 +21,48 @@ import {
   updateClient,
 } from "../data/firebase/apiService";
 import store from "../data/store/store";
-import Loading from "../reusable/Loading"; // Importáljuk a Loading komponenst
+import Loading from "../reusable/Loading";
+import ClientUpdateModal from "../reusable/ClientUpdateModal";
 
 function Dashboard({ onSelectClient }) {
   const dispatch = useDispatch();
 
-  // console.log(dispatch(getWorks()));
   const [works, setWorks] = useState([]);
   const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true); // Állapot a betöltés jelzéséhez
+  const [loading, setLoading] = useState(true);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [clientIdToDelete, setClientIdToDelete] = useState(null);
+  const [clientIdToModify, setClientIdToModify] = useState(null);
   const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
-  const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
       const worksData = await dispatch(getWorks());
       const clientsData = await dispatch(getClients());
       setWorks(worksData);
-      //   console.log(clientsData);
       setClients(clientsData);
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [dispatch, showDeleteConfirmation, showClientUpdateModal]);
 
   store.subscribe(() => {
-    //    console.log("State changed:", store.getState());
+    // console.log("State changed:", store.getState());
   });
 
   const handleSelectClient = async (clientId) => {
-    setLoading(true); // Betöltés elindítása
+    setLoading(true);
     try {
       const clientData = await dispatch(getClientFromStore(clientId));
       dispatch(selectClient(clientId));
       console.log({ clientId });
-
       navigate(`/clientAnalyzer/${clientId}`);
-      setLoading(false); // Betöltés vége
+      setLoading(false);
     } catch (error) {
       console.error("Error while selecting client:", error);
-      setLoading(false); // Betöltés vége hiba esetén is
+      setLoading(false);
     }
   };
 
@@ -76,7 +74,6 @@ function Dashboard({ onSelectClient }) {
     setShowNewClient(false);
   };
 
-  //////////////////
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: 1,
@@ -84,15 +81,12 @@ function Dashboard({ onSelectClient }) {
 
   const requestSort = (key) => {
     let direction = 1;
-
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
       direction = 2;
     }
-
     if (key === "Status") {
       direction = sortConfig.direction === 4 ? 1 : sortConfig.direction + 1;
     }
-
     setSortConfig({ key, direction });
     const sorted = sorting(works, { key, direction });
     setWorks(sorted);
@@ -102,30 +96,44 @@ function Dashboard({ onSelectClient }) {
     logout();
   };
 
-  const handleModifyClient = async (clientId, updatedClientData) => {
-    try {
-      await dispatch(updateClient(clientId, updatedClientData));
-      // sikeres módosítás esetén lehetőség van frissíteni a helyi állapotot is
-      // például úgy, hogy lekérjük a frissített klienst a backendről és frissítjük vele a helyi állapotot
-    } catch (error) {
-      console.error("Error while modifying client:", error);
-    }
+  const handleModifyClient = (event, clientId) => {
+    console.log(clientId);
+    event.preventDefault();
+    event.stopPropagation();
+    setClientIdToModify(clientId);
+    setShowClientUpdateModal(true);
   };
-  const handleDeleteClient = (event, clientId) => {
-    event.preventDefault(); // Az alapértelmezett esemény megakadályozása
-    event.stopPropagation(); // Az esemény további terjedésének megakadályozása
 
+  const handleClientUpdateClose = () => {
+    setShowClientUpdateModal(false);
+    setClientIdToModify(null);
+  };
+
+  const handleClientUpdate = async (updatedClientData) => {
+    console.log("Updating client:", clientIdToModify, updatedClientData);
+    await dispatch(updateClient(clientIdToModify, updatedClientData));
+    const updatedClients = clients.map((client) =>
+      client.clientId === clientIdToModify
+        ? { ...client, ...updatedClientData }
+        : client
+    );
+    setClients(updatedClients);
+    setShowClientUpdateModal(false);
+  };
+
+  const handleDeleteClient = (event, clientId) => {
+    event.preventDefault();
+    event.stopPropagation();
     setShowDeleteConfirmation(true);
-    setClientIdToDelete(clientId); // Átadjuk a kiválasztott kliens azonosítóját
+    setClientIdToDelete(clientId);
   };
 
   const handleConfirmDelete = async () => {
-    // A kliens törlése az azonosító alapján
     await dispatch(deleteClient(clientIdToDelete));
-    const updatedClients = clients.filter(
+    /* const updatedClients = clients.filter(
       (client) => client.clientId !== clientIdToDelete
     );
-    setClients(updatedClients);
+    setClients(updatedClients);*/
     setShowDeleteConfirmation(false);
   };
 
@@ -144,13 +152,18 @@ function Dashboard({ onSelectClient }) {
         </Modal.Body>
       </Modal>
 
-      <ClientUpdateModal
-        show={showClientUpdateModal}
-        handleClose={handleClientUpdateClose}
-        handleUpdate={handleClientUpdate}
-        clientId={selectedClient ? selectedClient.clientId : null}
-        clientData={selectedClient}
-      />
+      <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Update Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ClientUpdateModal
+            handleClose={handleClientUpdateClose}
+            clientId={clientIdToModify}
+            onUpdate={handleClientUpdate}
+          />
+        </Modal.Body>
+      </Modal>
 
       <Modal show={showDeleteConfirmation} onHide={handleCancelDelete}>
         <Modal.Header closeButton>
@@ -161,10 +174,7 @@ function Dashboard({ onSelectClient }) {
           <Button variant="secondary" onClick={handleCancelDelete}>
             Cancel
           </Button>
-          <Button
-            variant="danger"
-            onClick={() => handleConfirmDelete(clientIdToDelete)}
-          >
+          <Button variant="danger" onClick={handleConfirmDelete}>
             Delete
           </Button>
         </Modal.Footer>
@@ -203,12 +213,14 @@ function Dashboard({ onSelectClient }) {
               >
                 <p className="fw-bold">{client.name}</p>
                 <p>Tel: {client.telephone}</p>
-                <p>Address: {client.address}</p>{" "}
+                <p>Address: {client.address}</p>
                 <div className="d-flex">
                   <p className="fs-xs">Id: {client.clientId}</p>
                   <Button
                     variant="primary"
-                    onClick={() => handleModifyClient(client.clientId)}
+                    onClick={(event) =>
+                      handleModifyClient(event, client.clientId)
+                    }
                     style={{
                       background: "transparent",
                       border: "1px solid #007bff",
@@ -249,27 +261,27 @@ function Dashboard({ onSelectClient }) {
         <p className="fs-2 fw-bold text-start">Recent works</p>
         <ListGroup.Item className="p-0 m-0">
           <div className="d-flex w-100 m-0 p-3 pb-2 justify-content-between">
-            <div className="w-100  text-start" style={{ width: "25%" }}>
+            <div className="w-100 text-start" style={{ width: "25%" }}>
               <Button variant="primary" onClick={() => requestSort("client")}>
                 Client
               </Button>
             </div>
-            <div className="w-100  text-center" style={{ width: "25%" }}>
+            <div className="w-100 text-center" style={{ width: "25%" }}>
               <Button variant="primary" onClick={() => requestSort("Date")}>
                 Date
               </Button>
             </div>
-            <div className="w-100  text-center" style={{ width: "25%" }}>
+            <div className="w-100 text-center" style={{ width: "25%" }}>
               <Button variant="primary" onClick={() => requestSort("status")}>
                 Status
               </Button>
             </div>
-            <div className="w-100  text-center" style={{ width: "25%" }}>
+            <div className="w-100 text-center" style={{ width: "25%" }}>
               <Button variant="primary" onClick={() => requestSort("price")}>
                 Price
               </Button>
             </div>
-            <div className="w-100  text-end" style={{ width: "25%" }}>
+            <div className="w-100 text-end" style={{ width: "25%" }}>
               <Button variant="primary" onClick={() => requestSort("paid")}>
                 Paid
               </Button>

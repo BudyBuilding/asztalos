@@ -60,18 +60,17 @@ const clientsReducer = (state = initialState.clients, action) => {
       return action.payload;
     case ADD_CLIENT_SUCCESS:
       if (
-        !state.some((client) => client.ClientId === action.payload.ClientId)
+        !state.some((client) => client.clientId === action.payload.clientId)
       ) {
         return [...state, action.payload];
-      } else {
-        return state; // Visszatérés az állapottal, ha a feltétel nem teljesül
       }
+      return state;
     case "MODIFY_CLIENT_SUCCESS":
       return state.map((client) =>
-        client.ClientId === action.payload.ClientId ? action.payload : client
+        client.clientId === action.payload.clientId ? action.payload : client
       );
     case "DELETE_CLIENT_SUCCESS":
-      return state.filter((client) => client.ClientId !== action.payload);
+      return state.filter((client) => client.clientId !== action.payload);
     default:
       return state;
   }
