@@ -151,7 +151,7 @@ public class WorkController {
                     }
                 }
             } catch (IllegalAccessException e) {
-                e.printStackTrace(); // IllegalAccessException kezelése
+                    throw new RuntimeException("An error occurred while updating user details", e);
             }
 
             return ResponseEntity.ok(workService.save(existingwork));
