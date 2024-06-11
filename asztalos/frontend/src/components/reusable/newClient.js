@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addClient } from "../data/firebase/apiService"; // importáljuk az addClient függvényt az apiService-ből
+import { addClient } from "../data/firebase/apiService"; // Az addClient függvény importálása az apiService-ből
 
 function NewClient({ onClose }) {
   const [clientName, setClientName] = useState("");
@@ -22,30 +22,22 @@ function NewClient({ onClose }) {
     setClientAddress(e.target.value);
   };
 
-  const clients = useSelector((state) => state.clients);
-  const maxClientId = clients.reduce((max, client) => {
-    return client.ClientId > max ? client.ClientId : max;
-  }, 0);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newClientData = {
-      ClientId: maxClientId + 1,
-      Name: clientName,
-      Tel: clientTel,
-      Address: clientAddress,
+      name: clientName,
+      telephone: clientTel,
+      address: clientAddress,
     };
 
-    console.log(newClientData);
-
     try {
-      dispatch(addClient(newClientData));
+      await dispatch(addClient(newClientData)); // A kliens hozzáadása az új adatokkal
 
       setClientName("");
       setClientTel("");
       setClientAddress("");
-      onClose();
+      onClose(); // A modális ablak bezárása
     } catch (error) {
       console.error("Error while adding client:", error);
     }
