@@ -13,9 +13,8 @@ function ClientAnalyzer() {
 
   const allWorks = useSelector((state) => state.works);
   const allClients = useSelector((state) => state.clients);
-
   const memoizedWorks = useMemo(
-    () => allWorks.filter((work) => work.ClientId == clientId),
+    () => allWorks.filter((work) => work.client.clientId == clientId),
     [allWorks, clientId]
   );
   const selectedClient = useMemo(
@@ -25,10 +24,10 @@ function ClientAnalyzer() {
 
   const totalWorks = memoizedWorks.length;
   const activeWorks = memoizedWorks.filter(
-    (work) => work.Status === "In Progress"
+    (work) => work.status === "In Progress"
   ).length;
   const stillToPay = memoizedWorks.reduce(
-    (acc, work) => acc + (work.Price - work.Paid),
+    (acc, work) => acc + (work.price - work.paid),
     0
   );
   //
@@ -142,9 +141,13 @@ function ClientAnalyzer() {
               </Button>
             </div>
             <ListGroup>
-              {memoizedWorks.map((work) => (
-                <ClientWorkListItem key={work.workId} work={work} />
-              ))}
+              {memoizedWorks.length === 0 ? (
+                <p>There is no work yet.</p>
+              ) : (
+                memoizedWorks.map((work) => (
+                  <ClientWorkListItem key={work.workId} work={work} />
+                ))
+              )}
             </ListGroup>
           </div>
         </>

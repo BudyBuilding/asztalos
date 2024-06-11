@@ -2,20 +2,21 @@ import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
 
 function ClientWorkListItem({ work }) {
+  console.log(work);
   return (
     <ListGroup.Item>
       <div className="d-flex w-100 mb-2 justify-content-between">
         <span className="mb-1 text-start" style={{ width: "25%" }}>
-          {work.Date}
+          {work.measureDate}
         </span>
         <span className="mb-1 text-center" style={{ width: "25%" }}>
-          {work.Status}
+          {work.status}
         </span>
         <span className="mb-1 text-center col-3" style={{ width: "25%" }}>
-          {work.Price}
+          {work.price}
         </span>
         <span className="mb-1 text-end " style={{ width: "25%" }}>
-          {work.Paid}
+          {work.paid}
         </span>
       </div>
     </ListGroup.Item>

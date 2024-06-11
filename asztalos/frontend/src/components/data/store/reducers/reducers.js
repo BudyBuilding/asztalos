@@ -78,7 +78,7 @@ const clientsReducer = (state = initialState.clients, action) => {
 
 const worksReducer = (state = initialState.works, action) => {
   switch (action.type) {
-    case "GET_WORK_SUCCESS":
+    case "GET_WORKS_SUCCESS":
       return action.payload;
     case "ADD_WORK_SUCCESS":
       if (!state.some((work) => work.workId === action.payload.workId)) {
