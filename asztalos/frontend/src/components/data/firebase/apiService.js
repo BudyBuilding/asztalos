@@ -13,6 +13,7 @@ import {
   addWorkSuccess,
   selectObject,
   loginSuccess,
+  logoutSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
 const amazonDNS = "ec2-54-160-166-216.compute-1.amazonaws.com";
@@ -64,6 +65,12 @@ const checkToken = async (token) => {
     // Handle error
     throw error;
   }
+};
+
+const logout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("rememberToken");
+  store.dispatch(logoutSuccess()); // Dispatch logout success action
 };
 
 ///////////////////
@@ -214,4 +221,5 @@ export {
   addScript,
   addObject,
   modifyObject,
+  logout,
 };

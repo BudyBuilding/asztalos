@@ -10,24 +10,6 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem("rememberMeUsername");
-    const storedPassword = localStorage.getItem("rememberMePassword");
-    const storedRememberMe = localStorage.getItem("rememberMe") === "true";
-
-    if (storedUsername && storedPassword && storedRememberMe) {
-      setUsername(storedUsername);
-      setPassword(storedPassword);
-      setRememberMe(storedRememberMe);
-      dispatch(login({ username: storedUsername, password: storedPassword }));
-    }
-  }, []);
-  /*
-  const handleLogin = (e) => {
-    e.preventDefault();
-    dispatch(login({ username, password }));
-  };*/
-
   const handleLogin = (e) => {
     e.preventDefault();
     loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
@@ -37,18 +19,6 @@ const Login = () => {
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
   };
-
-  useEffect(() => {
-    if (rememberMe) {
-      localStorage.setItem("rememberMeUsername", username);
-      localStorage.setItem("rememberMePassword", password);
-      localStorage.setItem("rememberMe", "true");
-    } else {
-      localStorage.removeItem("rememberMeUsername");
-      localStorage.removeItem("rememberMePassword");
-      localStorage.removeItem("rememberMe");
-    }
-  }, [rememberMe]);
 
   return (
     <Container className="mt-5 pt-5 w-25">

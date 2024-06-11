@@ -10,7 +10,7 @@ import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
-import { getClients, getWorks } from "../data/firebase/apiService";
+import { getClients, getWorks, logout } from "../data/firebase/apiService";
 import store from "../data/store/store";
 function Dashboard({ onSelectClient }) {
   const dispatch = useDispatch();
@@ -71,6 +71,10 @@ function Dashboard({ onSelectClient }) {
     setWorks(sorted);
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <>
       <Modal show={showNewClient} onHide={handleNewClientClose}>
@@ -92,6 +96,9 @@ function Dashboard({ onSelectClient }) {
               className="me-3"
             >
               New client
+            </Button>
+            <Button variant="danger" onClick={handleLogout}>
+              Logout
             </Button>
           </div>
         </div>
