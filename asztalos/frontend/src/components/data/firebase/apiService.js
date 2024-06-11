@@ -16,9 +16,31 @@ import {
   logoutSuccess,
 } from "../store/actions/actions"; // Frissítsd az elérési utat, ha szükséges
 
-const amazonDNS = "ec2-54-160-166-216.compute-1.amazonaws.com";
+const amazonDNS = "ec2-3-87-74-221.compute-1.amazonaws.com";
 
 const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
+
+// Helper function to get the token from localStorage
+const getToken = () => localStorage.getItem("userToken");
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 ///////////////////
 //account crud actions
@@ -40,6 +62,7 @@ const loginApi = async (username, password, beRemembered) => {
 
     if (response.status === 200) {
       store.dispatch(loginSuccess()); // Dispatch login success action
+      localStorage.setItem("userToken", token);
     }
   } catch (error) {
     console.error("Error during login:", error);
@@ -74,10 +97,26 @@ const logout = () => {
 };
 
 ///////////////////
-const getClients = () => {
+/*const getClients = () => {
   return (dispatch) => {
     const clients = store.getState().clients; // Az ügyfelek állapotának lekérése a store-ból
     return clients; // Visszaadja az ügyfelek adatait
+  };
+};*/
+
+// Data fetching actions
+
+const getClients = () => {
+  return async (dispatch) => {
+    // A függvény visszatérési értéke egy aszinkron függvény
+    try {
+      const response = await axiosInstance.get("/clients");
+      dispatch(getClientsSuccess(response.data)); // API válasz feldolgozása és diszpácselése a store-ba
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      throw error;
+    }
   };
 };
 

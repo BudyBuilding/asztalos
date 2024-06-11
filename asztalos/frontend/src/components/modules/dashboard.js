@@ -16,8 +16,8 @@ function Dashboard({ onSelectClient }) {
   const dispatch = useDispatch();
 
   // console.log(dispatch(getWorks()));
-  const [works, setWorks] = useState(dispatch(getWorks()));
-  const [clients, setClients] = useState(dispatch(getClients()));
+  const [works, setWorks] = useState([]);
+  const [clients, setClients] = useState([]);
 
   const [showNewClient, setShowNewClient] = useState(false);
   const navigate = useNavigate(); // használjuk a navigate hookot közvetlenül
@@ -27,10 +27,11 @@ function Dashboard({ onSelectClient }) {
       const worksData = await dispatch(getWorks());
       const clientsData = await dispatch(getClients());
       setWorks(worksData);
+      console.log(clientsData);
       setClients(clientsData);
     }
     fetchData();
-  }, [showNewClient]);
+  }, []);
 
   store.subscribe(() => {
     // console.log("State changed:", store.getState());
@@ -109,14 +110,14 @@ function Dashboard({ onSelectClient }) {
         <div className="d-flex flex-nowrap overflow-x-scroll">
           {clients.map((client) => (
             <div
-              key={client.ClientId}
+              key={client.clientId}
               className="p-3 border rounded"
               style={{ minWidth: "200px", margin: "10px" }}
               onClick={() => handleSelectClient(client.ClientId)}
             >
-              <p className="fw-bold">{client.Name}</p>
-              <p>Tel: {client.Tel}</p>
-              <p>Address: {client.Address}</p>
+              <p className="fw-bold">{client.name}</p>
+              <p>Tel: {client.telephone}</p>
+              <p>Address: {client.address}</p>
             </div>
           ))}
         </div>
