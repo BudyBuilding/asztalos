@@ -473,13 +473,24 @@ const scripts = [
   },
 ];
 
-export const manage = () => {
-  objects.forEach((object) => {
-    store.dispatch(addObject(object));
-  });
+export const manage = async () => {
+  try {
+    const clients = await getClients();
+    // Összes munka lekérése a backendről
+    const works = await getAllWorks();
 
-  scripts.forEach((script) => {
-    store.dispatch(addScript(script));
-  });
+    store.dispatch(getAllWorks(works));
+    store.dispatch(getClients(clients));
+
+    objects.forEach((object) => {
+      store.dispatch(addObject(object));
+    });
+
+    scripts.forEach((script) => {
+      store.dispatch(addScript(script));
+    });
+  } catch (error) {
+    console.error("Error fetching clients and works:", error);
+    throw error;
+  }
 };
-manage();
