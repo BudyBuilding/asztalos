@@ -12,15 +12,17 @@ import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
+
+import logoutApi from "../data/api/authApi";
+
 import {
   getClients,
   getAllWorks,
-  logout,
   getClientFromStore,
   deleteClient,
   updateClient,
   deleteWork,
-} from "../data/firebase/apiService";
+} from "../data/api/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
@@ -103,7 +105,7 @@ function Dashboard({ onSelectClient }) {
   };
 
   const handleLogout = () => {
-    logout();
+    logoutApi();
   };
 
   const handleModifyClient = (event, clientId) => {

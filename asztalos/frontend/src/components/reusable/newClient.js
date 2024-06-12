@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addClient } from "../data/firebase/apiService"; // Az addClient függvény importálása az apiService-ből
+import { addClient } from "../data/api/apiService"; // Az addClient függvény importálása az apiService-ből
 
 function NewClient({ onClose }) {
   const [clientName, setClientName] = useState("");

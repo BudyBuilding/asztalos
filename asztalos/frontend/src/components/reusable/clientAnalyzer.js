@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import sorting from "./sort";
 import { useParams } from "react-router-dom";
 import NewWork from "./newWork";
-import { deleteWork } from "../data/firebase/apiService";
+import { deleteWork } from "../data/api/apiService";
 
 function ClientAnalyzer() {
   const dispatch = useDispatch();

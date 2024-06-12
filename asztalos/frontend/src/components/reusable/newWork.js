@@ -16,7 +16,7 @@ import {
   addWork,
   getWork,
   getAllWorks,
-} from "../data/firebase/apiService";
+} from "../data/api/apiService";
 
 function NewWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();

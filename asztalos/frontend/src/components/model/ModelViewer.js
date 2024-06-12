@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { DragControls } from "three/examples/jsm/controls/DragControls"; // Importáljuk a DragControls modult
 import store from "../data/store/store";
-import { modifyObject } from "../data/firebase/apiService";
+import { modifyObject } from "../data/api/apiService";
 
 function ModelViewer() {
   const dispatch = useDispatch();
