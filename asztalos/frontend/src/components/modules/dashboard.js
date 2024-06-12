@@ -7,7 +7,7 @@ import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
 import DashboardListItem from "../reusable/dashboardListItem";
-import { selectClient } from "../data/store/actions/actions";
+import { selectClient } from "../data/store/actions/storeFunctions";
 import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
@@ -19,6 +19,7 @@ import {
   getClientFromStore,
   deleteClient,
   updateClient,
+  deleteWork,
 } from "../data/firebase/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading";
@@ -35,18 +36,27 @@ function Dashboard({ onSelectClient }) {
   const [clientIdToModify, setClientIdToModify] = useState(null);
   const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
+  const [render, setRender] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchData() {
-      const worksData = await dispatch(getAllWorks());
+      // const worksData = await dispatch(getAllWorks());
+      // const clientsData = await dispatch(getClients());
+      const worksData = dispatch(getClients());
       const clientsData = await dispatch(getClients());
       setWorks(worksData);
       setClients(clientsData);
       setLoading(false);
     }
     fetchData();
-  }, [dispatch, showDeleteConfirmation, showClientUpdateModal, showNewClient]);
+  }, [
+    dispatch,
+    showDeleteConfirmation,
+    showClientUpdateModal,
+    showNewClient,
+    render,
+  ]);
 
   store.subscribe(() => {
     //console.log("State changed:", store.getState());
@@ -135,6 +145,10 @@ function Dashboard({ onSelectClient }) {
 
   const handleCancelDelete = () => {
     setShowDeleteConfirmation(false);
+  };
+  const handleDeleteWork = (workId) => {
+    dispatch(deleteWork(workId));
+    setRender(!render);
   };
 
   return (
@@ -287,7 +301,11 @@ function Dashboard({ onSelectClient }) {
 
         <ListGroup>
           {works.map((work) => (
-            <DashboardListItem key={work.workId} work={work} />
+            <DashboardListItem
+              key={work.workId}
+              work={work}
+              onDelete={handleDeleteWork}
+            />
           ))}
         </ListGroup>
       </div>

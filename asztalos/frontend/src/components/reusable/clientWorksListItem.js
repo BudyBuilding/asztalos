@@ -1,8 +1,9 @@
 import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
+import { IonIcon } from "@ionic/react";
+import { trash } from "ionicons/icons";
 
-function ClientWorkListItem({ work }) {
-  console.log(work);
+function ClientWorkListItem({ work, onDelete }) {
   return (
     <ListGroup.Item>
       <div className="d-flex w-100 mb-2 justify-content-between">
@@ -17,6 +18,12 @@ function ClientWorkListItem({ work }) {
         </span>
         <span className="mb-1 text-end " style={{ width: "25%" }}>
           {work.paid}
+        </span>
+        <span>
+          <IonIcon
+            icon={trash}
+            style={{ fontSize: "20px", color: "#dc3545" }}
+          />
         </span>
       </div>
     </ListGroup.Item>

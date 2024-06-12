@@ -1,9 +1,9 @@
 import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
-import { FaTrash } from "react-icons/fa";
-
 import { IonIcon } from "@ionic/react";
-function DashboardListItem({ work }) {
+import { trash } from "ionicons/icons";
+
+function DashboardListItem({ work, onDelete }) {
   return (
     <ListGroup.Item className="p-0 m-0">
       <div className="d-flex w-100 m-0 p-3 justify-content-between">
@@ -25,9 +25,12 @@ function DashboardListItem({ work }) {
         <span
           className="mb-1 text-end"
           style={{ width: "20%", cursor: "pointer" }}
-          onClick={() => onDelete(work.id)}
+          onClick={() => onDelete(work.workId)}
         >
-          <FaTrash />
+          <IonIcon
+            icon={trash}
+            style={{ fontSize: "20px", color: "#dc3545" }}
+          />
         </span>
       </div>
     </ListGroup.Item>

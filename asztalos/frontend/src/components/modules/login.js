@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { login, loginStart } from "../data/store/actions/actions";
+import { login, loginStart } from "../data/store/actions/storeFunctions";
 import { loginApi } from "../data/firebase/apiService";
 
 const Login = () => {

@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { Button, ListGroup } from "react-bootstrap";
 import ClientWorkListItem from "./clientWorksListItem";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import sorting from "./sort";
 import { useParams } from "react-router-dom";
 import NewWork from "./newWork";
+import { deleteWork } from "../data/firebase/apiService";
 
 function ClientAnalyzer() {
+  const dispatch = useDispatch();
   const { clientId } = useParams();
 
   const [showNewWork, setShowNewWork] = useState(false);
@@ -58,8 +60,9 @@ function ClientAnalyzer() {
   const closeNewWork = () => {
     setShowNewWork(false);
   };
-
-  console.log(selectedClient);
+  const handleWorkDelete = (workId) => {
+    dispatch(deleteWork(workId));
+  };
   return (
     <>
       {showNewWork ? (
@@ -130,7 +133,7 @@ function ClientAnalyzer() {
               <Button variant="primary" onClick={() => requestSort("Date")}>
                 Date
               </Button>
-              <Button variant="primary" onClick={() => requestSort("Status")}>
+              <Button variant="primary" onClick={() => requestSort("status")}>
                 Status
               </Button>
               <Button variant="primary" onClick={() => requestSort("Price")}>
