@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { login, loginStart } from "../data/store/actions/storeFunctions";
-import { loginApi } from "../data/firebase/apiService";
+import loginApi from "../data/api/authApi";
 
 const Login = () => {
   const [username, setUsername] = useState("");

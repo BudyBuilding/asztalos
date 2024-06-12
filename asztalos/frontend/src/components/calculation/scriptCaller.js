@@ -3,7 +3,7 @@ import { Container, Form, Button } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
 import Item from "../reusable/item";
-import { getScripts } from "../data/firebase/apiService";
+import { getScripts } from "../data/api/apiService";
 
 export default function ScriptCaller({ newObject }) {
   const dispatch = useDispatch();

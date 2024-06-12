@@ -7,7 +7,7 @@ import {
   addScript,
   addWork,
   getAllWorks,
-} from "../../data/firebase/apiService";
+} from "../../data/api/apiService";
 import store from "../../data/store/store";
 
 const objects = [

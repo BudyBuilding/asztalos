@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { getClientFromStore, updateClient } from "../data/firebase/apiService";
+import { getClientFromStore, updateClient } from "../data/api/apiService";
 
 const ClientUpdateModal = ({ handleClose, clientId }) => {
   const dispatch = useDispatch();

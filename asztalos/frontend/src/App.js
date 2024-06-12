@@ -13,7 +13,8 @@ import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
 import ModelViewer from "./components/model/ModelViewer";
 import { manage } from "./components/reusable/managers/storeManager";
-import { checkToken } from "./components/data/firebase/apiService";
+
+import checkTokenApi from "./components/data/api/authApi";
 
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
@@ -25,8 +26,8 @@ function App() {
     // Ellenőrizzük a localStorage-ban lévő rememberToken-t
     const rememberToken = localStorage.getItem("rememberToken");
     if (rememberToken) {
-      // Ha van rememberToken, hívjuk meg a checkToken függvényt
-      checkToken(rememberToken).then((isValid) => {
+      // Ha van rememberToken, hívjuk meg a checkTokenApi függvényt
+      checkTokenApi(rememberToken).then((isValid) => {
         if (isValid) {
           navigate("/dashboard");
         }
