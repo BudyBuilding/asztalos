@@ -1,8 +1,7 @@
 //reducers.js
 import { combineReducers } from "redux";
 import worksReducer from "../actions/workStoreFunctions";
-import clientsReducer from "../actions/clientStoreFunctions";
-import selectedClientReducer from "../actions/clientStoreFunctions";
+import { clientsReducer } from "../actions/clientStoreFunctions";
 import authReducer from "../actions/authStoreFunctions";
 import objectReducer from "../actions/objectStoreFunctions";
 import selectedObjectReducer from "../actions/objectStoreFunctions";
@@ -45,7 +44,6 @@ const reducers = combineReducers({
   clients: clientsReducer,
   works: worksReducer,
   auth: authReducer,
-  selectedClient: selectedClientReducer,
   colors: colorReducer,
   scripts: scriptReducer,
   selectedObject: selectedObjectReducer,

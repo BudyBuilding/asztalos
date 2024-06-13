@@ -20,7 +20,7 @@ import {
   modifyClientSuccess,
 } from "../store/actions/storeFunctions"; // Frissítsd az elérési utat, ha szükséges
 
-const amazonDNS = "ec2-100-27-218-52.compute-1.amazonaws.com";
+const amazonDNS = "ec2-3-92-4-65.compute-1.amazonaws.com";
 
 const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
 

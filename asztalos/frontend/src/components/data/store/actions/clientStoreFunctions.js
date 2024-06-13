@@ -1,4 +1,5 @@
-// clientStoreFunctions.js;
+// clientStoreFunctions.js
+
 ///////////
 // Actions
 export const addClient = (client) => ({
@@ -6,8 +7,18 @@ export const addClient = (client) => ({
   payload: client,
 });
 
-export const modifyClient = (modifiedClient) => ({
-  type: "MODIFY_CLIENT",
+export const loadClients = (clients) => ({
+  type: "LOAD_CLIENT",
+  payload: clients,
+});
+
+export const addMoreClients = (clients) => ({
+  type: "ADD_MORE_CLIENTS",
+  payload: clients,
+});
+
+export const updateClient = (modifiedClient) => ({
+  type: "UPDATE_CLIENT",
   payload: modifiedClient,
 });
 
@@ -25,14 +36,18 @@ export const deleteClient = (clientId) => ({
 // Initialstate
 const initialState = {
   clients: [],
+  selectedClient: null,
 };
 
 ///////////
 // Reducers
-const clientsReducer = (state = initialState.clients, action) => {
+export const clientsReducer = (state = initialState.clients, action) => {
   switch (action.type) {
     case "GET_CLIENTS":
       return action.payload;
+    case "LOAD_CLIENTS":
+      console.log("loading clients from store");
+      return action.payload; // Assuming action.payload is an array of clients
     case "ADD_CLIENT":
       if (
         !state.some((client) => client.clientId === action.payload.clientId)
@@ -40,7 +55,15 @@ const clientsReducer = (state = initialState.clients, action) => {
         return [...state, action.payload];
       }
       return state;
-    case "MODIFY_CLIENT":
+    case "ADD_MORE_CLIENTS":
+      const newClients = action.payload.filter(
+        (client) =>
+          !state.some(
+            (existingClient) => existingClient.clientId === client.clientId
+          )
+      );
+      return [...state, ...newClients];
+    case "UPDATE_CLIENT":
       return state.map((client) =>
         client.clientId === action.payload.clientId ? action.payload : client
       );
@@ -51,7 +74,10 @@ const clientsReducer = (state = initialState.clients, action) => {
   }
 };
 
-const selectedClientReducer = (state = null, action) => {
+export const selectedClientReducer = (
+  state = initialState.selectedClient,
+  action
+) => {
   switch (action.type) {
     case "SELECT_CLIENT":
       return action.payload;
@@ -59,8 +85,6 @@ const selectedClientReducer = (state = null, action) => {
       return state;
   }
 };
-
-export default { clientsReducer, selectedClientReducer };
 
 ///////////
 // Getters
