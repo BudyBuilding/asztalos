@@ -44,7 +44,7 @@ const checkTokenApi = async (token) => {
 
     console.log("Token check response:", response);
     if (response.status === 200) {
-      const { token, user } = response.data;
+      const { user } = response.data;
       localStorage.setItem("userToken", token);
 
       store.dispatch(loginSuccess(user));

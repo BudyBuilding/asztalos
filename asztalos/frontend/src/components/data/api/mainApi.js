@@ -1,7 +1,8 @@
 // mainApi.js
 import axios from "axios";
 
-const BASE_URL = "http://ec2-100-27-218-52.compute-1.amazonaws.com:9000"; // Az API alapértelmezett URL-je
+const aws = "ec2-3-92-4-65.compute-1.amazonaws.com";
+const BASE_URL = `http://${aws}:9000`; // Az API alapértelmezett URL-je
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,

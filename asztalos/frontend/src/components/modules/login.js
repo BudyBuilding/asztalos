@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { login, loginStart } from "../data/store/actions/storeFunctions";
-import loginApi from "../data/api/authApi";
+import authApi from "../data/api/authApi";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -12,8 +12,7 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
-    dispatch(login({ username, password }));
+    authApi.loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
   };
 
   const handleRememberMe = () => {

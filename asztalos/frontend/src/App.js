@@ -12,31 +12,25 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import NewWork from "./components/reusable/newWork";
 import ColorSelector from "./components/reusable/colorSelector";
 import ModelViewer from "./components/model/ModelViewer";
-import { manage } from "./components/reusable/managers/storeManager";
+import { fetchAll } from "./components/reusable/managers/storeManager";
 
-import checkTokenApi from "./components/data/api/authApi";
+import authApi from "./components/data/api/authApi";
 
 function App() {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const navigate = useNavigate();
 
   useEffect(() => {
-    manage();
-
     // Ellenőrizzük a localStorage-ban lévő rememberToken-t
     const rememberToken = localStorage.getItem("rememberToken");
     if (rememberToken) {
-      // Ha van rememberToken, hívjuk meg a checkTokenApi függvényt
-      checkTokenApi(rememberToken).then((isValid) => {
-        if (isValid) {
-          navigate("/dashboard");
-        }
-      });
+      authApi.checkTokenApi(rememberToken);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     if (isLoggedIn) {
+      fetchAll();
       navigate("/dashboard");
     } else {
       navigate("/login");

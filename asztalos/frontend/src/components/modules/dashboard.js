@@ -13,7 +13,7 @@ import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
 
-import logoutApi from "../data/api/authApi";
+import authApi from "../data/api/authApi";
 
 import {
   getClients,
@@ -42,26 +42,17 @@ function Dashboard({ onSelectClient }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchData() {
-      // const worksData = await dispatch(getAllWorks());
-      // const clientsData = await dispatch(getClients());
-      const worksData = dispatch(getClients());
-      const clientsData = await dispatch(getClients());
-      setWorks(worksData);
-      setClients(clientsData);
-      setLoading(false);
-    }
-    fetchData();
-  }, [
-    dispatch,
-    showDeleteConfirmation,
-    showClientUpdateModal,
-    showNewClient,
-    render,
-  ]);
+    setClients(loadClients());
+  }, [render]);
+
+  function loadClients() {
+    setLoading(false);
+    return store.getState().clients;
+  }
 
   store.subscribe(() => {
-    //console.log("State changed:", store.getState());
+    console.log("State changed:", store.getState());
+    setRender(!render);
   });
 
   const handleSelectClient = async (clientId) => {
@@ -105,7 +96,7 @@ function Dashboard({ onSelectClient }) {
   };
 
   const handleLogout = () => {
-    logoutApi();
+    authApi.logoutApi();
   };
 
   const handleModifyClient = (event, clientId) => {
