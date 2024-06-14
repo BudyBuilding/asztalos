@@ -1,28 +1,49 @@
-import React, { useState, useMemo } from "react";
-import { Button, ListGroup } from "react-bootstrap";
-import ClientWorkListItem from "./clientWorksListItem";
+import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import sorting from "./sort";
+import store from "../data/store/store";
 import { useParams } from "react-router-dom";
-import NewWork from "./newWork";
-import { deleteWork } from "../data/api/apiService";
 
+import { Button, ListGroup } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
+
+import ClientWorkListItem from "./clientWorksListItem";
+import NewWork from "./newWork";
+import ClientUpdateModal from "./ClientUpdateModal";
+
+import sorting from "./sort";
+import { deleteWork } from "../data/api/apiService";
+import clientApi from "../data/api/clientApi";
+import { getClientById } from "../data/getters";
 function ClientAnalyzer() {
   const dispatch = useDispatch();
   const { clientId } = useParams();
 
   const [showNewWork, setShowNewWork] = useState(false);
-
+  const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(
+    dispatch(getClientById(clientId))
+  );
+  const [render, setRender] = useState(true);
   const allWorks = useSelector((state) => state.works);
-  const allClients = useSelector((state) => state.clients);
   const memoizedWorks = useMemo(
     () => allWorks.filter((work) => work.client.clientId == clientId),
     [allWorks, clientId]
   );
-  const selectedClient = useMemo(
-    () => allClients.find((c) => c.clientId == clientId),
-    [allClients, clientId]
-  );
+
+  useEffect(() => {
+    load();
+  }, [render]);
+
+  async function load() {
+    setSelectedClient(await dispatch(getClientById(clientId)));
+  }
+
+  function rerender() {
+    setRender(!render);
+  }
+
+  console.log(dispatch(getClientById(clientId)));
+  console.log(clientId);
 
   const totalWorks = memoizedWorks.length;
   const activeWorks = memoizedWorks.filter(
@@ -32,7 +53,6 @@ function ClientAnalyzer() {
     (acc, work) => acc + (work.price - work.paid),
     0
   );
-  //
 
   const [sortConfig, setSortConfig] = useState({
     key: null,
@@ -63,6 +83,19 @@ function ClientAnalyzer() {
   const handleWorkDelete = (workId) => {
     dispatch(deleteWork(workId));
   };
+
+  const handleClientUpdateClose = () => {
+    setShowClientUpdateModal(false);
+  };
+
+  const handleClientUpdate = async (updatedClientData) => {
+    await dispatch(
+      clientApi.updateClientApi(selectedClient.clientId, updatedClientData)
+    );
+    setShowClientUpdateModal(false);
+    rerender();
+  };
+
   return (
     <>
       {showNewWork ? (
@@ -72,6 +105,18 @@ function ClientAnalyzer() {
         />
       ) : (
         <>
+          <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>Update Client</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <ClientUpdateModal
+                handleClose={handleClientUpdateClose}
+                clientId={selectedClient.clientId}
+                onUpdate={handleClientUpdate}
+              />
+            </Modal.Body>
+          </Modal>
           <div className="container d-xl-block">
             <div className="fs-3  text-start d-flex justify-content-between">
               <div>
@@ -79,7 +124,16 @@ function ClientAnalyzer() {
                 &nbsp; works
               </div>
               <div>
-                <Button>Edit Client</Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowClientUpdateModal(true)}
+                  style={{
+                    border: "1px solid #007bff",
+                    marginLeft: "0.5rem",
+                  }}
+                >
+                  Edit Client
+                </Button>
               </div>
             </div>
           </div>

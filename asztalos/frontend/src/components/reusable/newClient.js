@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { addClient } from "../data/api/apiService"; // Az addClient függvény importálása az apiService-ből
+import clientApi from "../data/api/clientApi";
 
 function NewClient({ onClose }) {
   const [clientName, setClientName] = useState("");
@@ -32,11 +33,8 @@ function NewClient({ onClose }) {
     };
 
     try {
-      await dispatch(addClient(newClientData)); // A kliens hozzáadása az új adatokkal
-
-      setClientName("");
-      setClientTel("");
-      setClientAddress("");
+      console.log("creating new client");
+      dispatch(clientApi.createClientApi(newClientData));
       onClose(); // A modális ablak bezárása
     } catch (error) {
       console.error("Error while adding client:", error);

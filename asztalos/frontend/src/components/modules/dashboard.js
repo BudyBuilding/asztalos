@@ -7,27 +7,22 @@ import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
 import DashboardListItem from "../reusable/dashboardListItem";
-import { selectClient } from "../data/store/actions/storeFunctions";
 import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
-
-import authApi from "../data/api/authApi";
-
 import {
-  getClients,
-  getAllWorks,
-  getClientFromStore,
-  deleteClient,
-  updateClient,
-  deleteWork,
-} from "../data/api/apiService";
+  loadClientById,
+  selectClient,
+} from "../data/store/actions/clientStoreFunctions";
+import authApi from "../data/api/authApi";
+import clientApi from "../data/api/clientApi";
+import { deleteWork } from "../data/api/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
 
-function Dashboard({ onSelectClient }) {
+function Dashboard() {
   const dispatch = useDispatch();
 
   const [works, setWorks] = useState([]);
@@ -50,6 +45,10 @@ function Dashboard({ onSelectClient }) {
     return store.getState().clients;
   }
 
+  function rendering() {
+    setRender(!render);
+  }
+
   store.subscribe(() => {
     console.log("State changed:", store.getState());
     setRender(!render);
@@ -58,9 +57,7 @@ function Dashboard({ onSelectClient }) {
   const handleSelectClient = async (clientId) => {
     setLoading(true);
     try {
-      const clientData = await dispatch(getClientFromStore(clientId));
       dispatch(selectClient(clientId));
-      console.log({ clientId });
       navigate(`/clientAnalyzer/${clientId}`);
       setLoading(false);
     } catch (error) {
@@ -114,14 +111,11 @@ function Dashboard({ onSelectClient }) {
 
   const handleClientUpdate = async (updatedClientData) => {
     console.log("Updating client:", clientIdToModify, updatedClientData);
-    await dispatch(updateClient(clientIdToModify, updatedClientData));
-    const updatedClients = clients.map((client) =>
-      client.clientId === clientIdToModify
-        ? { ...client, ...updatedClientData }
-        : client
+    await dispatch(
+      clientApi.updateClientApi(clientIdToModify, updatedClientData)
     );
-    setClients(updatedClients);
     setShowClientUpdateModal(false);
+    rendering();
   };
 
   const handleDeleteClient = (event, clientId) => {
@@ -132,8 +126,9 @@ function Dashboard({ onSelectClient }) {
   };
 
   const handleConfirmDelete = async () => {
-    await dispatch(deleteClient(clientIdToDelete));
+    await dispatch(clientApi.deleteClientApi(clientIdToDelete));
     setShowDeleteConfirmation(false);
+    rendering();
   };
 
   const handleCancelDelete = () => {
@@ -141,7 +136,7 @@ function Dashboard({ onSelectClient }) {
   };
   const handleDeleteWork = (workId) => {
     dispatch(deleteWork(workId));
-    setRender(!render);
+    rendering();
   };
 
   return (
@@ -207,55 +202,56 @@ function Dashboard({ onSelectClient }) {
           <Loading />
         ) : (
           <div className="d-flex flex-nowrap overflow-x-scroll">
-            {clients.map((client) => (
-              <div
-                key={client.clientId}
-                className="p-3 border rounded"
-                style={{ minWidth: "200px", margin: "10px" }}
-                onClick={() => handleSelectClient(client.clientId)}
-              >
-                <p className="fw-bold">{client.name}</p>
-                <p>Tel: {client.telephone}</p>
-                <p>Address: {client.address}</p>
-                <div className="d-flex">
-                  <p className="fs-xs">Id: {client.clientId}</p>
-                  <Button
-                    variant="primary"
-                    onClick={(event) =>
-                      handleModifyClient(event, client.clientId)
-                    }
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #007bff",
-                      borderRadius: "40%",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    <IonIcon
-                      icon={pencil}
-                      style={{ fontSize: "20px", color: "#007bff" }}
-                    />
-                  </Button>
-                  <Button
-                    variant="danger"
-                    onClick={(event) =>
-                      handleDeleteClient(event, client.clientId)
-                    }
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #dc3545",
-                      borderRadius: "40%",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    <IonIcon
-                      icon={trash}
-                      style={{ fontSize: "20px", color: "#dc3545" }}
-                    />
-                  </Button>
+            {clients &&
+              clients.map((client) => (
+                <div
+                  key={client.clientId}
+                  className="p-3 border rounded"
+                  style={{ minWidth: "200px", margin: "10px" }}
+                  onClick={() => handleSelectClient(client.clientId)}
+                >
+                  <p className="fw-bold">{client.name}</p>
+                  <p>Tel: {client.telephone}</p>
+                  <p>Address: {client.address}</p>
+                  <div className="d-flex">
+                    <p className="fs-xs">Id: {client.clientId}</p>
+                    <Button
+                      variant="primary"
+                      onClick={(event) =>
+                        handleModifyClient(event, client.clientId)
+                      }
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #007bff",
+                        borderRadius: "40%",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      <IonIcon
+                        icon={pencil}
+                        style={{ fontSize: "20px", color: "#007bff" }}
+                      />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={(event) =>
+                        handleDeleteClient(event, client.clientId)
+                      }
+                      style={{
+                        background: "transparent",
+                        border: "1px solid #dc3545",
+                        borderRadius: "40%",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      <IonIcon
+                        icon={trash}
+                        style={{ fontSize: "20px", color: "#dc3545" }}
+                      />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         )}
       </Container>
