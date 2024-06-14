@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { getClientFromStore, updateClient } from "../data/api/apiService";
-
-const ClientUpdateModal = ({ handleClose, clientId }) => {
+import { getClientById } from "../data/getters";
+const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
   const dispatch = useDispatch();
   const [clientData, setClientData] = useState(null);
   const [updatedClientData, setUpdatedClientData] = useState({
@@ -14,7 +13,7 @@ const ClientUpdateModal = ({ handleClose, clientId }) => {
 
   useEffect(() => {
     async function fetchClientData() {
-      const data = await dispatch(getClientFromStore(clientId));
+      const data = await dispatch(getClientById(clientId));
       console.log(data);
       setClientData(data);
       setUpdatedClientData({
@@ -33,7 +32,14 @@ const ClientUpdateModal = ({ handleClose, clientId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await dispatch(updateClient(clientId, updatedClientData));
+    const updatedClient = {
+      ...clientData,
+      name: updatedClientData.name,
+      telephone: updatedClientData.telephone,
+      address: updatedClientData.address,
+    };
+    console.log(updatedClient);
+    onUpdate(updatedClient);
     handleClose();
   };
 
@@ -54,7 +60,7 @@ const ClientUpdateModal = ({ handleClose, clientId }) => {
               type="text"
               placeholder="Enter client name"
               name="name"
-              value={updatedClientData.name}
+              value={updatedClientData.name ? updatedClientData.name : " "}
               onChange={handleChange}
             />
           </Form.Group>
@@ -64,7 +70,9 @@ const ClientUpdateModal = ({ handleClose, clientId }) => {
               type="tel"
               placeholder="Enter client telephone"
               name="telephone"
-              value={updatedClientData.telephone}
+              value={
+                updatedClientData.telephone ? updatedClientData.telephone : " "
+              }
               onChange={handleChange}
             />
           </Form.Group>
@@ -74,7 +82,9 @@ const ClientUpdateModal = ({ handleClose, clientId }) => {
               type="text"
               placeholder="Enter client address"
               name="address"
-              value={updatedClientData.address}
+              value={
+                updatedClientData.address ? updatedClientData.address : " "
+              }
               onChange={handleChange}
             />
           </Form.Group>

@@ -12,6 +12,11 @@ export const loadClients = (clients) => ({
   payload: clients,
 });
 
+export const loadClientById = (clientId) => ({
+  type: "LOAD_CLIENT_BY_ID",
+  payload: clientId,
+});
+
 export const addMoreClients = (clients) => ({
   type: "ADD_MORE_CLIENTS",
   payload: clients,
@@ -43,11 +48,14 @@ const initialState = {
 // Reducers
 export const clientsReducer = (state = initialState.clients, action) => {
   switch (action.type) {
-    case "GET_CLIENTS":
-      return action.payload;
     case "LOAD_CLIENTS":
       console.log("loading clients from store");
       return action.payload; // Assuming action.payload is an array of clients
+    case "LOAD_CLIENT_BY_ID":
+      const client = state.find((client) => client.clientId === action.payload);
+      return {
+        client,
+      };
     case "ADD_CLIENT":
       if (
         !state.some((client) => client.clientId === action.payload.clientId)
@@ -64,9 +72,15 @@ export const clientsReducer = (state = initialState.clients, action) => {
       );
       return [...state, ...newClients];
     case "UPDATE_CLIENT":
-      return state.map((client) =>
-        client.clientId === action.payload.clientId ? action.payload : client
-      );
+      console.log("updation a client wtih: ", action.payload);
+      return state.map((client) => {
+        if (client.clientId === action.payload.clientId) {
+          console.log("bingo");
+        }
+        client =
+          client.clientId === action.payload.clientId ? action.payload : client;
+        return client;
+      });
     case "DELETE_CLIENT":
       return state.filter((client) => client.clientId !== action.payload);
     default:

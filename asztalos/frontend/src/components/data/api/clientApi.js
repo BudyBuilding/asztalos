@@ -1,10 +1,15 @@
 // clientApi.js
 import axiosInstance from "./mainApi";
 import store from "../store/store"; // Redux store importálása
-import { addMoreClients } from "../store/actions/clientStoreFunctions";
+import {
+  addClient,
+  addMoreClients,
+  deleteClient,
+  updateClient,
+} from "../store/actions/clientStoreFunctions";
 import { useDispatch } from "react-redux";
 
-const getAllClients = async () => {
+const getAllClientsApi = async () => {
   try {
     const response = await axiosInstance.get("/clients");
     console.log("Loading clients from server response: ", response);
@@ -19,13 +24,13 @@ const getAllClients = async () => {
 };
 
 // Delete a client
-const deleteClient = (clientId) => {
+const deleteClientApi = (clientId) => {
   return async (dispatch) => {
     try {
       console.log(clientId);
       await axiosInstance.delete(`/clients/${clientId}`);
       console.log("Client deleted successfully.");
-      //     dispatch(deleteClientSuccess(clientId));
+      dispatch(deleteClient(clientId));
     } catch (error) {
       console.error("Error while deleting client:", error);
       throw error;
@@ -34,26 +39,26 @@ const deleteClient = (clientId) => {
 };
 ////////////////////
 // Updating section
-const updateClient = (clientId, updatedClientData) => {
+const updateClientApi = (clientId, updatedClientData) => {
   return async (dispatch) => {
     try {
       await axiosInstance.put(`/clients/${clientId}`, updatedClientData);
-      //dispatch(modifyClientSuccess(updatedClientData));
+      dispatch(updateClient(updatedClientData));
     } catch (error) {
       console.error("Error while updating client:", error);
       throw error;
     }
   };
 };
-const addClient = (clientData) => {
+
+const createClientApi = (clientData) => {
   return async (dispatch) => {
     try {
+      console.log("creating new client");
       const response = await axiosInstance.post(`/clients`, clientData);
-      console.log("Client added successfully:", response.data);
+      console.log("Client added successfully:", response);
 
-      // Frissítjük a kliensek állapotát a frissen hozzáadott klienssel
-      //   dispatch(getClientsSuccess([...store.getState().clients, response.data]));
-
+      dispatch(addClient(response.data));
       return response.data;
     } catch (error) {
       console.error("Error while adding client:", error);
@@ -62,7 +67,7 @@ const addClient = (clientData) => {
   };
 };
 
-const getClientOfUserAdmin = (clientId) => {
+const getClientOfUserAdminApi = (clientId) => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
     try {
@@ -77,9 +82,9 @@ const getClientOfUserAdmin = (clientId) => {
 };
 
 export default {
-  getAllClients,
-  deleteClient,
-  updateClient,
-  addClient,
-  getClientOfUserAdmin,
+  getAllClientsApi,
+  deleteClientApi,
+  updateClientApi,
+  createClientApi,
+  getClientOfUserAdminApi,
 };
