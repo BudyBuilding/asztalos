@@ -4,6 +4,9 @@ import { IonIcon } from "@ionic/react";
 import { trash } from "ionicons/icons";
 
 function ClientWorkListItem({ work, onDelete }) {
+  function handleDelete() {
+    onDelete(work.workId);
+  }
   return (
     <ListGroup.Item>
       <div className="d-flex w-100 mb-2 justify-content-between">
@@ -23,6 +26,7 @@ function ClientWorkListItem({ work, onDelete }) {
           <IonIcon
             icon={trash}
             style={{ fontSize: "20px", color: "#dc3545" }}
+            onClick={handleDelete}
           />
         </span>
       </div>

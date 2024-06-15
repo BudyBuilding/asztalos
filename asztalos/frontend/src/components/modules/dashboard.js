@@ -17,10 +17,12 @@ import {
 } from "../data/store/actions/clientStoreFunctions";
 import authApi from "../data/api/authApi";
 import clientApi from "../data/api/clientApi";
+import workApi from "../data/api/workApi";
 import { deleteWork } from "../data/api/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
+import { getAllClients, getAllWorks } from "../data/getters";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -38,11 +40,17 @@ function Dashboard() {
 
   useEffect(() => {
     setClients(loadClients());
+    setWorks(loadWorks());
   }, [render]);
 
   function loadClients() {
     setLoading(false);
-    return store.getState().clients;
+    return getAllClients();
+  }
+
+  function loadWorks() {
+    setLoading(false);
+    return getAllWorks();
   }
 
   function rendering() {
@@ -134,8 +142,8 @@ function Dashboard() {
   const handleCancelDelete = () => {
     setShowDeleteConfirmation(false);
   };
-  const handleDeleteWork = (workId) => {
-    dispatch(deleteWork(workId));
+  const handleDeleteWork = async (workId) => {
+    await dispatch(workApi.deleteWorkApi(workId));
     rendering();
   };
 
