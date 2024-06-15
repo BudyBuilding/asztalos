@@ -13,6 +13,7 @@ import ClientUpdateModal from "./ClientUpdateModal";
 import sorting from "./sort";
 import { deleteWork } from "../data/api/apiService";
 import clientApi from "../data/api/clientApi";
+import workApi from "../data/api/workApi";
 import { getClientById } from "../data/getters";
 function ClientAnalyzer() {
   const dispatch = useDispatch();
@@ -80,8 +81,9 @@ function ClientAnalyzer() {
   const closeNewWork = () => {
     setShowNewWork(false);
   };
-  const handleWorkDelete = (workId) => {
-    dispatch(deleteWork(workId));
+  const handleWorkDelete = async (workId) => {
+    await dispatch(workApi.deleteWorkApi(workId));
+    rerender();
   };
 
   const handleClientUpdateClose = () => {
@@ -202,7 +204,11 @@ function ClientAnalyzer() {
                 <p>There is no work yet.</p>
               ) : (
                 memoizedWorks.map((work) => (
-                  <ClientWorkListItem key={work.workId} work={work} />
+                  <ClientWorkListItem
+                    key={work.workId}
+                    work={work}
+                    onDelete={handleWorkDelete}
+                  />
                 ))
               )}
             </ListGroup>
