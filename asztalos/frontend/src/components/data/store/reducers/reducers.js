@@ -13,6 +13,7 @@ import objectReducer from "../actions/objectStoreFunctions";
 import selectedObjectReducer from "../actions/objectStoreFunctions";
 import colorReducer from "../actions/colorStoreFunctions";
 import scriptReducer from "../actions/scriptStoreFunctions";
+import { tablesReducer } from "../actions/tableStoreFunctions";
 
 const initialState = {
   colors: {
@@ -26,6 +27,7 @@ const initialState = {
   objects: [],
   clients: [],
   works: [],
+  tables: [],
   selectedWork: null,
   selectClient: null,
 };
@@ -60,6 +62,7 @@ const reducers = combineReducers({
   settings: settingsReducer,
   items: itemsReducer,
   objects: objectReducer,
+  tables: tablesReducer,
 });
 
 export default reducers;

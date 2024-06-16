@@ -31,3 +31,19 @@ export const getAllWorks = () => {
     return works;
   };
 };
+////////////////
+//table
+export const getTableById = (tableId) => {
+  return (dispatch) => {
+    const tables = store.getState().tables;
+    const table = tables.find((table) => table.tableId == tableId);
+    return table;
+  };
+};
+
+export const getAllTables = () => {
+  return (dispatch) => {
+    const tables = store.getState().tables;
+    return tables;
+  };
+};

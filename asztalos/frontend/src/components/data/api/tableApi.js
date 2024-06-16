@@ -10,7 +10,7 @@ import {
 import { useDispatch } from "react-redux";
 
 //////////////////////////
-const getAlltablesApi = async () => {
+const getAllTablesApi = async () => {
   try {
     const response = await axiosInstance.get("/tables");
     console.log("Loading tables from server response: ", response);
@@ -44,7 +44,7 @@ const getAllTableOfWorkApi = async (workId) => {
 };
 
 // Delete a table
-const deletetableApi = (tableId) => {
+const deleteTableApi = (tableId) => {
   return async (dispatch) => {
     try {
       console.log(tableId);
@@ -59,7 +59,7 @@ const deletetableApi = (tableId) => {
 };
 ////////////////////
 // Updating section
-const updatetableApi = (tableId, updatedtableData) => {
+const updateTableApi = (tableId, updatedtableData) => {
   return async (dispatch) => {
     try {
       await axiosInstance.put(`/tables/${tableId}`, updatedtableData);
@@ -71,7 +71,7 @@ const updatetableApi = (tableId, updatedtableData) => {
   };
 };
 
-const createtableApi = (tableData) => {
+const createTableApi = (tableData) => {
   return async (dispatch) => {
     try {
       console.log("creating new table");
@@ -87,7 +87,7 @@ const createtableApi = (tableData) => {
   };
 };
 
-const gettableOfUserAdminApi = (tableId) => {
+const getTableOfUserAdminApi = (tableId) => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
     try {
@@ -102,10 +102,10 @@ const gettableOfUserAdminApi = (tableId) => {
 };
 
 export default {
-  getAlltablesApi,
-  deletetableApi,
-  updatetableApi,
-  createtableApi,
-  gettableOfUserAdminApi,
+  getAllTablesApi,
+  deleteTableApi,
+  updateTableApi,
+  createTableApi,
+  getTableOfUserAdminApi,
   getAllTableOfWorkApi,
 };

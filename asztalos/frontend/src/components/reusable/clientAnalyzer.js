@@ -15,8 +15,13 @@ import { deleteWork } from "../data/api/apiService";
 import clientApi from "../data/api/clientApi";
 import workApi from "../data/api/workApi";
 import { getClientById } from "../data/getters";
+import { selectWork } from "../data/store/actions/workStoreFunctions";
+import { fetchTables } from "./managers/storeManager";
+import { useNavigate } from "react-router-dom";
 function ClientAnalyzer() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const { clientId } = useParams();
 
   const [showNewWork, setShowNewWork] = useState(false);
@@ -25,6 +30,7 @@ function ClientAnalyzer() {
     dispatch(getClientById(clientId))
   );
   const [render, setRender] = useState(true);
+  const [loading, setLoading] = useState(true);
   const allWorks = useSelector((state) => state.works);
   const memoizedWorks = useMemo(
     () => allWorks.filter((work) => work.client.clientId == clientId),
@@ -96,6 +102,19 @@ function ClientAnalyzer() {
     );
     setShowClientUpdateModal(false);
     rerender();
+  };
+
+  const handleSelectWork = async (workId) => {
+    setLoading(true);
+    try {
+      dispatch(selectWork(workId));
+      fetchTables(workId);
+      navigate(`/workAnalyzer/${workId}`);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error while selecting work:", error);
+      setLoading(false);
+    }
   };
 
   return (
@@ -208,6 +227,7 @@ function ClientAnalyzer() {
                     key={work.workId}
                     work={work}
                     onDelete={handleWorkDelete}
+                    onClick={handleSelectWork}
                   />
                 ))
               )}

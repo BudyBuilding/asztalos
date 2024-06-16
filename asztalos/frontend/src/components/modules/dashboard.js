@@ -11,10 +11,8 @@ import ClientAnalyzer from "../reusable/clientAnalyzer";
 import NewClient from "../reusable/newClient";
 import sorting from "../reusable/sort";
 import { useNavigate } from "react-router-dom";
-import {
-  loadClientById,
-  selectClient,
-} from "../data/store/actions/clientStoreFunctions";
+import { selectClient } from "../data/store/actions/clientStoreFunctions";
+import { selectWork } from "../data/store/actions/workStoreFunctions";
 import authApi from "../data/api/authApi";
 import clientApi from "../data/api/clientApi";
 import workApi from "../data/api/workApi";
@@ -23,6 +21,7 @@ import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
 import { getAllClients, getAllWorks } from "../data/getters";
+import { fetchTables } from "../reusable/managers/storeManager";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -58,7 +57,7 @@ function Dashboard() {
   }
 
   store.subscribe(() => {
-    console.log("State changed:", store.getState());
+    // console.log("State changed:", store.getState());
     setRender(!render);
   });
 
@@ -70,6 +69,19 @@ function Dashboard() {
       setLoading(false);
     } catch (error) {
       console.error("Error while selecting client:", error);
+      setLoading(false);
+    }
+  };
+
+  const handleSelectWork = async (workId) => {
+    setLoading(true);
+    try {
+      dispatch(selectWork(workId));
+      fetchTables(workId);
+      navigate(`/workAnalyzer/${workId}`);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error while selecting work:", error);
       setLoading(false);
     }
   };
@@ -302,6 +314,7 @@ function Dashboard() {
               key={work.workId}
               work={work}
               onDelete={handleDeleteWork}
+              onClick={handleSelectWork}
             />
           ))}
         </ListGroup>

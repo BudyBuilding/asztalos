@@ -3,10 +3,13 @@ import ListGroup from "react-bootstrap/ListGroup";
 import { IonIcon } from "@ionic/react";
 import { trash } from "ionicons/icons";
 
-function DashboardListItem({ work, onDelete }) {
+function DashboardListItem({ work, onDelete, onClick }) {
   return (
     <ListGroup.Item className="p-0 m-0">
-      <div className="d-flex w-100 m-0 p-3 justify-content-between">
+      <div
+        className="d-flex w-100 m-0 p-3 justify-content-between"
+        onClick={() => onClick(work.workId)}
+      >
         <span className=" text-start w-100" style={{ width: "25%" }}>
           {work.client.name}
         </span>
@@ -25,7 +28,10 @@ function DashboardListItem({ work, onDelete }) {
         <span
           className="mb-1 text-end"
           style={{ width: "20%", cursor: "pointer" }}
-          onClick={() => onDelete(work.workId)}
+          onClick={(event) => {
+            event.preventDefault();
+            onDelete(work.workId);
+          }}
         >
           <IonIcon
             icon={trash}
