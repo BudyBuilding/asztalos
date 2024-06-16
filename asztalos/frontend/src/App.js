@@ -42,6 +42,7 @@ function App() {
       <Routes>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
+        <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
       </Routes>

@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Button, ListGroup, Table } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
+import { getAllTables, getClientById, getWorkById } from "../data/getters";
+import { useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
 
 function WorkAnalyzer() {
   const [files, setFiles] = useState([
@@ -103,13 +106,23 @@ function WorkAnalyzer() {
     { id: 3, name: "PFL", quantity: 2, type: "tables", price: 200 },
     { id: 4, name: "121 FS 01", quantity: 2, type: "tables", price: 658 },
   ]);
+
+  const dispatch = useDispatch();
+  const { workId } = useParams();
+
+  const selectedWork = dispatch(getWorkById(workId));
+  const selectedClient = selectedWork.client;
+
+  const tables = dispatch(getAllTables());
+  const woodsPrice = tables.reduce((sum, table) => sum + table.price, 0); // Összegezd az árakat
+
   return (
     <>
       {/** Top line, name and button */}
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-3 text-start mb-0">
-            <span className="fs-1 fw-bold me-2">Chereju Clau</span>
+            <span className="fs-1 fw-bold me-2">{selectedClient.name}</span>
             <span className="fs-5">client</span>
           </p>
           <Button variant="primary" onClick={() => {}} className="ms-auto">
@@ -124,42 +137,53 @@ function WorkAnalyzer() {
         <div className="row">
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Tel: <span>+40758612749</span>
+              Tel: <span>{selectedClient.telephone}</span>
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Address: <span>Satu Mare, Str. number</span>
+              Address: <span>{selectedClient.address}</span>
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Wood price: <span>1728</span> RON
+              Wood price: <span>{woodsPrice}</span> RON
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Metals price: <span>1061</span> RON
+              Metals price: <span>* Not implemented yet *</span> RON
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Price: <span>2789</span> RON
+              Price: <span>{selectedWork.price}</span> RON
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Payed sum: <span>500</span> RON
+              Label : <span>{selectedWork.label}</span> RON
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Still has to pay: <span>2289</span> RON
+              Payed sum: <span>{selectedWork.paid}</span> RON
             </p>
           </div>
           <div className="col-md-6">
             <p className="fs-5 text-start">
-              Work status: <span>Measured</span>
+              Still has to pay:{" "}
+              <span>{selectedWork.price - selectedWork.paid}</span> RON
+            </p>
+          </div>
+          <div className="col-md-6">
+            <p className="fs-5 text-start">
+              Work status: <span>{selectedWork.status}</span>
+            </p>
+          </div>
+          <div className="col-md-6">
+            <p className="fs-5 text-start">
+              Work id: <span>{selectedWork.workId}</span>
             </p>
           </div>
         </div>
@@ -176,34 +200,34 @@ function WorkAnalyzer() {
             <Table striped bordered hover>
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Color</th>
+                  <th>Name</th>
                   <th>Quantity</th>
                   <th>Type</th>
                   <th>Price</th>
+                  <th>Price per quantity</th>
                 </tr>
               </thead>
               <tbody>
-                {woods.map((wood) => (
-                  <tr key={wood.id}>
-                    <td>{wood.id}</td>
-                    <td>{wood.color}</td>
-                    <td>{wood.quantity}</td>
-                    <td>{wood.type}</td>
-                    <td>{wood.price}</td>
+                {tables.map((table) => (
+                  <tr key={table.id}>
+                    <td>{table.name}</td>
+                    <td>{table.quantity}</td>
+                    <td>{table.type}</td>
+                    <td>{table.price}</td>
+                    <td>{table.priceperQty}</td>
                   </tr>
                 ))}
               </tbody>
             </Table>
             <Row className="justify-content-end">
               <Col xs="auto">
-                <h5>Total Price: 1728</h5>
+                <h5>Total Price: {woodsPrice}</h5>
               </Col>
             </Row>
           </div>
         </div>
-
         {/** Metals */}
+        {/*
         <p className="fs-3 fw-bold text-start">Metal</p>
         <div className="row">
           <div className="table-responsive">
@@ -256,8 +280,8 @@ function WorkAnalyzer() {
             </Row>
           </div>
         </div>
+      */}
       </div>
-
       {/** Model */}
       <div className="container d-xl-block">
         <p className="fs-2 fw-bold text-start">Model</p>

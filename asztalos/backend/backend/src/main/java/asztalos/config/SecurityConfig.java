@@ -44,35 +44,6 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
             .build();
 }
 
-/* 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // CSRF védelem letiltása
-            .cors().and() // CORS engedélyezése
-            .authorizeRequests()
-                .antMatchers("/account/register", "/account/login", "/account/checkToken").permitAll()
-                .anyRequest().authenticated()
-                .and()
-            .oauth2ResourceServer()
-                .jwt().jwtAuthenticationConverter(jwtAuthenticationConverter())
-                .and()
-            .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    }
-
-
-        @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Collections.singletonList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Collections.singletonList("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-*/
 
     @Bean
     public JwtDecoder jwtDecoder() {

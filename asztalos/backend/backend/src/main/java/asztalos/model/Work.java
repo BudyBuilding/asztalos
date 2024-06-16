@@ -35,6 +35,10 @@ public class Work {
     @Column(nullable = false)
     private int price;
 
+    
+    @Column(nullable = false)
+    private double label;
+
     @Column(nullable = false)
     private int paid;
 
@@ -89,6 +93,14 @@ public class Work {
 
     public void setPrice(int price) {
         this.price = price;
+    }
+
+        public double getLabel() {
+        return label;
+    }
+
+    public void setLabel(double label) {
+        this.label = label;
     }
 
     public int getPaid() {
