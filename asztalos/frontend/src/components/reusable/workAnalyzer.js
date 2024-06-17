@@ -8,8 +8,8 @@ import { fetchAll } from "./managers/storeManager";
 import Loading from "./Loading";
 
 function WorkAnalyzer() {
-  const [loading, setLoading] = useState(true);
   const [selectedWork, setSelectedWork] = useState(null);
+  const [loading, setLoading] = useState(selectedWork ? false : true);
   const [selectedClient, setSelectedClient] = useState(null);
   const [tables, setTables] = useState([]);
   const [woodsPrice, setWoodsPrice] = useState(0);

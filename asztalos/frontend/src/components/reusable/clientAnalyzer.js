@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 
 import { Button, ListGroup } from "react-bootstrap";
 import { Modal } from "react-bootstrap";
+import Loading from "./Loading";
 
 import ClientWorkListItem from "./clientWorksListItem";
 import NewWork from "./newWork";
@@ -30,7 +31,7 @@ function ClientAnalyzer() {
     dispatch(getClientById(clientId))
   );
   const [render, setRender] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(selectedClient ? false : true);
   const allWorks = useSelector((state) => state.works);
   const memoizedWorks = useMemo(
     () => allWorks.filter((work) => work.client.clientId == clientId),
@@ -119,128 +120,137 @@ function ClientAnalyzer() {
 
   return (
     <>
-      {}
-      <>
-        {showNewWork ? (
-          <NewWork
-            closeNewWork={closeNewWork}
-            clientId={selectedClient.clientId}
-          />
-        ) : (
-          <>
-            <Modal
-              show={showClientUpdateModal}
-              onHide={handleClientUpdateClose}
-            >
-              <Modal.Header closeButton>
-                <Modal.Title>Update Client</Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                <ClientUpdateModal
-                  handleClose={handleClientUpdateClose}
-                  clientId={selectedClient.clientId}
-                  onUpdate={handleClientUpdate}
-                />
-              </Modal.Body>
-            </Modal>
-            <div className="container d-xl-block">
-              <div className="fs-3  text-start d-flex justify-content-between">
-                <div>
-                  <span className="fs-1 fw-bold">{selectedClient?.name}</span>
-                  &nbsp; works
-                </div>
-                <div>
-                  <Button
-                    variant="primary"
-                    onClick={() => setShowClientUpdateModal(true)}
-                    style={{
-                      border: "1px solid #007bff",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    Edit Client
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="container d-xl-block">
-              <p className="fs-2 fw-bold text-start">Informations</p>
-              <div className="row">
-                <div className="col-md-6">
-                  <p className="fs-5 text-start">
-                    Tel: <span>{selectedClient?.telephone}</span>
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p className="fs-5 text-start">
-                    Address: <span>{selectedClient?.address}</span>
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p className="fs-5 text-start">
-                    All work: <span>{totalWorks}</span>
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p className="fs-5 text-start">
-                    Active work: <span>{activeWorks}</span>
-                  </p>
-                </div>
-                <div className="col-md-6">
-                  <p className="fs-5 text-start">
-                    Still has to pay: <span>{stillToPay}</span> RON
-                  </p>
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          {showNewWork ? (
+            <NewWork
+              closeNewWork={closeNewWork}
+              clientId={selectedClient.clientId}
+            />
+          ) : (
+            <>
+              <Modal
+                show={showClientUpdateModal}
+                onHide={handleClientUpdateClose}
+              >
+                <Modal.Header closeButton>
+                  <Modal.Title>Update Client</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <ClientUpdateModal
+                    handleClose={handleClientUpdateClose}
+                    clientId={selectedClient.clientId}
+                    onUpdate={handleClientUpdate}
+                  />
+                </Modal.Body>
+              </Modal>
+              <div className="container d-xl-block">
+                <div className="fs-3  text-start d-flex justify-content-between">
+                  <div>
+                    <span className="fs-1 fw-bold">{selectedClient?.name}</span>
+                    &nbsp; works
+                  </div>
+                  <div>
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowClientUpdateModal(true)}
+                      style={{
+                        border: "1px solid #007bff",
+                        marginLeft: "0.5rem",
+                      }}
+                    >
+                      Edit Client
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="container d-xl-block">
+                <p className="fs-2 fw-bold text-start">Informations</p>
+                <div className="row">
+                  <div className="col-md-6">
+                    <p className="fs-5 text-start">
+                      Tel: <span>{selectedClient?.telephone}</span>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <p className="fs-5 text-start">
+                      Address: <span>{selectedClient?.address}</span>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <p className="fs-5 text-start">
+                      All work: <span>{totalWorks}</span>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <p className="fs-5 text-start">
+                      Active work: <span>{activeWorks}</span>
+                    </p>
+                  </div>
+                  <div className="col-md-6">
+                    <p className="fs-5 text-start">
+                      Still has to pay: <span>{stillToPay}</span> RON
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-            <div className="container d-xl-block">
-              <div className="d-flex justify-content-between align-items-center">
-                <p className="fs-2 fw-bold text-start">Recent works</p>
-                <div>
+              <div className="container d-xl-block">
+                <div className="d-flex justify-content-between align-items-center">
+                  <p className="fs-2 fw-bold text-start">Recent works</p>
+                  <div>
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        handleNewWorkClick();
+                      }}
+                      className="me-3"
+                    >
+                      New work
+                    </Button>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <Button variant="primary" onClick={() => requestSort("Date")}>
+                    Date
+                  </Button>
                   <Button
                     variant="primary"
-                    onClick={() => {
-                      handleNewWorkClick();
-                    }}
-                    className="me-3"
+                    onClick={() => requestSort("status")}
                   >
-                    New work
+                    Status
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => requestSort("Price")}
+                  >
+                    Price
+                  </Button>
+                  <Button variant="primary" onClick={() => requestSort("Paid")}>
+                    Paid
                   </Button>
                 </div>
+                <ListGroup>
+                  {memoizedWorks.length === 0 ? (
+                    <p>There is no work yet.</p>
+                  ) : (
+                    memoizedWorks.map((work) => (
+                      <ClientWorkListItem
+                        key={work.workId}
+                        work={work}
+                        onDelete={handleWorkDelete}
+                        onClick={handleSelectWork}
+                      />
+                    ))
+                  )}
+                </ListGroup>
               </div>
-              <div className="d-flex justify-content-between mb-2">
-                <Button variant="primary" onClick={() => requestSort("Date")}>
-                  Date
-                </Button>
-                <Button variant="primary" onClick={() => requestSort("status")}>
-                  Status
-                </Button>
-                <Button variant="primary" onClick={() => requestSort("Price")}>
-                  Price
-                </Button>
-                <Button variant="primary" onClick={() => requestSort("Paid")}>
-                  Paid
-                </Button>
-              </div>
-              <ListGroup>
-                {memoizedWorks.length === 0 ? (
-                  <p>There is no work yet.</p>
-                ) : (
-                  memoizedWorks.map((work) => (
-                    <ClientWorkListItem
-                      key={work.workId}
-                      work={work}
-                      onDelete={handleWorkDelete}
-                      onClick={handleSelectWork}
-                    />
-                  ))
-                )}
-              </ListGroup>
-            </div>
-          </>
-        )}
-      </>
+            </>
+          )}
+        </>
+      )}
     </>
   );
 }
