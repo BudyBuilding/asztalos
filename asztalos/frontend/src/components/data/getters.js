@@ -1,4 +1,11 @@
 import store from "./store/store";
+export const getUser = () => {
+  return (dispatch) => {
+    const user = store.getState().user;
+    return user;
+  };
+};
+
 /////////////
 //client
 export const getClientById = (clientId) => {
@@ -13,6 +20,13 @@ export const getAllClients = () => {
   return (dispatch) => {
     const clients = store.getState().clients;
     return clients;
+  };
+};
+
+export const getSelectedClient = () => {
+  return (dispatch) => {
+    const selectedClient = store.getState().selectedClient;
+    return selectedClient;
   };
 };
 ////////////////
@@ -48,22 +62,6 @@ export const getAllTables = () => {
   };
 };
 
-/////////////////
-// object
-export const getSelectedObject = () => {
-  return (dispatch) => {
-    const selectedObject = store.getState().selectedObject;
-    return selectedObject;
-  };
-};
-
-export const getAllObjects = () => {
-  return (dispatch) => {
-    const objects = store.getState().objects;
-    return objects;
-  };
-};
-
 ////////////////
 //script
 export const getScriptById = (scriptId) => {
@@ -78,5 +76,36 @@ export const getAllScripts = () => {
   return (dispatch) => {
     const scripts = store.getState().scripts;
     return scripts;
+  };
+};
+
+export const getSelectedScript = () => {
+  return (dispatch) => {
+    const selectedScript = store.getState().selectedScript;
+    return selectedScript;
+  };
+};
+
+////////////////
+//object
+export const getObjectById = (objectId) => {
+  return (dispatch) => {
+    const objects = store.getState().objects;
+    const object = objects.find((object) => object.objectId == objectId);
+    return object;
+  };
+};
+
+export const getAllObjects = () => {
+  return (dispatch) => {
+    const objects = store.getState().objects;
+    return objects;
+  };
+};
+
+export const getSelectedObject = () => {
+  return (dispatch) => {
+    const selectedObject = store.getState().selectedObject;
+    return selectedObject;
   };
 };
