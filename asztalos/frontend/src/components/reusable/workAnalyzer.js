@@ -4,7 +4,7 @@ import { Row, Col } from "react-bootstrap";
 import { getAllTables, getClientById, getWorkById } from "../data/getters";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchAll } from "./managers/storeManager";
+import { fetchAll, fetchObjectsForWork } from "./managers/storeManager";
 import Loading from "./Loading";
 
 function WorkAnalyzer() {
@@ -65,9 +65,13 @@ function WorkAnalyzer() {
     loadTables();
   }, [dispatch]);
 
-  const handleEditWork = () => {
-    navigate(`/editWork/${workId}`);
-    //fetchobjects
+  const handleEditWork = async () => {
+    try {
+      navigate(`/editWork/${workId}`);
+      await dispatch(fetchObjectsForWork(workId));
+    } catch (error) {
+      console.error("Error opening work editor:", error);
+    }
   };
 
   return (

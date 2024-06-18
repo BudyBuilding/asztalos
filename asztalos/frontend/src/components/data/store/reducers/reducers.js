@@ -10,8 +10,10 @@ import {
 } from "../actions/clientStoreFunctions";
 import authReducer from "../actions/authStoreFunctions";
 import {
+  objectLoading,
   objectReducer,
   selectedObjectReducer,
+  objectLoadingReducer,
 } from "../actions/objectStoreFunctions";
 import colorReducer from "../actions/colorStoreFunctions";
 import {
@@ -38,6 +40,7 @@ const initialState = {
   selectedClient: null,
   selectedScript: null,
   selectedScriptItems: [],
+  objectLoading: false,
 };
 
 const settingsReducer = (state = initialState.settings, action) => {
@@ -72,6 +75,7 @@ const reducers = combineReducers({
   settings: settingsReducer,
   items: itemsReducer,
   objects: objectReducer,
+  objectLoading: objectLoadingReducer,
   tables: tablesReducer,
 });
 
