@@ -3,7 +3,7 @@ import { Button, ListGroup, Table } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
 import { getAllTables, getClientById, getWorkById } from "../data/getters";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchAll } from "./managers/storeManager";
 import Loading from "./Loading";
 
@@ -15,6 +15,7 @@ function WorkAnalyzer() {
   const [woodsPrice, setWoodsPrice] = useState(0);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { workId } = useParams();
 
   const [files, setFiles] = useState([
@@ -64,6 +65,11 @@ function WorkAnalyzer() {
     loadTables();
   }, [dispatch]);
 
+  const handleEditWork = () => {
+    navigate(`/editWork/${workId}`);
+    //fetchobjects
+  };
+
   return (
     <>
       {loading ? (
@@ -77,9 +83,22 @@ function WorkAnalyzer() {
                 <span className="fs-1 fw-bold me-2">{selectedClient.name}</span>
                 <span className="fs-5">client</span>
               </p>
-              <Button variant="primary" onClick={() => {}} className="ms-auto">
-                Order
-              </Button>
+              <div className="button-box">
+                <Button
+                  variant="success"
+                  onClick={handleEditWork}
+                  className="me-1"
+                >
+                  Edit Work
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {}}
+                  className="ms-auto"
+                >
+                  Order
+                </Button>
+              </div>
             </div>
           </div>
           {/** Basic informations */}
