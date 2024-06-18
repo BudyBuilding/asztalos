@@ -20,10 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.CreatedItem;
 import asztalos.model.User;
+import asztalos.model.Work;
 import asztalos.model.WorkObject;
 import asztalos.service.CreatedItemService;
 import asztalos.service.ObjectService;
 import asztalos.service.UserService;
+import asztalos.service.WorkService;
 
 @CrossOrigin
 @RestController
@@ -35,8 +37,12 @@ public class CreatedItemController {
 
     @Autowired
     private UserService userService;
+
     @Autowired
     private ObjectService objectService;
+
+    @Autowired
+    private WorkService workService;
 
     @PostMapping
     public ResponseEntity<?> createCreatedItem(@RequestBody CreatedItem createdItem) {
@@ -96,9 +102,35 @@ public class CreatedItemController {
         }
 
         List<CreatedItem> items;
-        if (currentUser.getRole().equals("admin") || currentUser.getUserId().equals(object.getUser().getUserId())
-                ) {
+        if (currentUser.getRole().equals("admin") || currentUser.getUserId().equals(object.getUser().getUserId())) {
             items = createdItemService.findByObject(object);
+        } else {
+            return ResponseEntity.status(403).build();
+
+        }
+
+        return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("work/{workId}")
+    public ResponseEntity<?> getCreatedItemByWork(@PathVariable Long workId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userService.findByUsername(username).get();
+        Work work = workService.findById(workId).get();
+
+        if (currentUser == null) {
+            return ResponseEntity.status(403).build();
+        }
+
+        if (work == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        List<CreatedItem> items;
+        if (currentUser.getRole().equals("admin") || currentUser.getUserId().equals(work.getUser().getUserId())
+                ) {
+            items = createdItemService.findByWork(work);
         } else {
                  return ResponseEntity.status(403).build();
        
