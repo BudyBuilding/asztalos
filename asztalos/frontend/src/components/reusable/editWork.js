@@ -296,9 +296,9 @@ function EditWork({ closeNewWork, clientId }) {
         {objects &&
           objects.map((obj) => {
             return (
-              <Nav.Item key={obj.key}>
+              <Nav.Item key={obj.objectId}>
                 <Nav.Link
-                  eventKey={obj.key}
+                  eventKey={obj.objectId}
                   onClick={() => {
                     if (showForm) {
                       setShowForm(false);
@@ -307,7 +307,7 @@ function EditWork({ closeNewWork, clientId }) {
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  {obj.name}
+                  {obj.objectId}
                 </Nav.Link>
               </Nav.Item>
             );

@@ -9,7 +9,10 @@ import Loading from "./Loading";
 
 import ClientWorkListItem from "./clientWorksListItem";
 import ClientUpdateModal from "./ClientUpdateModal";
-
+import {
+  fetchCreatedItemsForWork,
+  fetchObjectsForWork,
+} from "./managers/storeManager";
 import sorting from "./sort";
 import { deleteWork } from "../data/api/apiService";
 import clientApi from "../data/api/clientApi";
@@ -112,10 +115,17 @@ function ClientAnalyzer() {
   const handleSelectWork = async (workId) => {
     setLoading(true);
     try {
-      dispatch(selectWork(workId));
-      fetchTables(workId);
+      await dispatch(selectWork(workId));
+      await fetchTables(workId);
       navigate(`/workAnalyzer/${workId}`);
+      await fetchObjectsForWork(workId);
       setLoading(false);
+    } catch (error) {
+      console.error("Error while selecting work:", error);
+      setLoading(false);
+    }
+    try {
+      await fetchCreatedItemsForWork(workId);
     } catch (error) {
       console.error("Error while selecting work:", error);
       setLoading(false);

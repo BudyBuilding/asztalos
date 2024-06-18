@@ -109,3 +109,10 @@ export const getSelectedObject = () => {
     return selectedObject;
   };
 };
+
+export const getAllCreatedItems = () => {
+  return (dispatch) => {
+    const createdItems = store.getState().createdItems;
+    return createdItems;
+  };
+};
