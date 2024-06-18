@@ -12,7 +12,7 @@ export const addMoreScripts = (scripts) => ({
 });
 
 export const updateScript = (modifiedScript) => ({
-  type: "MODIFY_SCRIPT",
+  type: "UPDATE_SCRIPT",
   payload: modifiedScript,
 });
 
@@ -21,15 +21,35 @@ export const deleteScript = (scriptId) => ({
   payload: scriptId,
 });
 
+export const selectScript = (scriptId) => ({
+  type: "SELECT_SCRIPT",
+  payload: scriptId,
+});
+export const addScriptItem = (sciptItem) => ({
+  type: "ADD_SCRIPT_ITEM",
+  payload: sciptItem,
+});
+
+export const addMoreScriptItems = (sciptItems) => ({
+  type: "ADD_MORE_SCRIPT_ITEMS",
+  payload: sciptItems,
+});
+
+export const clearSelectedScriptItems = () => ({
+  type: "CLEAR_SELECTED_SCRIPT_ITEMS",
+});
+
 ///////////
 // Initialstate
 const initialState = {
   scripts: [],
+  selectedScript: [],
+  selectedScriptItems: [],
 };
 
 ///////////
 // Reducers
-const scriptReducer = (state = initialState.scripts, action) => {
+export const scriptReducer = (state = initialState.scripts, action) => {
   switch (action.type) {
     case "ADD_SCRIPT":
       if (
@@ -45,7 +65,7 @@ const scriptReducer = (state = initialState.scripts, action) => {
           (script) => !state.some((s) => s.scriptId === script.scriptId)
         ),
       ];
-    case "MODIFY_SCRIPT":
+    case "UPDATE_SCRIPT":
       return state.map((script) =>
         script.scriptId === action.payload.scriptId
           ? { ...script, ...action.payload }
@@ -58,7 +78,37 @@ const scriptReducer = (state = initialState.scripts, action) => {
   }
 };
 
-export default scriptReducer;
+export const selectedScriptReducer = (state = "0", action) => {
+  switch (action.type) {
+    case "SELECT_SCRIPT":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+export const selectedScriptItemsReducer = (state = [], action) => {
+  switch (action.type) {
+    case "ADD_SCRIPT_ITEM":
+      return [
+        ...state,
+        ...action.payload.filter(
+          (scriptItem) => !state.some((s) => s.itemId === scriptItem.itemId)
+        ),
+      ];
+    case "ADD_MORE_SCRIPT_ITEMS":
+      return [
+        ...state,
+        ...action.payload.filter(
+          (scriptItem) => !state.some((s) => s.itemId === scriptItem.itemId)
+        ),
+      ];
+    case "CLEAR_SELECTED_SCRIPT_ITEMS":
+      return [];
+    default:
+      return state;
+  }
+};
 
 ///////////
 // Getters
