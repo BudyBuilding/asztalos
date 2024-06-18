@@ -9,10 +9,16 @@ import {
   selectedClientReducer,
 } from "../actions/clientStoreFunctions";
 import authReducer from "../actions/authStoreFunctions";
-import objectReducer from "../actions/objectStoreFunctions";
-import selectedObjectReducer from "../actions/objectStoreFunctions";
+import {
+  objectReducer,
+  selectedObjectReducer,
+} from "../actions/objectStoreFunctions";
 import colorReducer from "../actions/colorStoreFunctions";
-import scriptReducer from "../actions/scriptStoreFunctions";
+import {
+  scriptReducer,
+  selectedScriptReducer,
+  selectedScriptItemsReducer,
+} from "../actions/scriptStoreFunctions";
 import { tablesReducer } from "../actions/tableStoreFunctions";
 
 const initialState = {
@@ -29,7 +35,9 @@ const initialState = {
   works: [],
   tables: [],
   selectedWork: null,
-  selectClient: null,
+  selectedClient: null,
+  selectedScript: null,
+  selectedScriptItems: [],
 };
 
 const settingsReducer = (state = initialState.settings, action) => {
@@ -53,6 +61,8 @@ const itemsReducer = (state = initialState.items, action) => {
 const reducers = combineReducers({
   selectedClient: selectedClientReducer,
   selectedWork: selectedWorkReducer,
+  selectedScript: selectedScriptReducer,
+  selectedScriptItems: selectedScriptItemsReducer,
   clients: clientsReducer,
   works: worksReducer,
   auth: authReducer,
