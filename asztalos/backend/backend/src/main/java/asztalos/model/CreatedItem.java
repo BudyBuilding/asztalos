@@ -38,6 +38,10 @@ public class CreatedItem {
     @JoinColumn(name = "object")
     private WorkObject object;
 
+    @ManyToOne
+    @JoinColumn(name = "work")
+    private Work work;
+
     // Getters and setters
 
     public Long getItemId() {
@@ -118,5 +122,13 @@ public class CreatedItem {
 
     public void setObject(WorkObject object) {
         this.object = object;
+    }
+
+        public Work getWork() {
+        return work;
+    }
+
+    public void setWork(Work work) {
+        this.work = work;
     }
 }

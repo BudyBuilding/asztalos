@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import asztalos.model.CreatedItem;
 import asztalos.model.WorkObject;
+import asztalos.model.Work;
+
 import asztalos.repository.CreatedItemRepository;
 
 @Service
@@ -26,6 +28,10 @@ public class CreatedItemService {
 
     public List<CreatedItem> findByObject(WorkObject object) {
         return createdItemRepository.findByObject(object);
+    }
+
+    public List<CreatedItem> findByWork(Work work) {
+        return createdItemRepository.findByWork(work);
     }
 
     public List<CreatedItem> findAll() {
