@@ -20,9 +20,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.User;
+import asztalos.model.Work;
 import asztalos.model.WorkObject;
 import asztalos.service.ObjectService;
 import asztalos.service.UserService;
+import asztalos.service.WorkService;
 
 @CrossOrigin
 @RestController
@@ -34,6 +36,9 @@ public class ObjectController {
     
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private WorkService workService;
 
     @GetMapping
     public ResponseEntity<?> getObjects(@RequestParam(required = false) Long objectId) {
@@ -74,7 +79,12 @@ public class ObjectController {
     }
     ///////////////////////////////
    
-
+        @GetMapping("/work/{workId}")
+        public ResponseEntity<List<WorkObject>> getScriptItemsByScriptId(@PathVariable Long workId) {
+        Work work = workService.findById(workId).get();
+        List<WorkObject> objects = objectService.findByWork(work);
+        return ResponseEntity.ok(objects);
+    }
     @PostMapping
     public ResponseEntity<?> createObject(@RequestBody WorkObject workObject) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
