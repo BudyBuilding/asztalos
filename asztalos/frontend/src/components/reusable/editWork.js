@@ -10,14 +10,14 @@ import ModelViewer from "../model/ModelViewer";
 import { getSelectedObject, getAllWorks, getAllObjects } from "../data/getters";
 import {
   selectObject,
-  modifyObject,
+  updateObject,
   addObject,
   getObjectById,
 } from "../data/store/actions/objectStoreFunctions";
-
 import { addWork } from "../data/store/actions/workStoreFunctions";
+import objectApi from "../data/api/objectApi";
 
-function NewWork({ closeNewWork, clientId }) {
+function EditWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
 
   const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
@@ -27,7 +27,6 @@ function NewWork({ closeNewWork, clientId }) {
   const [selectedSettingKeys, setSelectedSettingKeys] = useState([]);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
-  const [selectedScript, setSelectedScript] = useState(null);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
   const [objects, setObjects] = useState(dispatch(getAllObjects()));
@@ -60,9 +59,9 @@ function NewWork({ closeNewWork, clientId }) {
       setSelectedSettings(settings);
       setSelectedItems(items);
     } else {
-      const selectedObject = objects.find(
-        (obj) => obj.key === parseInt(selectedTab)
-      );
+      const selectedObject = objects
+        ? objects.find((obj) => obj.key === parseInt(selectedTab))
+        : [];
       if (selectedObject) {
         setSelectedSettings([
           {
@@ -106,15 +105,11 @@ function NewWork({ closeNewWork, clientId }) {
     }
     setSelectedItemKeys(showedItems);
   }
-  function addNewObject(object) {
-    // Ellenőrizzük, hogy az új objektum már szerepel-e az állapotban
-    if (!objects.some((obj) => obj.key === object.key)) {
-      setObjects([...objects, object]);
-      store.dispatch(addObject(object));
-    } else {
-      console.warn("Az objektum már szerepel az állapotban:", object);
-    }
-  }
+
+  const addNewObject = async (object, generatedItems) => {
+    console.log("adding the object to the backend");
+    objectApi.createObjectApi(object);
+  };
 
   useEffect(() => {
     if (selectedTab === "0") {
@@ -125,7 +120,7 @@ function NewWork({ closeNewWork, clientId }) {
           settings.push({
             name: object.name,
             key: object.key,
-            values: object.values, // Fixed typo here from 'vlaues' to 'values'
+            values: object.values,
           });
           items.push({
             name: object.name,
@@ -139,9 +134,9 @@ function NewWork({ closeNewWork, clientId }) {
       setSelectedItems(items);
     } else {
       // Ha egy specifikus elemet választottak, csak azt jelenítjük meg
-      const selectedObject = objects.find(
-        (obj) => obj.key === parseInt(selectedTab)
-      );
+      const selectedObject = objects
+        ? objects.find((obj) => obj.key === parseInt(selectedTab))
+        : [];
       if (selectedObject) {
         setSelectedSettings([
           {
@@ -184,7 +179,7 @@ function NewWork({ closeNewWork, clientId }) {
   function saveModify(object) {
     const objs = objects.map((obj) => (obj.key === object.key ? object : obj));
     setObjects(objs);
-    dispatch(modifyObject(object));
+    dispatch(updateObject(object));
   }
 
   function handleModifiedItem(modifiedItem, objectID) {
@@ -305,18 +300,20 @@ function NewWork({ closeNewWork, clientId }) {
           })}
         <Button onClick={handleSaveWork}>Save Work</Button>
       </Nav>
-
       <Container
         fluid
         className="d-flex justify-content-between p-0 m-0 w-100"
         style={{
-          height: "calc(70vh - 56px)",
+          //          height: "calc(70vh - 56px)",
+          height: "100vh",
         }}
+        key="mainNewWorkBox"
       >
         <Container
           fluid
           className="w-25 border m-0 p-0"
           style={{ overflowY: "auto" }}
+          key="leftNewWorkBox"
         >
           <h3 className="fw-bold">Settings</h3>
           {selectedSettings &&
@@ -346,16 +343,21 @@ function NewWork({ closeNewWork, clientId }) {
         <Container
           className="w-60 border m-0 p-0"
           style={{ overflowY: "auto" }}
+          key="middleNewWorkBox"
         >
           {showModel && <ModelViewer />}
           {!showModel && showForm && (
-            <ScriptCaller newObjectKey={newObjKey} newObject={addNewObject} />
+            <ScriptCaller
+              newObjectKey={newObjKey}
+              addNewObjectFunction={addNewObject}
+            />
           )}
         </Container>
         <Container
           fluid
           className="w-25 border m-0 p-0"
           style={{ overflowY: "auto" }}
+          key="rightNewWorkBox"
         >
           <h3 className="fw-bold">Required Pieces</h3>
 
@@ -406,4 +408,4 @@ function NewWork({ closeNewWork, clientId }) {
   );
 }
 
-export default NewWork;
+export default EditWork;

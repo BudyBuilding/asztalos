@@ -9,11 +9,8 @@ import { Provider } from "react-redux";
 import store from "./components/data/store/store";
 import { useSelector, useDispatch } from "react-redux";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import NewWork from "./components/reusable/newWork";
-import ColorSelector from "./components/reusable/colorSelector";
-import ModelViewer from "./components/model/ModelViewer";
 import { fetchAll } from "./components/reusable/managers/storeManager";
-
+import EditWork from "./components/reusable/editWork";
 import authApi from "./components/data/api/authApi";
 
 function App() {
@@ -43,6 +40,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
         <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
+        <Route path="/editWork/:workId" element={<EditWork />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
       </Routes>
