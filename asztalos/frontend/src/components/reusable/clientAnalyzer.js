@@ -8,7 +8,6 @@ import { Modal } from "react-bootstrap";
 import Loading from "./Loading";
 
 import ClientWorkListItem from "./clientWorksListItem";
-import NewWork from "./newWork";
 import ClientUpdateModal from "./ClientUpdateModal";
 
 import sorting from "./sort";
@@ -19,6 +18,8 @@ import { getClientById } from "../data/getters";
 import { selectWork } from "../data/store/actions/workStoreFunctions";
 import { fetchTables } from "./managers/storeManager";
 import { useNavigate } from "react-router-dom";
+import NewWorkModal from "./newWorkModal";
+
 function ClientAnalyzer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -49,9 +50,6 @@ function ClientAnalyzer() {
   function rerender() {
     setRender(!render);
   }
-
-  console.log(dispatch(getClientById(clientId)));
-  console.log(clientId);
 
   const totalWorks = memoizedWorks.length;
   const activeWorks = memoizedWorks.filter(
@@ -88,6 +86,12 @@ function ClientAnalyzer() {
   const closeNewWork = () => {
     setShowNewWork(false);
   };
+
+  const handleNewWork = async (newWork) => {
+    await dispatch(workApi.createWorkApi(newWork));
+    setShowNewWork(false);
+  };
+
   const handleWorkDelete = async (workId) => {
     await dispatch(workApi.deleteWorkApi(workId));
     rerender();
@@ -124,131 +128,121 @@ function ClientAnalyzer() {
         <Loading />
       ) : (
         <>
-          {showNewWork ? (
-            <NewWork
-              closeNewWork={closeNewWork}
+          <Modal show={showNewWork} onHide={closeNewWork}>
+            <Modal.Header closeButton>
+              <Modal.Title> Create new work</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <NewWorkModal
+                show={showNewWork}
+                handleClose={closeNewWork}
+                onSubmit={handleNewWork}
+              />
+            </Modal.Body>
+          </Modal>
+          <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
+            <ClientUpdateModal
+              handleClose={handleClientUpdateClose}
               clientId={selectedClient.clientId}
+              onUpdate={handleClientUpdate}
             />
-          ) : (
-            <>
-              <Modal
-                show={showClientUpdateModal}
-                onHide={handleClientUpdateClose}
-              >
-                <Modal.Header closeButton>
-                  <Modal.Title>Update Client</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  <ClientUpdateModal
-                    handleClose={handleClientUpdateClose}
-                    clientId={selectedClient.clientId}
-                    onUpdate={handleClientUpdate}
-                  />
-                </Modal.Body>
-              </Modal>
-              <div className="container d-xl-block">
-                <div className="fs-3  text-start d-flex justify-content-between">
-                  <div>
-                    <span className="fs-1 fw-bold">{selectedClient?.name}</span>
-                    &nbsp; works
-                  </div>
-                  <div>
-                    <Button
-                      variant="primary"
-                      onClick={() => setShowClientUpdateModal(true)}
-                      style={{
-                        border: "1px solid #007bff",
-                        marginLeft: "0.5rem",
-                      }}
-                    >
-                      Edit Client
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="container d-xl-block">
-                <p className="fs-2 fw-bold text-start">Informations</p>
-                <div className="row">
-                  <div className="col-md-6">
-                    <p className="fs-5 text-start">
-                      Tel: <span>{selectedClient?.telephone}</span>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fs-5 text-start">
-                      Address: <span>{selectedClient?.address}</span>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fs-5 text-start">
-                      All work: <span>{totalWorks}</span>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fs-5 text-start">
-                      Active work: <span>{activeWorks}</span>
-                    </p>
-                  </div>
-                  <div className="col-md-6">
-                    <p className="fs-5 text-start">
-                      Still has to pay: <span>{stillToPay}</span> RON
-                    </p>
-                  </div>
-                </div>
-              </div>
+          </Modal>
 
-              <div className="container d-xl-block">
-                <div className="d-flex justify-content-between align-items-center">
-                  <p className="fs-2 fw-bold text-start">Recent works</p>
-                  <div>
-                    <Button
-                      variant="primary"
-                      onClick={() => {
-                        handleNewWorkClick();
-                      }}
-                      className="me-3"
-                    >
-                      New work
-                    </Button>
-                  </div>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <Button variant="primary" onClick={() => requestSort("Date")}>
-                    Date
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => requestSort("status")}
-                  >
-                    Status
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => requestSort("Price")}
-                  >
-                    Price
-                  </Button>
-                  <Button variant="primary" onClick={() => requestSort("Paid")}>
-                    Paid
-                  </Button>
-                </div>
-                <ListGroup>
-                  {memoizedWorks.length === 0 ? (
-                    <p>There is no work yet.</p>
-                  ) : (
-                    memoizedWorks.map((work) => (
-                      <ClientWorkListItem
-                        key={work.workId}
-                        work={work}
-                        onDelete={handleWorkDelete}
-                        onClick={handleSelectWork}
-                      />
-                    ))
-                  )}
-                </ListGroup>
+          <div className="container d-xl-block">
+            <div className="fs-3  text-start d-flex justify-content-between">
+              <div>
+                <span className="fs-1 fw-bold">{selectedClient?.name}</span>
+                &nbsp; works
               </div>
-            </>
-          )}
+              <div>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowClientUpdateModal(true)}
+                  style={{
+                    border: "1px solid #007bff",
+                    marginLeft: "0.5rem",
+                  }}
+                >
+                  Edit Client
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="container d-xl-block">
+            <p className="fs-2 fw-bold text-start">Informations</p>
+            <div className="row">
+              <div className="col-md-6">
+                <p className="fs-5 text-start">
+                  Tel: <span>{selectedClient?.telephone}</span>
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="fs-5 text-start">
+                  Address: <span>{selectedClient?.address}</span>
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="fs-5 text-start">
+                  All work: <span>{totalWorks}</span>
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="fs-5 text-start">
+                  Active work: <span>{activeWorks}</span>
+                </p>
+              </div>
+              <div className="col-md-6">
+                <p className="fs-5 text-start">
+                  Still has to pay: <span>{stillToPay}</span> RON
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="container d-xl-block">
+            <div className="d-flex justify-content-between align-items-center">
+              <p className="fs-2 fw-bold text-start">Recent works</p>
+              <div>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    handleNewWorkClick();
+                  }}
+                  className="me-3"
+                >
+                  New work
+                </Button>
+              </div>
+            </div>
+            <div className="d-flex justify-content-between mb-2">
+              <Button variant="primary" onClick={() => requestSort("Date")}>
+                Date
+              </Button>
+              <Button variant="primary" onClick={() => requestSort("status")}>
+                Status
+              </Button>
+              <Button variant="primary" onClick={() => requestSort("Price")}>
+                Price
+              </Button>
+              <Button variant="primary" onClick={() => requestSort("Paid")}>
+                Paid
+              </Button>
+            </div>
+            <ListGroup>
+              {memoizedWorks.length === 0 ? (
+                <p>There is no work yet.</p>
+              ) : (
+                memoizedWorks.map((work) => (
+                  <ClientWorkListItem
+                    key={work.workId}
+                    work={work}
+                    onDelete={handleWorkDelete}
+                    onClick={handleSelectWork}
+                  />
+                ))
+              )}
+            </ListGroup>
+          </div>
         </>
       )}
     </>
