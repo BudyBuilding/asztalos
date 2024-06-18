@@ -4,43 +4,47 @@ import { useSelector, useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
 import Item from "../reusable/item";
 import { getScripts } from "../data/api/apiService";
-
-export default function ScriptCaller({ newObject }) {
+import {
+  getAllObjects,
+  getAllScripts,
+  getSelectedClient,
+} from "../data/getters";
+import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
+import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
+import { getSelectedWork } from "../data/store/actions/workStoreFunctions";
+export default function ScriptCaller({ addNewObjectFunction }) {
   const dispatch = useDispatch();
   const [selectedScript, setSelectedScript] = useState(null);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedType, setSelectedType] = useState(null);
   const [showScripts, setShowScripts] = useState([]);
   const [currentConfig, setCurrentConfig] = useState([]);
-  const scripts = dispatch(getScripts());
-  const objects = useSelector((state) => state.objects); // Objektumok lekérése a store-ból
+  const scripts = dispatch(getAllScripts());
   const [measurements, setMeasurements] = useState({
     height: "",
     width: "",
     depth: "",
   });
   const [results, setResults] = useState([]);
-
   const [showWarning, setShowWarning] = useState(false);
 
-  const maxKey = Math.max(...objects.map((obj) => obj.key), 0);
+  const maxKey = 26;
 
   const newObjectKey = maxKey + 1;
 
   const getRoomsWithScripts = () => {
     const roomsWithScripts = [];
-
-    scripts.forEach((script) => {
-      if (script.room) {
-        if (!roomsWithScripts.includes(script.room)) {
-          if (script.room !== "All") {
-            roomsWithScripts.push(script.room);
+    if (scripts) {
+      scripts.forEach((script) => {
+        if (script.room) {
+          if (!roomsWithScripts.includes(script.room)) {
+            if (script.room !== "All") {
+              roomsWithScripts.push(script.room);
+            }
           }
         }
-      }
-    });
+      });
 
-    return roomsWithScripts;
+      return roomsWithScripts;
+    }
   };
 
   const roomsWithScripts = getRoomsWithScripts();
@@ -67,54 +71,43 @@ export default function ScriptCaller({ newObject }) {
       measurements.depth > 0 &&
       measurements.depth
     ) {
-      setCurrentConfig(script.config);
+      setCurrentConfig(script);
       setSelectedScript(script);
+      fetchScriptItemsForScript(script.scriptId);
       console.log(measurements);
     } else {
       setShowWarning(true);
     }
   }
   function handleGenerate() {
-    if (selectedScript && currentConfig && measurements) {
-      const thickness = 18;
-
+    if (selectedScript && measurements) {
+      const generatedItems = [];
+      /* const thickness = 18;
       const updatedScript = {
         ...selectedScript,
         config: currentConfig,
       };
 
       console.log(updatedScript);
-      setSelectedScript(updatedScript);
-
+      setSelectedScript(updatedScript);*/
+      /*
       const result = processScript(updatedScript, measurements, thickness);
       console.log("Generated result:", result);
-      setResults(result);
-
+      setResults(result);*/
+      const client = dispatch(getSelectedWork());
+      console.log(client);
       const object = {
-        name: selectedScript.scriptName,
-        key: newObjectKey,
-        values: {
-          currentConfig,
-          size: {
-            width: measurements.width,
-            height: measurements.height,
-            depth: measurements.depth,
-          },
-          position: {
-            x: 0,
-            y: 0,
-            z: 0,
-          },
-          rotation: {
-            x: 0,
-            y: 0,
-            z: 0,
-          },
-        },
-        items: result,
+        name: selectedScript.name,
+        client: dispatch(getSelectedClient()),
+        work: dispatch(getSelectedWork()),
+        usedScript: selectScript.scriptId,
+        usedColors: ["red", "blue"],
+        //        size: "[0,0,0]",
+        //      position: "[0,0,0]",
+        //    rotation: "[0,0,0]",
       };
       console.log(object);
-      newObject(object);
+      //      addNewObjectFunction(object, generatedItems);
     } else {
       console.error("Invalid configuration or selected script.");
     }
@@ -132,6 +125,7 @@ export default function ScriptCaller({ newObject }) {
   function handleBack() {
     setCurrentConfig(null);
     setSelectedScript(null);
+    dispatch(clearSelectedScriptItems());
   }
 
   function handleConfigChange(event) {
@@ -197,82 +191,105 @@ export default function ScriptCaller({ newObject }) {
 
           <h3 className="fw-bold">Script Selector</h3>
           <div className="">
-            {roomsWithScripts.map((room, index) => (
-              <div
-                key={index}
-                className="d-flex align-content-center m-auto mb-2"
-                style={{ cursor: "pointer" }}
-                onClick={() => handleShowScripts(room)}
-              >
-                <p
-                  className="align-content-center fs-4 me-3"
-                  style={{ width: "10rem" }}
+            {roomsWithScripts &&
+              roomsWithScripts.map((room, index) => (
+                <div
+                  key={index}
+                  className="d-flex align-content-center m-auto mb-2"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleShowScripts(room)}
                 >
-                  {room}
-                </p>
-                <div className="scripts d-flex flex-nowrap overflow-x-scroll">
-                  {scripts
-                    .filter(
-                      (script) => script.room === room || script.room === "All"
-                    )
-                    .map((script) => (
-                      <div
-                        key={`${room}_${script.scriptId}`}
-                        className="me-3"
-                        onClick={() => selectScript(script)}
-                      >
+                  <p
+                    className="align-content-center fs-4 me-3"
+                    style={{ width: "10rem" }}
+                  >
+                    {room}
+                  </p>
+                  <div className="scripts d-flex flex-nowrap overflow-x-scroll">
+                    {scripts
+                      .filter(
+                        (script) =>
+                          script.room === room || script.room === "All"
+                      )
+                      .map((script) => (
                         <div
-                          className="border rounded text-center"
-                          style={{ width: "5rem", height: "5rem" }}
-                        ></div>
-                        <p>{script.scriptName}</p>
-                      </div>
-                    ))}
+                          key={`${room}_${script.scriptId}`}
+                          className="me-3"
+                          onClick={() => selectScript(script)}
+                        >
+                          <div
+                            className="border rounded text-center"
+                            style={{ width: "5rem", height: "5rem" }}
+                          ></div>
+                          <p>{script.name}</p>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </Container>
       ) : (
-        <div className="mt-4">
-          <h3 className="fw-bold">{selectedScript.scriptName} Settings</h3>
-          <Form className="mt-3">
-            {Object.entries(currentConfig).map(([key, value], idx) => (
-              <Form.Group key={idx} className="mb-3  d-flex ">
-                <Form.Label
-                  className="border-0 ps-3 align-content-center"
-                  style={{ width: "11rem" }}
-                >
-                  {key}
-                </Form.Label>
-                <Form.Control
-                  className="border-0 text-center ms-2 align-content-center"
-                  style={{ width: "5rem" }}
-                  type="text"
-                  name={key}
-                  value={value}
-                  onChange={handleConfigChange}
-                />
-              </Form.Group>
-            ))}
-            <Button variant="secondary" onClick={handleBack}>
-              Back
-            </Button>{" "}
-            <Button variant="primary" onClick={handleGenerate}>
-              Generate
-            </Button>
-            <Button variant="success" onClick={handleGenerate} className="mt-3">
-              Generate & Save
-            </Button>
-          </Form>
+        <div className="mt-4 d-flex justify-content-evenly">
+          <div className="border w-50">
+            <h3 className="fw-bold">{selectedScript.name} Settings</h3>
+            <Form className="mt-3">
+              {Object.entries(currentConfig).map(([key, value], idx) => (
+                <Form.Group key={idx} className="mb-3  d-flex ">
+                  <Form.Label
+                    className="border-0 ps-3 align-content-center"
+                    style={{ width: "11rem" }}
+                  >
+                    {key}
+                  </Form.Label>
+                  <Form.Control
+                    className="border-0 text-center ms-2 align-content-center"
+                    style={{ width: "5rem" }}
+                    type="text"
+                    name={key}
+                    value={value}
+                    onChange={handleConfigChange}
+                  />
+                </Form.Group>
+              ))}
+            </Form>
+          </div>
 
           {/**Results */}
-          <Container fluid className="w-50  m-1 p-1">
-            <h3 className="fw-bold">Results</h3>
-            {results.resultItems &&
-              results.resultItems.map((result, index) => {
-                return <Item key={result.key || index} Item={result} />;
-              })}
+          <Container
+            fluid
+            className="w-50 border d-flex justify-content-center p-1"
+          >
+            <div>
+              <div className="button-box">
+                <Button
+                  variant="secondary"
+                  className="m-1"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+                <Button
+                  variant="primary"
+                  className="m-1"
+                  onClick={handleGenerate}
+                >
+                  Generate
+                </Button>
+                <Button
+                  variant="success"
+                  className="m-1"
+                  onClick={handleGenerate}
+                >
+                  Save
+                </Button>
+              </div>
+              <h3 className="fw-bold text-center">Results</h3>
+              {results.resultItems &&
+                results.resultItems.map((result, index) => {
+                  return <Item key={result.key || index} Item={result} />;
+                })}
+            </div>
           </Container>
         </div>
       )}
