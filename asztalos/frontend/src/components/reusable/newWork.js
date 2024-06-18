@@ -7,16 +7,15 @@ import store from "../data/store/store";
 import Item from "./item";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
+import { getSelectedObject, getAllWorks, getAllObjects } from "../data/getters";
 import {
-  selectingObject,
+  selectObject,
   modifyObject,
-  getObjects,
   addObject,
-  getClientFromStore,
-  addWork,
-  getWork,
-  getAllWorks,
-} from "../data/api/apiService";
+  getObjectById,
+} from "../data/store/actions/objectStoreFunctions";
+
+import { addWork } from "../data/store/actions/workStoreFunctions";
 
 function NewWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
@@ -31,28 +30,33 @@ function NewWork({ closeNewWork, clientId }) {
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
-  const [objects, setObjects] = useState(dispatch(getObjects()));
+  const [objects, setObjects] = useState(dispatch(getAllObjects()));
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
   const [modifiedObject, setModifiedObject] = useState(null);
   let newObjKey = 999;
 
   useEffect(() => {
-    selectingObject("0");
+    //    selectingObject("0");
+    const selectedObject = dispatch(getSelectedObject);
+    console.log(selectedObject);
   }, []);
 
   useEffect(() => {
     if (selectedTab === "0") {
       let settings = [];
       let items = [];
-      objects.forEach((object) => {
-        settings.push({
-          name: object.name,
-          key: object.key,
-          values: object.values,
+      if (objects) {
+        objects.forEach((object) => {
+          settings.push({
+            name: object.name,
+            key: object.key,
+            values: object.values,
+          });
+          items.push(object);
         });
-        items.push(object);
-      });
+      }
+
       setSelectedSettings(settings);
       setSelectedItems(items);
     } else {
@@ -116,18 +120,21 @@ function NewWork({ closeNewWork, clientId }) {
     if (selectedTab === "0") {
       let settings = [];
       let items = [];
-      objects.forEach((object) => {
-        settings.push({
-          name: object.name,
-          key: object.key,
-          values: object.values, // Fixed typo here from 'vlaues' to 'values'
+      if (objects) {
+        objects.forEach((object) => {
+          settings.push({
+            name: object.name,
+            key: object.key,
+            values: object.values, // Fixed typo here from 'vlaues' to 'values'
+          });
+          items.push({
+            name: object.name,
+            key: object.key,
+            items: object.items,
+          });
         });
-        items.push({
-          name: object.name,
-          key: object.key,
-          items: object.items,
-        });
-      });
+      }
+
       setSelectedSettings(settings);
       setSelectedItems(items);
     } else {
@@ -169,7 +176,7 @@ function NewWork({ closeNewWork, clientId }) {
   function handleSelectedTab(key) {
     if (key !== selectedTab) {
       setSelectedTab(key);
-      selectingObject(key);
+      dispatch(selectObject(key));
       setSelectedItemKeys([]);
     }
   }
@@ -212,7 +219,7 @@ function NewWork({ closeNewWork, clientId }) {
 
   const handleSaveWork = async () => {
     // Lekérjük az ügyfél adatait
-    const client = await dispatch(getClientFromStore(clientId));
+    const client = await dispatch(getObjectById(clientId));
 
     // Lekérjük az összes munkát a store-ból
     const works = await dispatch(getAllWorks());
@@ -277,24 +284,25 @@ function NewWork({ closeNewWork, clientId }) {
             New Object
           </Nav.Link>
         </Nav.Item>
-        {objects.map((obj) => {
-          return (
-            <Nav.Item key={obj.key}>
-              <Nav.Link
-                eventKey={obj.key}
-                onClick={() => {
-                  if (showForm) {
-                    setShowForm(false);
-                  }
-                  setShowModel(true);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                {obj.name}
-              </Nav.Link>
-            </Nav.Item>
-          );
-        })}
+        {objects &&
+          objects.map((obj) => {
+            return (
+              <Nav.Item key={obj.key}>
+                <Nav.Link
+                  eventKey={obj.key}
+                  onClick={() => {
+                    if (showForm) {
+                      setShowForm(false);
+                    }
+                    setShowModel(true);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  {obj.name}
+                </Nav.Link>
+              </Nav.Item>
+            );
+          })}
         <Button onClick={handleSaveWork}>Save Work</Button>
       </Nav>
 
