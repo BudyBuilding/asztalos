@@ -47,3 +47,36 @@ export const getAllTables = () => {
     return tables;
   };
 };
+
+/////////////////
+// object
+export const getSelectedObject = () => {
+  return (dispatch) => {
+    const selectedObject = store.getState().selectedObject;
+    return selectedObject;
+  };
+};
+
+export const getAllObjects = () => {
+  return (dispatch) => {
+    const objects = store.getState().objects;
+    return objects;
+  };
+};
+
+////////////////
+//script
+export const getScriptById = (scriptId) => {
+  return (dispatch) => {
+    const scripts = store.getState().scripts;
+    const script = scripts.find((script) => script.scriptId == scriptId);
+    return script;
+  };
+};
+
+export const getAllScripts = () => {
+  return (dispatch) => {
+    const scripts = store.getState().scripts;
+    return scripts;
+  };
+};

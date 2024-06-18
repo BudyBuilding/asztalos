@@ -11,7 +11,7 @@ export const addMoreScripts = (scripts) => ({
   payload: scripts,
 });
 
-export const modifyScript = (modifiedScript) => ({
+export const updateScript = (modifiedScript) => ({
   type: "MODIFY_SCRIPT",
   payload: modifiedScript,
 });
