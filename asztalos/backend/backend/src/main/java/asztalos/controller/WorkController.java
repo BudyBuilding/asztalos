@@ -1,6 +1,7 @@
 package asztalos.controller;
 
 import java.lang.reflect.Field;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -193,30 +194,36 @@ public class WorkController {
     }
     
     // creating new work
-    @PostMapping
-    public ResponseEntity<?> createWork(@RequestBody Work work) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        Optional<User> currentUser = userService.findByUsername(username);
-        Optional<Client> currentClient = clientService.findById(work.getClient().getClientId());
-        if (!currentClient.isPresent()) {
-            return ResponseEntity.status(404).build();
-        }
+@PostMapping
+public ResponseEntity<?> createWork(@RequestBody Work work) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
+    Optional<Client> currentClient = clientService.findById(work.getClient().getClientId());
 
-
-        // checking if the user from the token is available
-        // cannot give problem (but who de hell knows)
-        if (!currentUser.isPresent()) {
-            return ResponseEntity.status(403).build();
-        }
-
-        // setting up the new works user
-        work.setUser(currentUser.get());
-        work.setClient(currentClient.get());
-
-        // creating the new work object and filling up with the data
-        Work createdwork = workService.save(work);
-        return ResponseEntity.ok(createdwork);
+    if (!currentClient.isPresent()) {
+        return ResponseEntity.status(404).build();
     }
+
+    // checking if the user from the token is available
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
+    }
+
+    // setting up the new work's user and client
+    work.setUser(currentUser.get());
+    work.setClient(currentClient.get());
+
+    // setting default values
+    work.setPrice(0);  // assuming price is of type Double
+    work.setPaid(0);   // assuming paid is of type Double
+    work.setStatus("measured");
+    work.setLabel(0);    // assuming label is of type Integer
+        // Mérés dátumának beállítása a hívás dátumára
+        work.setMeasureDate(new Date());
+    // creating the new work object and filling it with the data
+    Work createdWork = workService.save(work);
+    return ResponseEntity.ok(createdWork);
+}
 
 }
