@@ -7,7 +7,7 @@ export const addObject = (object) => ({
 });
 
 export const addMoreObjects = (objects) => ({
-  type: "ADD_MORE_OBJECTs",
+  type: "ADD_MORE_OBJECTS",
   payload: objects,
 });
 
@@ -19,6 +19,11 @@ export const updateObject = (modifiedObject) => ({
 export const selectObject = (objectId) => ({
   type: "SELECT_OBJECT",
   payload: objectId,
+});
+
+export const setObjectLoading = (loading) => ({
+  type: "SET_OBJECT_LOADING",
+  payload: loading,
 });
 
 export const addcreatedItem = (createdItem) => ({
@@ -37,11 +42,12 @@ const initialState = {
   objects: [],
   selectedObject: "0",
   createdItems: [],
+  objectLoading: false,
 };
 
 ///////////
 // Reducers
-export const objectReducer = (state = [], action) => {
+export const objectReducer = (state = initialState.objects, action) => {
   switch (action.type) {
     case "ADD_OBJECT":
       if (!state.some((obj) => obj.objectId === action.payload.objectId)) {
@@ -51,7 +57,7 @@ export const objectReducer = (state = [], action) => {
       const newObjects = action.payload.filter(
         (object) =>
           !state.some(
-            (existingObject) => existingObject.objectId === object.objectId
+            (existingObject) => existingObject.objectId == object.objectId
           )
       );
       return [...state, ...newObjects];
@@ -64,7 +70,10 @@ export const objectReducer = (state = [], action) => {
   }
 };
 
-export const selectedObjectReducer = (state = "0", action) => {
+export const selectedObjectReducer = (
+  state = initialState.selectedObject,
+  action
+) => {
   switch (action.type) {
     case "SELECT_OBJECT":
       return action.payload;
@@ -73,7 +82,10 @@ export const selectedObjectReducer = (state = "0", action) => {
   }
 };
 
-export const createdItemsReducer = (state = "0", action) => {
+export const createdItemsReducer = (
+  state = initialState.createdItems,
+  action
+) => {
   switch (action.type) {
     case "ADD_CREATED_ITEM":
       if (
@@ -95,12 +107,14 @@ export const createdItemsReducer = (state = "0", action) => {
       return state;
   }
 };
-
-///////////
-// Getters
-export const getAllObjects = (state) => state.objects;
-
-export const getObjectById = (state, objectId) =>
-  state.objects.find((object) => object.objectId === objectId);
-
-export const getSelectedObject = (state) => state.selectedObject;
+export const objectLoadingReducer = (
+  state = initialState.objectLoading,
+  action
+) => {
+  switch (action.type) {
+    case "SET_OBJECT_LOADING":
+      return action.payload;
+    default:
+      return state;
+  }
+};
