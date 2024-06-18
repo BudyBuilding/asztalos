@@ -26,8 +26,8 @@ export const setObjectLoading = (loading) => ({
   payload: loading,
 });
 
-export const addcreatedItem = (createdItem) => ({
-  type: "ADD_CREATED_ITEMS",
+export const addCreatedItem = (createdItem) => ({
+  type: "ADD_CREATED_ITEM",
   payload: createdItem,
 });
 

@@ -1,0 +1,141 @@
+// createdItemApi.js
+import axiosInstance from "./mainApi";
+import store from "../store/store"; // Redux store importálása
+import {
+  addCreatedItem,
+  addMoreCreatedItems,
+  //deleteCreatedItem,
+  //updateCreatedItem,
+} from "../store/actions/objectStoreFunctions";
+import { useDispatch } from "react-redux";
+
+const getAllCreatedItemsApi = async () => {
+  try {
+    const response = await axiosInstance.get("/created-itemss");
+    console.log("Loading createdItems from server response: ", response);
+    if (response.status === 200) {
+      store.dispatch(addMoreCreatedItems(response.data)); // Dispatching to update Redux store
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching createdItems:", error);
+    throw error;
+  }
+};
+
+const getAllCreatedItemsForObjectApi = async (objectId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/created-items/object/${objectId}`
+    );
+    console.log(
+      "Loading createdItems for object: ",
+      objectId,
+      " from server response: ",
+      response
+    );
+    if (response.status === 200) {
+      store.dispatch(addMoreCreatedItems(response.data)); // Dispatching to update Redux store
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching createdItems:", error);
+    throw error;
+  }
+};
+
+const getAllCreatedItemsForWorkApi = async (workId) => {
+  try {
+    const response = await axiosInstance.get(`/created-items/work/${workId}`);
+    console.log(
+      "Loading createdItems for work: ",
+      workId,
+      " from server response: ",
+      response
+    );
+    if (response.status === 200) {
+      store.dispatch(addMoreCreatedItems(response.data)); // Dispatching to update Redux store
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching createdItems:", error);
+    throw error;
+  }
+};
+
+/*
+// Delete a createdItem
+const deleteCreatedItemApi = (createdItemId) => {
+  return async (dispatch) => {
+    try {
+      console.log(createdItemId);
+      await axiosInstance.delete(`/createdItems/${createdItemId}`);
+      console.log("CreatedItem deleted successfully.");
+      dispatch(deleteCreatedItem(createdItemId));
+    } catch (error) {
+      console.error("Error while deleting createdItem:", error);
+      throw error;
+    }
+  };
+};
+////////////////////
+// Updating section
+const updateCreatedItemApi = (createdItemId, updatedCreatedItemData) => {
+  return async (dispatch) => {
+    try {
+      await axiosInstance.put(
+        `/createdItems/${createdItemId}`,
+        updatedCreatedItemData
+      );
+      dispatch(updateCreatedItem(updatedCreatedItemData));
+    } catch (error) {
+      console.error("Error while updating createdItem:", error);
+      throw error;
+    }
+  };
+};*/
+
+const createCreatedItemApi = (createdItemData) => {
+  return async (dispatch) => {
+    try {
+      console.log("creating new createdItem");
+      const response = await axiosInstance.post(
+        `/created-items`,
+        createdItemData
+      );
+      console.log("CreatedItem added successfully:", response);
+
+      dispatch(addCreatedItem(response.data));
+      return response.data;
+    } catch (error) {
+      console.error("Error while adding createdItem:", error);
+      throw error;
+    }
+  };
+};
+
+const getCreatedItemOfUserAdminApi = (createdItemId) => {
+  return async (dispatch) => {
+    // A függvény visszatérési értéke egy aszinkron függvény
+    try {
+      const response = await axiosInstance.get(
+        `/created-items/${createdItemId}`
+      );
+      //   dispatch(getCreatedItemSuccess(response.data)); // API válasz feldolgozása és diszpácselése a store-ba
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching createdItems:", error);
+      throw error;
+    }
+  };
+};
+
+export default {
+  getAllCreatedItemsApi,
+  getAllCreatedItemsForObjectApi,
+  getAllCreatedItemsForWorkApi,
+  //  deleteCreatedItemApi,
+  //  updateCreatedItemApi,
+  createCreatedItemApi,
+  getCreatedItemOfUserAdminApi,
+};

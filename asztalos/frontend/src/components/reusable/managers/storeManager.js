@@ -5,6 +5,7 @@ import scriptApi from "../../data/api/scriptApi";
 import scriptItemApi from "../../data/api/scriptItemApi";
 import tableApi from "../../data/api/tableApi";
 import workApi from "../../data/api/workApi";
+import createdItemApi from "../../data/api/createdItemApi";
 
 export const fetchClients = () => {
   console.log("fetching the clients");
@@ -33,6 +34,16 @@ export const fetchScriptItemsForScript = (selectedScript) => {
 export const fetchObjects = () => {
   console.log("fetching the objects");
   scriptApi.getAllObjectsApi();
+};
+
+export const fetchCreatedItemsForObject = (objectId) => {
+  console.log("fetching the scripts for object: ", objectId);
+  createdItemApi.getAllCreatedItemsForObjectApi(objectId);
+};
+
+export const fetchCreatedItemsForWork = (workId) => {
+  console.log("fetching the scripts for work: ", workId);
+  createdItemApi.getAllCreatedItemsForWorkApi(workId);
 };
 
 export const fetchObjectsForWork = (selectedWork) => {

@@ -14,6 +14,7 @@ import {
   objectReducer,
   selectedObjectReducer,
   objectLoadingReducer,
+  createdItemsReducer,
 } from "../actions/objectStoreFunctions";
 import colorReducer from "../actions/colorStoreFunctions";
 import {
@@ -76,6 +77,7 @@ const reducers = combineReducers({
   items: itemsReducer,
   objects: objectReducer,
   objectLoading: objectLoadingReducer,
+  createdItems: createdItemsReducer,
   tables: tablesReducer,
 });
 
