@@ -7,37 +7,43 @@ import store from "../data/store/store";
 import Item from "./item";
 import ScriptCaller from "../calculation/scriptCaller";
 import ModelViewer from "../model/ModelViewer";
-import { getSelectedObject, getAllWorks, getAllObjects } from "../data/getters";
+import {
+  getSelectedObject,
+  getAllWorks,
+  getAllObjects,
+  getObjectById,
+} from "../data/getters";
 import {
   selectObject,
   updateObject,
   addObject,
-  getObjectById,
 } from "../data/store/actions/objectStoreFunctions";
 import { addWork } from "../data/store/actions/workStoreFunctions";
 import objectApi from "../data/api/objectApi";
-
+import { useParams } from "react-router-dom";
+import { fetchObjectsForWork } from "./managers/storeManager";
 function EditWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
 
-  const [types, setTypes] = useState(["Kitchen", "Living Room", "Wardrobe"]);
-  const [selectedPlace, setSelectedPlace] = useState(null);
+  const { workId } = useParams();
   const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
+  const [loading, setLoading] = useState(true);
   const [showColors, setShowColors] = useState(false);
   const [selectedSettingKeys, setSelectedSettingKeys] = useState([]);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
-  const [objects, setObjects] = useState(dispatch(getAllObjects()));
+  const [objects, setObjects] = useState(
+    loading ? dispatch(getAllObjects()) : []
+  );
   const [selectedSettings, setSelectedSettings] = useState(objects);
   const [selectedItems, setSelectedItems] = useState(null);
   const [modifiedObject, setModifiedObject] = useState(null);
   let newObjKey = 999;
 
   useEffect(() => {
-    //    selectingObject("0");
-    const selectedObject = dispatch(getSelectedObject);
+    const selectedObject = dispatch(getSelectedObject());
     console.log(selectedObject);
   }, []);
 
@@ -83,8 +89,15 @@ function EditWork({ closeNewWork, clientId }) {
     }
   }, [objects, selectedTab]);
 
+  useEffect(() => {
+    if (!loading) {
+      setObjects(dispatch(getAllObjects()));
+    }
+  }, [loading]);
+
   store.subscribe(() => {
     //console.log("State changed:", store.getState());
+    setLoading(store.getState().objectLoading);
   });
   function handleShowObjectSetting(key) {
     let showedSettings = [...selectedSettingKeys];
@@ -257,6 +270,7 @@ function EditWork({ closeNewWork, clientId }) {
   return (
     <>
       <Nav
+        key="nav"
         className="pt-5"
         variant="tabs"
         defaultActiveKey="0"
@@ -345,7 +359,7 @@ function EditWork({ closeNewWork, clientId }) {
           style={{ overflowY: "auto" }}
           key="middleNewWorkBox"
         >
-          {showModel && <ModelViewer />}
+          {/*showModel && <ModelViewer />*/}
           {!showModel && showForm && (
             <ScriptCaller
               newObjectKey={newObjKey}

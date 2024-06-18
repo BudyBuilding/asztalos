@@ -6,6 +6,7 @@ import {
   addMoreObjects,
   deleteObject,
   updateObject,
+  setObjectLoading,
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
 
@@ -25,8 +26,10 @@ const getAllObjectsApi = async () => {
 
 const getObjectOfWorkApi = async (selectedWork) => {
   try {
-    const response = await axiosInstance.get("/objects");
+    store.dispatch(setObjectLoading(true));
+    const response = await axiosInstance.get(`/objects/work/${selectedWork}`);
     console.log("Loading objects from server response: ", response);
+    store.dispatch(setObjectLoading(false));
     if (response.status === 200) {
       store.dispatch(addMoreObjects(response.data)); // Dispatching to update Redux store
     }
