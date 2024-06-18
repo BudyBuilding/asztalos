@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import asztalos.model.User;
+import asztalos.model.Work;
 import asztalos.model.WorkObject;
 import asztalos.repository.ObjectRepository;
 
@@ -34,5 +35,9 @@ public class ObjectService {
 
     public List<WorkObject> findByUser(User user) {
         return objectRepository.findByUser(user);
+    }
+
+    public List<WorkObject> findByWork(Work work) {
+        return objectRepository.findByWork(work);
     }
 }
