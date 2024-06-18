@@ -26,6 +26,7 @@ public class Script {
     private User user;
 
     private String imgUrl;
+    private String room;
 
     // Getters and setters
 
@@ -68,5 +69,12 @@ public class Script {
 
     public void setImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
+    }
+        public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 }
