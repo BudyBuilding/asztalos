@@ -202,6 +202,19 @@ function EditWork({ closeNewWork, clientId }) {
             New Object
           </Nav.Link>
         </Nav.Item>
+        <Nav.Item key={"0"}>
+          <Nav.Link
+            eventKey="0"
+            onClick={() => {
+              if (showForm) {
+                setShowForm(false);
+              }
+              setShowModel(true);
+            }}
+          >
+            New Object
+          </Nav.Link>
+        </Nav.Item>
         {objects &&
           objects.map((obj) => {
             return (
