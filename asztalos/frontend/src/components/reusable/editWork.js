@@ -30,16 +30,10 @@ function EditWork({ closeNewWork, clientId }) {
   const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
   const [loading, setLoading] = useState(true);
   const [showColors, setShowColors] = useState(false);
-  const [selectedSettingKeys, setSelectedSettingKeys] = useState([]);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
-  const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
   const [objects, setObjects] = useState(getAllObjects());
-  const [selectedSettings, setSelectedSettings] = useState(objects);
-  const [selectedItems, setSelectedItems] = useState(
-    getCreatedItemsByWork(workId)
-  );
   const [itemDetails, setItemDetails] = useState([]);
   const [settingDetails, setSettingDetails] = useState([]);
   const [modifiedObject, setModifiedObject] = useState(null);
@@ -78,48 +72,6 @@ function EditWork({ closeNewWork, clientId }) {
   }
 
   useEffect(() => {
-    if (selectedTab === "0") {
-      let settings = [];
-      let items = [];
-      if (objects) {
-        objects.forEach((object) => {
-          settings.push({
-            name: object.name,
-            key: object.key,
-            values: object.values,
-          });
-          items.push(getCreatedItemsByObject(object.objectId));
-        });
-      }
-
-      setSelectedSettings(settings);
-      setSelectedItems(items);
-    } else {
-      const selectedObject = objects
-        ? objects.find((obj) => obj.key === parseInt(selectedTab))
-        : [];
-      if (selectedObject) {
-        setSelectedSettings([
-          {
-            name: selectedObject.name,
-            key: selectedObject.key,
-            values: selectedObject.values,
-            items: selectedObject.items,
-          },
-        ]);
-        setSelectedItems([
-          {
-            name: selectedObject.name,
-            key: selectedObject.key,
-            items: selectedObject.items,
-            values: selectedObject.values,
-          },
-        ]);
-      }
-    }
-  }, [objects, selectedTab]);
-
-  useEffect(() => {
     if (!loading) {
       setObjects(dispatch(getAllObjects()));
     }
@@ -129,77 +81,11 @@ function EditWork({ closeNewWork, clientId }) {
     //console.log("State changed:", store.getState());
     setLoading(store.getState().objectLoading);
   });
-  function handleShowObjectSetting(key) {
-    let showedSettings = [...selectedSettingKeys];
-    if (showedSettings.includes(key)) {
-      showedSettings = showedSettings.filter((k) => k !== key);
-    } else {
-      showedSettings.push(key);
-    }
-    setSelectedSettingKeys(showedSettings);
-  }
-
-  function handleShowItemSetting(key) {
-    let showedItems = [...selectedItemKeys];
-    if (showedItems.includes(key)) {
-      showedItems = showedItems.filter((k) => k !== key);
-    } else {
-      showedItems.push(key);
-    }
-    setSelectedItemKeys(showedItems);
-  }
 
   const addNewObject = async (object, generatedItems) => {
     console.log("adding the object to the backend");
     objectApi.createObjectApi(object);
   };
-
-  useEffect(() => {
-    if (selectedTab === "0") {
-      let settings = [];
-      let items = [];
-      if (objects) {
-        objects.forEach((object) => {
-          settings.push({
-            name: object.name,
-            key: object.key,
-            values: object.values,
-          });
-          items.push({
-            name: object.name,
-            key: object.key,
-            items: object.items,
-          });
-        });
-      }
-
-      setSelectedSettings(settings);
-      setSelectedItems(items);
-    } else {
-      // Ha egy specifikus elemet választottak, csak azt jelenítjük meg
-      const selectedObject = objects
-        ? objects.find((obj) => obj.key === parseInt(selectedTab))
-        : [];
-      if (selectedObject) {
-        setSelectedSettings([
-          {
-            name: selectedObject.name,
-            key: selectedObject.key,
-            items: selectedObject.items,
-            values: selectedObject.values,
-          },
-        ]);
-        setSelectedItems([
-          {
-            name: selectedObject.name,
-            key: selectedObject.key,
-            values: selectedObject.values,
-            items: selectedObject.items,
-          },
-        ]);
-      }
-    }
-  }, [selectedTab]);
 
   const colors = useSelector((state) => state.colors);
 
@@ -207,15 +93,10 @@ function EditWork({ closeNewWork, clientId }) {
     setShowColorSelector(false);
   }
 
-  useEffect(() => {
-    dispatch({ type: "LOAD_COLORS" });
-  }, [dispatch]);
-
   function handleSelectedTab(key) {
     if (key !== selectedTab) {
       setSelectedTab(key);
       dispatch(selectObject(key));
-      setSelectedItemKeys([]);
     }
   }
 
@@ -313,8 +194,6 @@ function EditWork({ closeNewWork, clientId }) {
             eventKey="newObject"
             onClick={() => {
               setShowModel(false);
-              setSelectedItems([]);
-              setSelectedSettings([]);
               if (!showForm) {
                 setShowForm(true);
               }
