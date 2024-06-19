@@ -41,13 +41,22 @@ function EditWork({ closeNewWork, clientId }) {
     getCreatedItemsByWork(workId)
   );
   const [itemDetails, setItemDetails] = useState([]);
-
+  const [settingDetails, setSettingDetails] = useState([]);
   const [modifiedObject, setModifiedObject] = useState(null);
+  const [currentObject, setCurrentObject] = useState([]);
   let newObjKey = 999;
 
   useEffect(() => {
-    console.log(selectedItems);
-  }, [selectedItems]);
+    if (selectedTab == 0) {
+      setCurrentObject(objects);
+    } else {
+      const choosenObject = objects.find(
+        (object) => object.objectId == selectedTab
+      );
+      setCurrentObject([choosenObject]);
+    }
+  }, [selectedTab]);
+
   function itemDetailing(objectId) {
     let newDetails = [...itemDetails];
     if (newDetails.includes(objectId)) {
@@ -57,7 +66,17 @@ function EditWork({ closeNewWork, clientId }) {
     }
     setItemDetails(newDetails);
   }
-  console.log(objects);
+
+  function settingDetailing(objectId) {
+    let newDetails = [...settingDetails];
+    if (newDetails.includes(objectId)) {
+      newDetails = newDetails.filter((id) => id !== objectId);
+    } else {
+      newDetails.push(objectId);
+    }
+    setSettingDetails(newDetails);
+  }
+
   useEffect(() => {
     if (selectedTab === "0") {
       let settings = [];
@@ -341,7 +360,37 @@ function EditWork({ closeNewWork, clientId }) {
           key="leftNewWorkBox"
         >
           <h3 className="fw-bold">Settings</h3>
-          {selectedSettings &&
+          {currentObject &&
+            currentObject.map((object) => {
+              return (
+                <div key={object.objectId}>
+                  <h3
+                    onClick={() => settingDetailing(object.objectId)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {object.name}
+                  </h3>
+                  {settingDetails.includes(object.objectId) && (
+                    <div>
+                      {dispatch(getCreatedItemsByObject(object.objectId)).map(
+                        (item) => (
+                          <div key={item.itemId}>
+                            <Item
+                              objectID={object.objectId}
+                              key={item.itemId}
+                              Item={item}
+                              onItemChange={handleItemChange}
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+          {/*selectedSettings &&
             selectedSettings.map((obj) => {
               return (
                 <div key={obj.key}>
@@ -363,7 +412,7 @@ function EditWork({ closeNewWork, clientId }) {
                   )}
                 </div>
               );
-            })}
+            })*/}
         </Container>
         <Container
           className="w-60 border m-0 p-0"
@@ -385,8 +434,8 @@ function EditWork({ closeNewWork, clientId }) {
           key="rightNewWorkBox"
         >
           <h3 className="fw-bold">Required Pieces</h3>
-          {objects &&
-            objects.map((object) => {
+          {currentObject &&
+            currentObject.map((object) => {
               return (
                 <div key={object.objectId}>
                   <h3
@@ -421,46 +470,3 @@ function EditWork({ closeNewWork, clientId }) {
 }
 
 export default EditWork;
-{
-  /*selectedItems &&
-            selectedItems.map((itemObj) => {
-              return (
-                <div key={itemObj.key}>
-                  <h3
-                    className="mt-4 mb-2"
-                    onClick={() => handleShowItemSetting(itemObj.key)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {itemObj.name}
-                  </h3>
-                  {selectedItemKeys &&
-                    selectedItemKeys.includes(itemObj.key) && (
-                      <div>
-                        {itemObj.items.map((item) => {
-                          return (
-                            <div key={item.itemKey}>
-                              <Item
-                                objectID={itemObj.key}
-                                key={item.itemKey}
-                                Item={item}
-                                onItemChange={handleItemChange}
-                              />
-                            </div>
-                          );
-                        })}
-                        <Button
-                          variant="primary"
-                          className="me-2 ms-2"
-                          onClick={handleSave}
-                        >
-                          Save
-                        </Button>
-                        <Button variant="secondary" onClick={handleRegenerate}>
-                          Regenerate
-                        </Button>
-                      </div>
-                    )}
-                </div>
-              );
-            })*/
-}
