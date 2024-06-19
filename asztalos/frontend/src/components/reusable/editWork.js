@@ -52,21 +52,31 @@ function EditWork({ closeNewWork, clientId }) {
   }, [selectedTab]);
 
   function itemDetailing(objectId) {
+    console.log(objectId);
     let newDetails = [...itemDetails];
     if (newDetails.includes(objectId)) {
       newDetails = newDetails.filter((id) => id !== objectId);
     } else {
-      newDetails.push(objectId);
+      if (selectedTab != "newObject") {
+        newDetails.push(objectId);
+      } else {
+        newDetails = [];
+      }
     }
     setItemDetails(newDetails);
   }
 
   function settingDetailing(objectId) {
+    console.log(objectId);
     let newDetails = [...settingDetails];
     if (newDetails.includes(objectId)) {
       newDetails = newDetails.filter((id) => id !== objectId);
     } else {
-      newDetails.push(objectId);
+      if (selectedTab != "newObject") {
+        newDetails.push(objectId);
+      } else {
+        newDetails = [];
+      }
     }
     setSettingDetails(newDetails);
   }
@@ -189,14 +199,12 @@ function EditWork({ closeNewWork, clientId }) {
           handleSelectedTab(selectedKey);
         }}
       >
-        <Nav.Item key={"10000"}>
+        <Nav.Item key={"-1"}>
           <Nav.Link
             eventKey="newObject"
             onClick={() => {
               setShowModel(false);
-              if (!showForm) {
-                setShowForm(true);
-              }
+              setCurrentObject([]);
             }}
           >
             New Object
@@ -254,32 +262,34 @@ function EditWork({ closeNewWork, clientId }) {
           <h3 className="fw-bold">Settings</h3>
           {currentObject &&
             currentObject.map((object) => {
-              return (
-                <div key={object.objectId}>
-                  <h3
-                    onClick={() => settingDetailing(object.objectId)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {object.name}
-                  </h3>
-                  {settingDetails.includes(object.objectId) && (
-                    <div>
-                      {dispatch(getCreatedItemsByObject(object.objectId)).map(
-                        (item) => (
-                          <div key={item.itemId}>
-                            <Item
-                              objectID={object.objectId}
-                              key={item.itemId}
-                              Item={item}
-                              onItemChange={handleItemChange}
-                            />
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
+              if (object) {
+                return (
+                  <div key={object.objectId}>
+                    <h3
+                      onClick={() => settingDetailing(object.objectId)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {object.name}
+                    </h3>
+                    {settingDetails.includes(object.objectId) && (
+                      <div>
+                        {dispatch(getCreatedItemsByObject(object.objectId)).map(
+                          (item) => (
+                            <div key={item.itemId}>
+                              <Item
+                                objectID={object.objectId}
+                                key={item.itemId}
+                                Item={item}
+                                onItemChange={handleItemChange}
+                              />
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
             })}
 
           {/*selectedSettings &&
@@ -328,32 +338,34 @@ function EditWork({ closeNewWork, clientId }) {
           <h3 className="fw-bold">Required Pieces</h3>
           {currentObject &&
             currentObject.map((object) => {
-              return (
-                <div key={object.objectId}>
-                  <h3
-                    onClick={() => itemDetailing(object.objectId)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {object.name}
-                  </h3>
-                  {itemDetails.includes(object.objectId) && (
-                    <div>
-                      {dispatch(getCreatedItemsByObject(object.objectId)).map(
-                        (item) => (
-                          <div key={item.itemId}>
-                            <Item
-                              objectID={object.objectId}
-                              key={item.itemId}
-                              Item={item}
-                              onItemChange={handleItemChange}
-                            />
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
+              if (object) {
+                return (
+                  <div key={object.objectId}>
+                    <h3
+                      onClick={() => itemDetailing(object.objectId)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {object.name}
+                    </h3>
+                    {itemDetails.includes(object.objectId) && (
+                      <div>
+                        {dispatch(getCreatedItemsByObject(object.objectId)).map(
+                          (item) => (
+                            <div key={item.itemId}>
+                              <Item
+                                objectID={object.objectId}
+                                key={item.itemId}
+                                Item={item}
+                                onItemChange={handleItemChange}
+                              />
+                            </div>
+                          )
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
             })}
         </Container>
       </Container>
