@@ -116,3 +116,21 @@ export const getAllCreatedItems = () => {
     return createdItems;
   };
 };
+
+export const getCreatedItemsByWork = (workId) => {
+  return (dispatch) => {
+    const createdItems = store
+      .getState()
+      .createdItems.filter((item) => item.work.workId === workId);
+    return createdItems;
+  };
+};
+
+export const getCreatedItemsByObject = (objectId) => {
+  return (dispatch) => {
+    const createdItems = store
+      .getState()
+      .createdItems.filter((item) => item.object.objectId === objectId);
+    return createdItems || [];
+  };
+};

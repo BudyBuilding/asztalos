@@ -21,7 +21,11 @@ import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
 import { getAllClients, getAllWorks } from "../data/getters";
-import { fetchTables } from "../reusable/managers/storeManager";
+import {
+  fetchCreatedItemsForWork,
+  fetchObjectsForWork,
+  fetchTables,
+} from "../reusable/managers/storeManager";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -57,7 +61,7 @@ function Dashboard() {
   }
 
   store.subscribe(() => {
-    console.log("State changed:", store.getState());
+    //    console.log("State changed:", store.getState());
     setRender(!render);
   });
 
@@ -78,6 +82,8 @@ function Dashboard() {
     try {
       dispatch(selectWork(workId));
       fetchTables(workId);
+      fetchObjectsForWork(workId);
+      fetchCreatedItemsForWork(workId);
       navigate(`/workAnalyzer/${workId}`);
       setLoading(false);
     } catch (error) {

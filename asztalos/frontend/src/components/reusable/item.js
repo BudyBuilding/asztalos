@@ -1,9 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Form, Container, Row, Col } from "react-bootstrap";
 
 export default function Item({ Item, onItemChange, objectID }) {
   const [item, setItem] = useState(Item); // Állapot létrehozása és inicializálása
+  function parseStringToArray(str) {
+    try {
+      return JSON.parse(str);
+    } catch (error) {
+      console.error("Error parsing string to array:", error);
+      return [];
+    }
+  }
 
+  useEffect(() => {
+    console.log(item);
+  }, [item]);
+
+  useEffect(() => {
+    const parsedSize = parseStringToArray(Item.size);
+    setItem((prevItem) => ({
+      ...prevItem,
+      size: parsedSize,
+    }));
+  }, [Item.size]);
   const handleItemChange = (updatedItem) => {
     setItem(updatedItem); // Frissítjük az állapotot az új elemmel
     onItemChange(updatedItem, objectID); // Változások továbbítása a szülő komponens felé
@@ -18,7 +37,7 @@ export default function Item({ Item, onItemChange, objectID }) {
               <Form.Group as={Col}>
                 <Form.Control
                   className="border-0 p-0 text-center m-0"
-                  value={item.length}
+                  value={item.size[0]}
                   onChange={(e) =>
                     handleItemChange({ ...item, length: e.target.value })
                   }
@@ -28,7 +47,7 @@ export default function Item({ Item, onItemChange, objectID }) {
               <Form.Group as={Col}>
                 <Form.Control
                   className="border-0 p-0 text-center m-0"
-                  value={item.width}
+                  value={item.size[1]}
                   onChange={(e) =>
                     handleItemChange({ ...item, width: e.target.value })
                   }
@@ -38,9 +57,9 @@ export default function Item({ Item, onItemChange, objectID }) {
               <Form.Group as={Col}>
                 <Form.Control
                   className="border-0 p-0 text-center m-0"
-                  value={item.pcs}
+                  value={item.qty}
                   onChange={(e) =>
-                    handleItemChange({ ...item, pcs: e.target.value })
+                    handleItemChange({ ...item, qty: e.target.value })
                   }
                 />
               </Form.Group>
