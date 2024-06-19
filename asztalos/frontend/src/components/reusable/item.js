@@ -11,10 +11,10 @@ export default function Item({ Item, onItemChange, objectID }) {
       return [];
     }
   }
-
+  /*
   useEffect(() => {
     console.log(item);
-  }, [item]);
+  }, [item]);*/
 
   useEffect(() => {
     const parsedSize = parseStringToArray(Item.size);
