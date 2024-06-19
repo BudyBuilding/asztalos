@@ -12,6 +12,8 @@ import {
   getAllWorks,
   getAllObjects,
   getObjectById,
+  getCreatedItemsByWork,
+  getCreatedItemsByObject,
 } from "../data/getters";
 import {
   selectObject,
@@ -21,7 +23,6 @@ import {
 import { addWork } from "../data/store/actions/workStoreFunctions";
 import objectApi from "../data/api/objectApi";
 import { useParams } from "react-router-dom";
-import { fetchObjectsForWork } from "./managers/storeManager";
 function EditWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
 
@@ -34,19 +35,29 @@ function EditWork({ closeNewWork, clientId }) {
   const [showForm, setShowForm] = useState(false);
   const [selectedItemKeys, setSelectedItemKeys] = useState([]);
   const [showModel, setShowModel] = useState(true);
-  const [objects, setObjects] = useState(
-    loading ? dispatch(getAllObjects()) : []
-  );
+  const [objects, setObjects] = useState(getAllObjects());
   const [selectedSettings, setSelectedSettings] = useState(objects);
-  const [selectedItems, setSelectedItems] = useState(null);
+  const [selectedItems, setSelectedItems] = useState(
+    getCreatedItemsByWork(workId)
+  );
+  const [itemDetails, setItemDetails] = useState([]);
+
   const [modifiedObject, setModifiedObject] = useState(null);
   let newObjKey = 999;
 
   useEffect(() => {
-    const selectedObject = dispatch(getSelectedObject());
-    console.log(selectedObject);
-  }, []);
-
+    console.log(selectedItems);
+  }, [selectedItems]);
+  function itemDetailing(objectId) {
+    let newDetails = [...itemDetails];
+    if (newDetails.includes(objectId)) {
+      newDetails = newDetails.filter((id) => id !== objectId);
+    } else {
+      newDetails.push(objectId);
+    }
+    setItemDetails(newDetails);
+  }
+  console.log(objects);
   useEffect(() => {
     if (selectedTab === "0") {
       let settings = [];
@@ -58,7 +69,7 @@ function EditWork({ closeNewWork, clientId }) {
             key: object.key,
             values: object.values,
           });
-          items.push(object);
+          items.push(getCreatedItemsByObject(object.objectId));
         });
       }
 
@@ -374,8 +385,44 @@ function EditWork({ closeNewWork, clientId }) {
           key="rightNewWorkBox"
         >
           <h3 className="fw-bold">Required Pieces</h3>
+          {objects &&
+            objects.map((object) => {
+              return (
+                <div key={object.objectId}>
+                  <h3
+                    onClick={() => itemDetailing(object.objectId)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {object.name}
+                  </h3>
+                  {itemDetails.includes(object.objectId) && (
+                    <div>
+                      {dispatch(getCreatedItemsByObject(object.objectId)).map(
+                        (item) => (
+                          <div key={item.itemId}>
+                            <Item
+                              objectID={object.objectId}
+                              key={item.itemId}
+                              Item={item}
+                              onItemChange={handleItemChange}
+                            />
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+        </Container>
+      </Container>
+    </>
+  );
+}
 
-          {selectedItems &&
+export default EditWork;
+{
+  /*selectedItems &&
             selectedItems.map((itemObj) => {
               return (
                 <div key={itemObj.key}>
@@ -415,11 +462,5 @@ function EditWork({ closeNewWork, clientId }) {
                     )}
                 </div>
               );
-            })}
-        </Container>
-      </Container>
-    </>
-  );
+            })*/
 }
-
-export default EditWork;
