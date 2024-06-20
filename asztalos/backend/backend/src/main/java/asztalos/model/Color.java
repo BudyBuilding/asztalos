@@ -1,5 +1,8 @@
 package asztalos.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -27,6 +30,14 @@ public class Color {
     private String imgUrl;
 
     // Getters and setters
+    @JsonCreator
+    public Color(@JsonProperty("colorId") Long colorId) {
+        this.colorId = colorId;
+    }
+        
+    public Color() {
+    }
+
 
     public Long getColorId() {
         return colorId;
