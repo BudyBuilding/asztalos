@@ -22,19 +22,20 @@ public class Script {
     private String name;
 
     @ManyToOne
-   @JoinColumn(name = "\"user\"")
+    @JoinColumn(name = "\"user\"")
     private User user;
 
     private String imgUrl;
     private String room;
 
-    // Getters and setters
+    private String setting;
 
+    // Constructor with @JsonCreator and @JsonProperty for JSON serialization/deserialization
     @JsonCreator
     public Script(@JsonProperty("scriptId") Long scriptId) {
         this.scriptId = scriptId;
     }
-
+    // Getters and setters
     public Script() {
         
     }
@@ -70,11 +71,20 @@ public class Script {
     public void setImgUrl(String imgUrl) {
         this.imgUrl = imgUrl;
     }
-        public String getRoom() {
+    
+    public String getRoom() {
         return room;
     }
 
     public void setRoom(String room) {
         this.room = room;
+    }
+
+        public String getSetting() {
+        return setting;
+    }
+
+    public void setSetting(String setting) {
+        this.setting = setting;
     }
 }

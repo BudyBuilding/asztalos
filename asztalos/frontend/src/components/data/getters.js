@@ -134,3 +134,20 @@ export const getCreatedItemsByObject = (objectId) => {
     return createdItems || [];
   };
 };
+
+//////////////////
+// settings
+export const getSettingById = (settingId) => {
+  return (dispatch) => {
+    const settings = store.getState().settings;
+    const setting = settings.find((setting) => setting.settingId == settingId);
+    return setting;
+  };
+};
+
+export const getAllSettings = () => {
+  return (dispatch) => {
+    const settings = store.getState().settings;
+    return settings;
+  };
+};

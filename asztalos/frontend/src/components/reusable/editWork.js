@@ -12,7 +12,6 @@ import {
   getAllWorks,
   getAllObjects,
   getObjectById,
-  getCreatedItemsByWork,
   getCreatedItemsByObject,
 } from "../data/getters";
 import {
@@ -205,6 +204,7 @@ function EditWork({ closeNewWork, clientId }) {
             onClick={() => {
               setShowModel(false);
               setCurrentObject([]);
+              setShowForm(true);
             }}
           >
             New Object
@@ -291,30 +291,6 @@ function EditWork({ closeNewWork, clientId }) {
                 );
               }
             })}
-
-          {/*selectedSettings &&
-            selectedSettings.map((obj) => {
-              return (
-                <div key={obj.key}>
-                  <h3
-                    className="mt-4 mb-2"
-                    onClick={() => handleShowObjectSetting(obj.key)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {obj.name}
-                  </h3>
-                  {selectedSettingKeys.includes(obj.key) && (
-                    <ul>
-                      {Object.entries(obj.values).map(([subKey, value]) => (
-                        <li key={subKey}>{`${subKey}: ${JSON.stringify(
-                          value
-                        )}`}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              );
-            })*/}
         </Container>
         <Container
           className="w-60 border m-0 p-0"

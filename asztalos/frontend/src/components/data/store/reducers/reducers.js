@@ -23,7 +23,7 @@ import {
   selectedScriptItemsReducer,
 } from "../actions/scriptStoreFunctions";
 import { tablesReducer } from "../actions/tableStoreFunctions";
-
+import { settingReducer } from "../actions/settingStoreFunctions";
 const initialState = {
   colors: {
     door: [],
@@ -79,6 +79,7 @@ const reducers = combineReducers({
   objectLoading: objectLoadingReducer,
   createdItems: createdItemsReducer,
   tables: tablesReducer,
+  settings: settingReducer,
 });
 
 export default reducers;

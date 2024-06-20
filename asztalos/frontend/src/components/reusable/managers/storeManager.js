@@ -6,6 +6,7 @@ import scriptItemApi from "../../data/api/scriptItemApi";
 import tableApi from "../../data/api/tableApi";
 import workApi from "../../data/api/workApi";
 import createdItemApi from "../../data/api/createdItemApi";
+import settingsApi from "../../data/api/settingsApi";
 
 export const fetchClients = () => {
   console.log("fetching the clients");
@@ -26,6 +27,7 @@ export const fetchScripts = () => {
   console.log("fetching the scripts");
   scriptApi.getAllScriptsApi();
 };
+
 export const fetchScriptItemsForScript = (selectedScript) => {
   console.log("fetching the scripts for: ", selectedScript);
   scriptItemApi.getAllScriptItemsForScriptApi(selectedScript);
@@ -51,10 +53,36 @@ export const fetchObjectsForWork = (selectedWork) => {
   objectApi.getObjectOfWorkApi(selectedWork);
 };
 
+export const fetchSettings = () => {
+  console.log("fetching the settings");
+  settingsApi.getAllSettingsApi();
+};
+
+export const fetchSettingsByWork = () => {
+  console.log("fetching the settings");
+  settingsApi.getAllSettingOfWorkApi();
+};
+/*
+export const fetchSettingsByObject = () => {
+  console.log("fetching the settings");
+  settingsApi.getAllSettingsApi();
+};
+
+export const fetchSettingsByScript = () => {
+  console.log("fetching the settings");
+  settingsApi.getAllSettingsApi();
+};
+*/
+export const fetchSettingsByList = () => {
+  console.log("fetching the settings");
+  settingsApi.getAllSettingOfListOfIdsApi();
+};
+
 /////////////
 export const fetchAll = () => {
   console.log("fetching");
   fetchClients();
   fetchWorks();
   fetchScripts();
+  fetchSettings();
 };
