@@ -45,6 +45,13 @@ export const getAllWorks = () => {
     return works;
   };
 };
+
+export const getSelectedWork = () => {
+  return (dispatch) => {
+    const works = store.getState().selectedWork;
+    return works;
+  };
+};
 ////////////////
 //table
 export const getTableById = (tableId) => {
@@ -83,6 +90,31 @@ export const getSelectedScript = () => {
   return (dispatch) => {
     const selectedScript = store.getState().selectedScript;
     return selectedScript;
+  };
+};
+
+export const getAllScriptItems = () => {
+  return (dispatch) => {
+    const scriptItems = store.getState().selectedScriptItems;
+    return scriptItems;
+  };
+};
+
+export const getScriptItemsByWork = (workId) => {
+  return (dispatch) => {
+    const scriptItems = store
+      .getState()
+      .scriptItems.filter((item) => item.work.workId === workId);
+    return scriptItems;
+  };
+};
+
+export const getScriptItemsByScript = (scriptId) => {
+  return (dispatch) => {
+    const scriptItems = store
+      .getState()
+      .scriptItems.filter((item) => item.object.scriptId === scriptId);
+    return scriptItems || [];
   };
 };
 
