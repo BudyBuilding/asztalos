@@ -34,9 +34,9 @@ public class WorkObject {
 
     private String name;
 
-    //@ManyToOne
-    //@JoinColumn(name = "used_script", referencedColumnName = "script_id")
-   // private Script usedScript;
+    @ManyToOne
+    @JoinColumn(name = "used_script"    )
+    private Script usedScript;
 
     @ElementCollection
     @Column(name = "color")
@@ -82,7 +82,6 @@ public class WorkObject {
     public void setName(String name) {
         this.name = name;
     }
-/* *
     public Script getUsedScript() {
         return usedScript;
     }
@@ -90,7 +89,6 @@ public class WorkObject {
     public void setUsedScript(Script usedScript) {
         this.usedScript = usedScript;
     }
-*/
     public List<String> getUsedColors() {
         return usedColors;
     }

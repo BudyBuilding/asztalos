@@ -29,7 +29,7 @@ export const fetchScripts = () => {
 };
 
 export const fetchScriptItemsForScript = (selectedScript) => {
-  console.log("fetching the scripts for: ", selectedScript);
+  console.log("fetching the script items for: ", selectedScript);
   scriptItemApi.getAllScriptItemsForScriptApi(selectedScript);
 };
 
