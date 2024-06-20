@@ -11,12 +11,15 @@ import {
   getSelectedClient,
   getSettingById,
   getSelectedWork,
+  getLatestObject,
+  getUser,
 } from "../data/getters";
 
 import objectApi from "../data/api/objectApi";
+import createdItemApi from "../data/api/createdItemApi";
 import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
 import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
-export default function ScriptCaller({ addNewObjectFunction }) {
+export default function ScriptCaller({ onSave }) {
   const dispatch = useDispatch();
   const [selectedScript, setSelectedScript] = useState(null);
   const [showScripts, setShowScripts] = useState([]);
@@ -50,11 +53,12 @@ export default function ScriptCaller({ addNewObjectFunction }) {
     }
   };
   store.subscribe(() => {
-    //   console.log("State changed:", store.getState());
+    console.log("State changed:", store.getState());
   });
   const roomsWithScripts = getRoomsWithScripts();
   const selectedWork = dispatch(getSelectedWork());
   const selectedClient = dispatch(getSelectedClient());
+  const currentUser = dispatch(getUser());
   useEffect(() => {
     if (selectedScript) {
       const parsedSettings = parseSetting(selectedScript.setting);
@@ -136,7 +140,6 @@ export default function ScriptCaller({ addNewObjectFunction }) {
     if (generatedItems.length !== 0) {
       try {
         // Objektum létrehozása és hozzáadása a store-hoz
-        console.log(selectedScript);
         const objectToCreate = {
           name: selectedScript.name,
           used_script: {
@@ -150,18 +153,46 @@ export default function ScriptCaller({ addNewObjectFunction }) {
           },
           used_colors: "{}",
         };
-        const createdObject = await objectApi.createObjectApi(objectToCreate); // `objectToCreate` változó itt kellene definiálni
 
-        console.log(dispatch(createdObject));
+        // Új objektum létrehozása és várakozás az eredményre
+        const createdObject = await dispatch(
+          objectApi.createObjectApi(objectToCreate)
+        );
+        console.log("Object successfully created and stored:", createdObject);
 
-        console.log("Object successfully created and stored.");
+        // Új objektum frissítése a store-ban
+        const newObject = dispatch(getLatestObject());
+        console.log("New object from store:", newObject);
+
+        // Frissített generált elemek létrehozása
+        const updatedGeneratedItems = generatedItems.map((item) => ({
+          ...item,
+          object: {
+            objectId: newObject.objectId,
+          },
+          work: {
+            workId: selectedWork,
+          },
+          rotable: true,
+          rotation: "[0,0,0]",
+          position: "[0,0,0]",
+        }));
+        console.log("Updated generated items:", updatedGeneratedItems);
+
+        // Új elemek mentése
+        await dispatch(
+          createdItemApi.createMultipleCreatedItemsApi(updatedGeneratedItems)
+        );
+        console.log("Generated items successfully saved.");
       } catch (error) {
         console.error("Error creating object:", error);
       }
     } else {
       console.log("There is no generated item to save.");
     }
+    onSave();
   }
+
   const handleShowScripts = (index) => {
     if (!showScripts.includes(index)) {
       setShowScripts([...showScripts, index]);
