@@ -24,7 +24,7 @@ public class ScriptItem {
 
     private String material;
 
-    private Integer qty;
+    private String qty;
 
     private String size;
 
@@ -66,11 +66,11 @@ public class ScriptItem {
         this.material = material;
     }
 
-    public Integer getQty() {
+    public String getQty() {
         return qty;
     }
 
-    public void setQty(Integer qty) {
+    public void setQty(String qty) {
         this.qty = qty;
     }
 
