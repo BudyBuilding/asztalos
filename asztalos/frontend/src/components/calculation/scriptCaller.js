@@ -8,6 +8,7 @@ import {
   getAllObjects,
   getAllScripts,
   getSelectedClient,
+  getSettingById,
 } from "../data/getters";
 import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
 import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
@@ -27,9 +28,7 @@ export default function ScriptCaller({ addNewObjectFunction }) {
   const [showWarning, setShowWarning] = useState(false);
 
   const maxKey = 26;
-
   const newObjectKey = maxKey + 1;
-
   const getRoomsWithScripts = () => {
     const roomsWithScripts = [];
     if (scripts) {
@@ -48,6 +47,13 @@ export default function ScriptCaller({ addNewObjectFunction }) {
   };
 
   const roomsWithScripts = getRoomsWithScripts();
+
+  useEffect(() => {
+    if (selectedScript) {
+      const parsedSettings = parseSetting(selectedScript.setting);
+      setCurrentConfig(parsedSettings);
+    }
+  }, [selectedScript]);
 
   useEffect(() => {
     if (showWarning) {
@@ -71,7 +77,7 @@ export default function ScriptCaller({ addNewObjectFunction }) {
       measurements.depth > 0 &&
       measurements.depth
     ) {
-      setCurrentConfig(script);
+      setCurrentConfig(script.setting);
       setSelectedScript(script);
       fetchScriptItemsForScript(script.scriptId);
       console.log(measurements);
@@ -79,21 +85,29 @@ export default function ScriptCaller({ addNewObjectFunction }) {
       setShowWarning(true);
     }
   }
+
+  function parseSetting(setting) {
+    // Ha a setting üres vagy null, üres objektummal térünk vissza
+    if (!setting) {
+      return {};
+    }
+
+    const parsedSettings = {};
+    const pairs = setting.split(",");
+
+    pairs.forEach((pair) => {
+      const [key, value] = pair.split(":");
+      if (key && value) {
+        parsedSettings[key.trim()] = parseInt(value.trim()); // Vagy ha számok, akkor parseFloat
+      }
+    });
+    return parsedSettings;
+  }
+
   function handleGenerate() {
     if (selectedScript && measurements) {
       const generatedItems = [];
-      /* const thickness = 18;
-      const updatedScript = {
-        ...selectedScript,
-        config: currentConfig,
-      };
 
-      console.log(updatedScript);
-      setSelectedScript(updatedScript);*/
-      /*
-      const result = processScript(updatedScript, measurements, thickness);
-      console.log("Generated result:", result);
-      setResults(result);*/
       const client = dispatch(getSelectedWork());
       console.log(client);
       const object = {
@@ -102,9 +116,6 @@ export default function ScriptCaller({ addNewObjectFunction }) {
         work: dispatch(getSelectedWork()),
         usedScript: selectScript.scriptId,
         usedColors: ["red", "blue"],
-        //        size: "[0,0,0]",
-        //      position: "[0,0,0]",
-        //    rotation: "[0,0,0]",
       };
       console.log(object);
       //      addNewObjectFunction(object, generatedItems);
@@ -240,7 +251,9 @@ export default function ScriptCaller({ addNewObjectFunction }) {
                     className="border-0 ps-3 align-content-center"
                     style={{ width: "11rem" }}
                   >
-                    {key}
+                    {dispatch(getSettingById(key))
+                      ? dispatch(getSettingById(key)).name
+                      : ""}
                   </Form.Label>
                   <Form.Control
                     className="border-0 text-center ms-2 align-content-center"
