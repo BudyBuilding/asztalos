@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Form, Button } from "react-bootstrap";
 import { useSelector, useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
+import store from "../data/store/store";
 import Item from "../reusable/item";
 import { getScripts } from "../data/api/apiService";
 import {
@@ -9,16 +10,19 @@ import {
   getAllScripts,
   getSelectedClient,
   getSettingById,
+  getSelectedWork,
 } from "../data/getters";
+
+import objectApi from "../data/api/objectApi";
 import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
 import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
-import { getSelectedWork } from "../data/store/actions/workStoreFunctions";
 export default function ScriptCaller({ addNewObjectFunction }) {
   const dispatch = useDispatch();
   const [selectedScript, setSelectedScript] = useState(null);
   const [showScripts, setShowScripts] = useState([]);
   const [currentConfig, setCurrentConfig] = useState([]);
   const scripts = dispatch(getAllScripts());
+  const [generatedItems, setGeneratedItems] = useState([]);
   const [measurements, setMeasurements] = useState({
     height: "",
     width: "",
@@ -45,9 +49,12 @@ export default function ScriptCaller({ addNewObjectFunction }) {
       return roomsWithScripts;
     }
   };
-
+  store.subscribe(() => {
+    //   console.log("State changed:", store.getState());
+  });
   const roomsWithScripts = getRoomsWithScripts();
-
+  const selectedWork = dispatch(getSelectedWork());
+  const selectedClient = dispatch(getSelectedClient());
   useEffect(() => {
     if (selectedScript) {
       const parsedSettings = parseSetting(selectedScript.setting);
@@ -106,9 +113,10 @@ export default function ScriptCaller({ addNewObjectFunction }) {
 
   function handleGenerate() {
     if (selectedScript && measurements) {
-      const generatedItems = [];
-
-      const client = dispatch(getSelectedWork());
+      const generatedItemList = processScript(currentConfig, measurements);
+      console.log(generatedItemList);
+      setGeneratedItems(generatedItemList);
+      /*  const client = dispatch(getSelectedWork());
       console.log(client);
       const object = {
         name: selectedScript.name,
@@ -117,13 +125,43 @@ export default function ScriptCaller({ addNewObjectFunction }) {
         usedScript: selectScript.scriptId,
         usedColors: ["red", "blue"],
       };
-      console.log(object);
+      console.log(object);*/
       //      addNewObjectFunction(object, generatedItems);
     } else {
       console.error("Invalid configuration or selected script.");
     }
   }
 
+  async function handleSave() {
+    if (generatedItems.length !== 0) {
+      try {
+        // Objektum létrehozása és hozzáadása a store-hoz
+        console.log(selectedScript);
+        const objectToCreate = {
+          name: selectedScript.name,
+          used_script: {
+            scriptId: selectedScript.scriptId,
+          },
+          work: {
+            workId: selectedWork,
+          },
+          client: {
+            clientId: selectedClient,
+          },
+          used_colors: "{}",
+        };
+        const createdObject = await objectApi.createObjectApi(objectToCreate); // `objectToCreate` változó itt kellene definiálni
+
+        console.log(dispatch(createdObject));
+
+        console.log("Object successfully created and stored.");
+      } catch (error) {
+        console.error("Error creating object:", error);
+      }
+    } else {
+      console.log("There is no generated item to save.");
+    }
+  }
   const handleShowScripts = (index) => {
     if (!showScripts.includes(index)) {
       setShowScripts([...showScripts, index]);
@@ -289,17 +327,13 @@ export default function ScriptCaller({ addNewObjectFunction }) {
                 >
                   Generate
                 </Button>
-                <Button
-                  variant="success"
-                  className="m-1"
-                  onClick={handleGenerate}
-                >
+                <Button variant="success" className="m-1" onClick={handleSave}>
                   Save
                 </Button>
               </div>
               <h3 className="fw-bold text-center">Results</h3>
-              {results.resultItems &&
-                results.resultItems.map((result, index) => {
+              {generatedItems.length != 0 &&
+                generatedItems.map((result, index) => {
                   return <Item key={result.key || index} Item={result} />;
                 })}
             </div>

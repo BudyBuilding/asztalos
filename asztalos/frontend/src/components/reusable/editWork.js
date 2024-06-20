@@ -325,6 +325,9 @@ function EditWork({ closeNewWork, clientId }) {
                     </h3>
                     {itemDetails.includes(object.objectId) && (
                       <div>
+                        {console.log(
+                          dispatch(getCreatedItemsByObject(object.objectId))
+                        )}
                         {dispatch(getCreatedItemsByObject(object.objectId)).map(
                           (item) => (
                             <div key={item.itemId}>
