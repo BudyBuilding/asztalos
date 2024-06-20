@@ -30,15 +30,12 @@ public class Script {
 
     private String setting;
 
-    // Constructor with @JsonCreator and @JsonProperty for JSON serialization/deserialization
     @JsonCreator
     public Script(@JsonProperty("scriptId") Long scriptId) {
         this.scriptId = scriptId;
     }
     // Getters and setters
-    public Script() {
-        
-    }
+    public Script() {}
  
     public Long getScriptId() {
         return scriptId;
