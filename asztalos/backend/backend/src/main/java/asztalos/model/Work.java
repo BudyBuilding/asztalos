@@ -2,6 +2,9 @@ package asztalos.model;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -47,6 +50,13 @@ public class Work {
     private Date finishDate;
 
     // Getters és setters
+  @JsonCreator
+  public Work(@JsonProperty("workId") Long workId) {
+      this.workId = workId;
+  }
+     
+    public Work(){}
+
     public Long getWorkId() {
         return workId;
     }
