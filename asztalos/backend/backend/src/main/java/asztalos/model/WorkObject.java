@@ -2,6 +2,9 @@ package asztalos.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -43,6 +46,15 @@ public class WorkObject {
     private List<String> usedColors;
 
     // Getters és setters
+
+    @JsonCreator
+    public WorkObject(@JsonProperty("objectId") Long objectId) {
+        this.objectId = objectId;
+    }
+
+    public WorkObject() {}
+        
+
     public Long getObjectId() {
         return objectId;
     }
