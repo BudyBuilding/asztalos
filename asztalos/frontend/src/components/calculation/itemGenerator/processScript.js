@@ -1,125 +1,74 @@
-const keretScript = {
-  config: {
-    PFL: true,
-  },
-  items: [
-    ["measurements.height", "measurements.depth", "2", "1", "2", "2", "side"],
-    [
-      "measurements.width - 2 * thickness",
-      "measurements.depth",
-      "2",
-      "1",
-      "0",
-      "2",
-      "roof",
-    ],
-  ],
-  CurrentScripts: ["PFLScript"],
-};
+import { useDispatch } from "react-redux";
+import { getAllScriptItems } from "../../data/getters";
+import store from "../../data/store/store";
 
-const PFLScript = {
-  items: [
-    [
-      "measurements.height - 5",
-      "measurements.width - 5",
-      "0",
-      "0",
-      "0",
-      "1",
-      "PFL",
-    ],
-  ],
-};
-const scripts = { keretScript, PFLScript };
+function evaluateFormula(formula, settings) {
+  const settingRegex = /\(\*(\d+)\*\)/g;
+  return formula.replace(settingRegex, (match, p1) => settings[p1] || 0);
+}
 
-function processScript(script, measurements, thickness) {
-  const { config, items, CurrentScripts } = script;
-  const resultItems = [];
+function processScript(currentConfig, measurements) {
+  const { height, width, depth } = measurements;
+  const scriptItems = store.dispatch(getAllScriptItems());
 
-  for (let item of items) {
-    let [length, width, cantType, longCant, shortCant, pcs, type] = item;
-    const frameHeight = measurements.height;
-    const frameDepth = measurements.depth;
-    const frameWidth = measurements.width;
+  console.log(scriptItems);
+  console.log(measurements);
+  console.log(currentConfig);
 
-    length = length.replace("measurements.height", frameHeight);
-    length = length.replace("measurements.width", frameWidth);
-    length = length.replace("measurements.depth", frameDepth);
-    length = length.replace("config.cantType", cantType);
-    length = length.replace("thickness", thickness);
-    //  length = length.replace("doorNumber", doorNumber);
+  if (scriptItems) {
+    return scriptItems
+      .map((item) => {
+        const sizeFormula = item.size; // "[width - 2 * (*1*) + 3 * (*2*), height, depth]"
+        const qtyFormula = item.qty; // "(*3*) * (*4*)"
+        console.log(sizeFormula);
 
-    width = width.replace("measurements.length", frameHeight);
-    width = width.replace("measurements.width", frameWidth);
-    width = width.replace("measurements.depth", frameDepth);
-    width = width.replace("config.cantType", cantType);
-    width = width.replace("thickness", thickness);
-    // width = width.replace("doorNumber", doorNumber);
+        // Behelyettesítjük a beállítás értékeket
+        const evaluatedSize = evaluateFormula(sizeFormula, {
+          ...currentConfig,
+          width,
+          height,
+          depth,
+        });
+        const evaluatedQty = evaluateFormula(qtyFormula, currentConfig);
 
-    if (pcs.includes("config.doorNumber")) {
-      length = length.replace("config.doorNumber", config.doorNumber);
-      width = width.replace("config.doorNumber", config.doorNumber);
-      pcs = pcs.replace("config.doorNumber", config.doorNumber);
-    }
+        // Kiértékeljük a képleteket és tömbökké alakítjuk
+        try {
+          // Távolítsuk el a felesleges karaktereket
+          const sanitizedSize = evaluatedSize.replace(/[\[\]]/g, "");
+          const sizeSegments = sanitizedSize.split(",").map((segment) => {
+            try {
+              return eval(segment.trim());
+            } catch (error) {
+              console.error(
+                `Error evaluating segment: ${segment.trim()}`,
+                error
+              );
+              return 0; // Alapértelmezett érték hibás kiértékelés esetén
+            }
+          });
 
-    length = eval(length);
-    length = parseFloat(length);
-
-    width = eval(width);
-    width = parseFloat(width);
-
-    longCant = parseInt(longCant);
-    shortCant = parseInt(shortCant);
-    pcs = parseInt(pcs);
-
-    if (cantType === "2" || cantType === "42") {
-      if (shortCant > 0) {
-        length = length - shortCant * 2;
-      }
-      if (longCant > 0) {
-        width = width - longCant * 2;
-      }
-    }
-
-    if (cantType === "1") {
-      if (shortCant > 0) {
-        length = length - shortCant * 1;
-      }
-      if (longCant > 0) {
-        width = width - longCant * 1;
-      }
-    }
-
-    const newItem = {
-      length,
-      width,
-      cantType,
-      longCant,
-      shortCant,
-      pcs,
-      type,
-    };
-
-    resultItems.push(newItem);
+          const size = `[${sizeSegments.join(", ")}]`; // Újra összeállítjuk a stringet szögletes zárójelekkel
+          const qty = eval(evaluatedQty.trim());
+          console.log(item);
+          const material = item.material;
+          const name = item.name;
+          const position = item.position;
+          const rotation = item.rotation;
+          return {
+            material,
+            name,
+            position,
+            rotation,
+            size,
+            qty,
+          };
+        } catch (error) {
+          console.error(`Error evaluating formulas for item: ${item}`, error);
+          return null;
+        }
+      })
+      .filter((item) => item !== null);
   }
-
-  if (CurrentScripts) {
-    for (let script of CurrentScripts) {
-      const currentScript = scripts[script];
-      const currentResult = processScript(
-        currentScript,
-        measurements,
-        thickness
-      );
-      currentResult.resultItems.map((item) => {
-        resultItems.push(item);
-      });
-    }
-  }
-
-  return {
-    resultItems,
-  };
 }
 
 export default processScript;
