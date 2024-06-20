@@ -114,6 +114,29 @@ const createCreatedItemApi = (createdItemData) => {
   };
 };
 
+const createMultipleCreatedItemsApi = (createdItemsDataList) => {
+  return async (dispatch) => {
+    try {
+      console.log("Creating multiple createdItems");
+      const response = await axiosInstance.post(
+        `/created-items/items`,
+        createdItemsDataList
+      );
+      console.log("CreatedItems added successfully:", response);
+
+      // Assuming the response.data is an array of newly created items
+      if (response.status === 200) {
+        store.dispatch(addMoreCreatedItems(response.data)); // Dispatching to update Redux store
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error while adding createdItems:", error);
+      throw error;
+    }
+  };
+};
+
 const getCreatedItemOfUserAdminApi = (createdItemId) => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
@@ -133,6 +156,7 @@ const getCreatedItemOfUserAdminApi = (createdItemId) => {
 export default {
   getAllCreatedItemsApi,
   getAllCreatedItemsForObjectApi,
+  createMultipleCreatedItemsApi,
   getAllCreatedItemsForWorkApi,
   //  deleteCreatedItemApi,
   //  updateCreatedItemApi,
