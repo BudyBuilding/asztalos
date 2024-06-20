@@ -66,7 +66,6 @@ function EditWork({ closeNewWork, clientId }) {
   }
 
   function settingDetailing(objectId) {
-    console.log(objectId);
     let newDetails = [...settingDetails];
     if (newDetails.includes(objectId)) {
       newDetails = newDetails.filter((id) => id !== objectId);
@@ -141,8 +140,12 @@ function EditWork({ closeNewWork, clientId }) {
       setModifiedObject(null);
     }
   };
-  const handleRegenerate = () => {
-    // Implementáld az újragenerálás logikáját
+  const handleCreateObject = () => {
+    setShowForm(false);
+    setShowModel(true);
+    dispatch(selectObject("0")); // Válasszuk ki a "0"-s fület a Nav-ban
+    setObjects(dispatch(getAllObjects())); // Ez csak egy megjegyzés, hogy itt dispatch(getAllObjects) hívás nincs zárójelben, ami azt jelenti, hogy dispatch(getAllObjects) lesz a setObjects új értéke
+    setSelectedTab("0"); // Állítsuk be a kiválasztott fület "0"-ra
   };
 
   const handleSaveWork = async () => {
@@ -220,7 +223,7 @@ function EditWork({ closeNewWork, clientId }) {
               setShowModel(true);
             }}
           >
-            New Object
+            Full modell
           </Nav.Link>
         </Nav.Item>
         {objects &&
@@ -301,7 +304,7 @@ function EditWork({ closeNewWork, clientId }) {
           {!showModel && showForm && (
             <ScriptCaller
               newObjectKey={newObjKey}
-              addNewObjectFunction={addNewObject}
+              onSave={handleCreateObject}
             />
           )}
         </Container>
