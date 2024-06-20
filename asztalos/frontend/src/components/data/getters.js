@@ -1,7 +1,7 @@
 import store from "./store/store";
 export const getUser = () => {
   return (dispatch) => {
-    const user = store.getState().user;
+    const user = store.getState().auth.user;
     return user;
   };
 };
@@ -132,6 +132,24 @@ export const getAllObjects = () => {
   return (dispatch) => {
     const objects = store.getState().objects;
     return objects;
+  };
+};
+
+export const getLatestObject = () => {
+  return (dispatch) => {
+    const objects = store.getState().objects;
+    if (objects.length === 0) {
+      return null; // Ha nincs egyetlen objektum sem, null értékkel térünk vissza
+    }
+
+    // Megkeressük a legnagyobb objectId-jú objektumot
+    const latestObject = objects.reduce((maxObject, currentObject) => {
+      return currentObject.objectId > maxObject.objectId
+        ? currentObject
+        : maxObject;
+    });
+
+    return latestObject;
   };
 };
 
