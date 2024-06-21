@@ -11,6 +11,16 @@ export const addMoreObjects = (objects) => ({
   payload: objects,
 });
 
+export const replaceStoreWithObject = (object) => ({
+  type: "REPLACE_OBJECT",
+  payload: object,
+});
+
+export const replaceStoreWithMoreObjects = (objects) => ({
+  type: "REPLACE_MORE_OBJECTS",
+  payload: objects,
+});
+
 export const updateObject = (modifiedObject) => ({
   type: "UPDATE_OBJECT",
   payload: modifiedObject,
@@ -61,6 +71,10 @@ export const objectReducer = (state = initialState.objects, action) => {
           )
       );
       return [...state, ...newObjects];
+    case "REPLACE_OBJECT":
+      return action.payload;
+    case "REPLACE_MORE_OBJECTS":
+      return action.payload;
     case "UPDATE_OBJECT":
       return state.map((obj) =>
         obj.objectId === action.payload.objectId ? action.payload : obj

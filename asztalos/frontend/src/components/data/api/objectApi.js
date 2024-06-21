@@ -7,6 +7,8 @@ import {
   deleteObject,
   updateObject,
   setObjectLoading,
+  replaceStoreWithMoreObjects,
+  // Delete a object
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
 
@@ -15,7 +17,7 @@ const getAllObjectsApi = async () => {
     const response = await axiosInstance.get("/objects");
     console.log("Loading objects from server response: ", response);
     if (response.status === 200) {
-      store.dispatch(addMoreObjects(response.data)); // Dispatching to update Redux store
+      store.dispatch(replaceStoreWithMoreObjects(response.data)); // Dispatching to update Redux store
     }
     return response.data;
   } catch (error) {
@@ -31,7 +33,7 @@ const getObjectOfWorkApi = async (selectedWork) => {
     console.log("Loading objects from server response: ", response);
     store.dispatch(setObjectLoading(false));
     if (response.status === 200) {
-      store.dispatch(addMoreObjects(response.data)); // Dispatching to update Redux store
+      store.dispatch(replaceStoreWithMoreObjects(response.data)); // Dispatching to update Redux store
     }
     return response.data;
   } catch (error) {
@@ -39,7 +41,6 @@ const getObjectOfWorkApi = async (selectedWork) => {
     throw error;
   }
 };
-
 // Delete a object
 const deleteObjectApi = (objectId) => {
   return async (dispatch) => {
