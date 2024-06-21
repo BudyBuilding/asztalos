@@ -117,17 +117,6 @@ export default function ScriptCaller({ onSave }) {
       const generatedItemList = processScript(currentConfig, measurements);
       console.log(generatedItemList);
       setGeneratedItems(generatedItemList);
-      /*  const client = dispatch(getSelectedWork());
-      console.log(client);
-      const object = {
-        name: selectedScript.name,
-        client: dispatch(getSelectedClient()),
-        work: dispatch(getSelectedWork()),
-        usedScript: selectScript.scriptId,
-        usedColors: ["red", "blue"],
-      };
-      console.log(object);*/
-      //      addNewObjectFunction(object, generatedItems);
     } else {
       console.error("Invalid configuration or selected script.");
     }
@@ -154,17 +143,17 @@ export default function ScriptCaller({ onSave }) {
           position: "[0,0,0]",
           rotation: "[0,0,0]",
         };
-        console.log(objectToCreate);
+        //console.log(objectToCreate);
 
         // Új objektum létrehozása és várakozás az eredményre
         const createdObject = await dispatch(
           objectApi.createObjectApi(objectToCreate)
         );
-        console.log("Object successfully created and stored:", createdObject);
+        //console.log("Object successfully created and stored:", createdObject);
 
         // Új objektum frissítése a store-ban
         const newObject = dispatch(getLatestObject());
-        console.log("New object from store:", newObject);
+        //console.log("New object from store:", newObject);
 
         // Frissített generált elemek létrehozása
         const updatedGeneratedItems = generatedItems.map((item) => ({

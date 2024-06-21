@@ -13,6 +13,7 @@ import {
   getAllObjects,
   getObjectById,
   getCreatedItemsByObject,
+  getSettingById,
 } from "../data/getters";
 import {
   selectObject,
@@ -40,7 +41,6 @@ function EditWork({ closeNewWork, clientId }) {
   let newObjKey = 999;
 
   function parseSetting(setting) {
-    // Ha a setting üres vagy null, üres objektummal térünk vissza
     if (!setting) {
       return {};
     }
@@ -51,9 +51,10 @@ function EditWork({ closeNewWork, clientId }) {
     pairs.forEach((pair) => {
       const [key, value] = pair.split(":");
       if (key && value) {
-        parsedSettings[key.trim()] = parseInt(value.trim()); // Vagy ha számok, akkor parseFloat
+        parsedSettings[key.trim()] = parseInt(value.trim(), 10); // Fontos: alapértelmezett számrendszer (10)
       }
     });
+
     return parsedSettings;
   }
 
@@ -295,19 +296,17 @@ function EditWork({ closeNewWork, clientId }) {
                     </h3>
                     {settingDetails.includes(object.objectId) && (
                       <div>
-                        {dispatch(getCreatedItemsByObject(object.objectId)).map(
-                          {
-                            /*   (item) => (
-                            <div key={item.itemId}>
-                              <Item
-                                objectID={object.objectId}
-                                key={item.itemId}
-                                Item={item}
-                                onItemChange={handleItemChange}
-                              />
+                        {Object.entries(parseSetting(object.setting)).map(
+                          ([key, value]) => (
+                            <div key={key}>
+                              <p>
+                                {dispatch(getSettingById(key))
+                                  ? dispatch(getSettingById(key)).name
+                                  : ""}
+                                :{value}
+                              </p>
                             </div>
-                          )*/
-                          }
+                          )
                         )}
                       </div>
                     )}
