@@ -4,11 +4,7 @@ import { Row, Col } from "react-bootstrap";
 import { getAllTables, getClientById, getWorkById } from "../data/getters";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  fetchAll,
-  fetchCreatedItemsForWork,
-  fetchObjectsForWork,
-} from "./managers/storeManager";
+
 import Loading from "./Loading";
 
 function WorkAnalyzer() {
