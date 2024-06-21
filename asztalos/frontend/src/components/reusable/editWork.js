@@ -39,6 +39,24 @@ function EditWork({ closeNewWork, clientId }) {
   const [currentObject, setCurrentObject] = useState([]);
   let newObjKey = 999;
 
+  function parseSetting(setting) {
+    // Ha a setting üres vagy null, üres objektummal térünk vissza
+    if (!setting) {
+      return {};
+    }
+
+    const parsedSettings = {};
+    const pairs = setting.split(",");
+
+    pairs.forEach((pair) => {
+      const [key, value] = pair.split(":");
+      if (key && value) {
+        parsedSettings[key.trim()] = parseInt(value.trim()); // Vagy ha számok, akkor parseFloat
+      }
+    });
+    return parsedSettings;
+  }
+
   useEffect(() => {
     if (selectedTab == 0) {
       setCurrentObject(objects);
@@ -47,6 +65,7 @@ function EditWork({ closeNewWork, clientId }) {
         (object) => object.objectId == selectedTab
       );
       setCurrentObject([choosenObject]);
+      console.log(choosenObject);
     }
   }, [selectedTab]);
 
@@ -277,7 +296,8 @@ function EditWork({ closeNewWork, clientId }) {
                     {settingDetails.includes(object.objectId) && (
                       <div>
                         {dispatch(getCreatedItemsByObject(object.objectId)).map(
-                          (item) => (
+                          {
+                            /*   (item) => (
                             <div key={item.itemId}>
                               <Item
                                 objectID={object.objectId}
@@ -286,7 +306,8 @@ function EditWork({ closeNewWork, clientId }) {
                                 onItemChange={handleItemChange}
                               />
                             </div>
-                          )
+                          )*/
+                          }
                         )}
                       </div>
                     )}

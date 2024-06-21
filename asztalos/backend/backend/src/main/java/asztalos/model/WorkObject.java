@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,7 +23,7 @@ public class WorkObject {
     private Long objectId;
 
     @ManyToOne
-    @JoinColumn(name = "work"    )
+    @JoinColumn(name = "work")
     private Work work;
 
     @ManyToOne
@@ -32,17 +31,22 @@ public class WorkObject {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "client"    )
+    @JoinColumn(name = "client")
     private Client client;
 
     private String name;
 
+    private String size;
+    private String position;
+    private String rotation;
+    
+    private String setting;
+
     @ManyToOne
-    @JoinColumn(name = "used_script"    )
+    @JoinColumn(name = "used_script")
     private Script usedScript;
 
-    @ElementCollection
-    @Column(name = "color")
+    @Column(name = "used_colors")
     private List<String> usedColors;
 
     // Getters és setters
@@ -94,6 +98,39 @@ public class WorkObject {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public String getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(String rotation) {
+        this.rotation = rotation;
+    }
+    
+    public String getSetting() {
+        return setting;
+    }
+
+    public void setSetting(String setting) {
+        this.setting = setting;
+    }    
+
     public Script getUsedScript() {
         return usedScript;
     }
@@ -101,6 +138,7 @@ public class WorkObject {
     public void setUsedScript(Script usedScript) {
         this.usedScript = usedScript;
     }
+
     public List<String> getUsedColors() {
         return usedColors;
     }

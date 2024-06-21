@@ -19,6 +19,7 @@ import objectApi from "../data/api/objectApi";
 import createdItemApi from "../data/api/createdItemApi";
 import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
 import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
+
 export default function ScriptCaller({ onSave }) {
   const dispatch = useDispatch();
   const [selectedScript, setSelectedScript] = useState(null);
@@ -31,11 +32,8 @@ export default function ScriptCaller({ onSave }) {
     width: "",
     depth: "",
   });
-  const [results, setResults] = useState([]);
   const [showWarning, setShowWarning] = useState(false);
 
-  const maxKey = 26;
-  const newObjectKey = maxKey + 1;
   const getRoomsWithScripts = () => {
     const roomsWithScripts = [];
     if (scripts) {
@@ -52,18 +50,17 @@ export default function ScriptCaller({ onSave }) {
       return roomsWithScripts;
     }
   };
-  store.subscribe(() => {
-    console.log("State changed:", store.getState());
-  });
+
   const roomsWithScripts = getRoomsWithScripts();
   const selectedWork = dispatch(getSelectedWork());
   const selectedClient = dispatch(getSelectedClient());
-  const currentUser = dispatch(getUser());
+
   useEffect(() => {
     if (selectedScript) {
       const parsedSettings = parseSetting(selectedScript.setting);
       setCurrentConfig(parsedSettings);
     }
+    console.log(JSON.stringify(currentConfig));
   }, [selectedScript]);
 
   useEffect(() => {
@@ -142,7 +139,7 @@ export default function ScriptCaller({ onSave }) {
         // Objektum létrehozása és hozzáadása a store-hoz
         const objectToCreate = {
           name: selectedScript.name,
-          used_script: {
+          usedScript: {
             scriptId: selectedScript.scriptId,
           },
           work: {
@@ -151,8 +148,13 @@ export default function ScriptCaller({ onSave }) {
           client: {
             clientId: selectedClient,
           },
-          used_colors: "{}",
+          usedColors: ["Red", "Blue"],
+          setting: JSON.stringify(currentConfig),
+          size: "[0,0,0]",
+          position: "[0,0,0]",
+          rotation: "[0,0,0]",
         };
+        console.log(objectToCreate);
 
         // Új objektum létrehozása és várakozás az eredményre
         const createdObject = await dispatch(
@@ -202,6 +204,7 @@ export default function ScriptCaller({ onSave }) {
       setShowScripts(updatedScripts);
     }
   };
+
   function handleBack() {
     setCurrentConfig(null);
     setSelectedScript(null);
