@@ -165,8 +165,6 @@ export default function ScriptCaller({ onSave }) {
             workId: selectedWork,
           },
           rotable: true,
-          rotation: "[0,0,0]",
-          position: "[0,0,0]",
         }));
         console.log("Updated generated items:", updatedGeneratedItems);
 
