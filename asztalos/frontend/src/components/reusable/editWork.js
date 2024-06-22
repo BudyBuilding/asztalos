@@ -23,6 +23,7 @@ import {
 import { addWork } from "../data/store/actions/workStoreFunctions";
 import objectApi from "../data/api/objectApi";
 import { useParams } from "react-router-dom";
+import ObjectViewer from "../model/ObjectViewer";
 function EditWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
 
@@ -59,6 +60,8 @@ function EditWork({ closeNewWork, clientId }) {
   }
 
   useEffect(() => {
+    setShowModel(false);
+
     if (selectedTab == 0) {
       setCurrentObject(objects);
     } else {
@@ -66,7 +69,11 @@ function EditWork({ closeNewWork, clientId }) {
         (object) => object.objectId == selectedTab
       );
       setCurrentObject([choosenObject]);
-      console.log(choosenObject);
+    }
+    if (selectedTab != "newObject") {
+      setTimeout(() => {
+        setShowModel(true);
+      }, 0);
     }
   }, [selectedTab]);
 
@@ -211,10 +218,9 @@ function EditWork({ closeNewWork, clientId }) {
   };
 
   return (
-    <>
+    <div className=" mt-0">
       <Nav
         key="nav"
-        className="pt-5"
         variant="tabs"
         defaultActiveKey="0"
         onSelect={(selectedKey) => {
@@ -240,7 +246,6 @@ function EditWork({ closeNewWork, clientId }) {
               if (showForm) {
                 setShowForm(false);
               }
-              setShowModel(true);
             }}
           >
             Full modell
@@ -256,7 +261,6 @@ function EditWork({ closeNewWork, clientId }) {
                     if (showForm) {
                       setShowForm(false);
                     }
-                    setShowModel(true);
                   }}
                   style={{ cursor: "pointer" }}
                 >
@@ -271,10 +275,8 @@ function EditWork({ closeNewWork, clientId }) {
         fluid
         className="d-flex justify-content-between p-0 m-0 w-100"
         style={{
-          //          height: "calc(70vh - 56px)",
-          height: "100vh",
+          height: "calc(90vh)",
         }}
-        key="mainNewWorkBox"
       >
         <Container
           fluid
@@ -320,7 +322,16 @@ function EditWork({ closeNewWork, clientId }) {
           style={{ overflowY: "auto" }}
           key="middleNewWorkBox"
         >
-          {/*showModel && <ModelViewer />*/}
+          {
+            showModel && (
+              //  (selectedTab !== "0" ? (
+              <ObjectViewer objectId={selectedTab} />
+            )
+            //  ) : (
+            //    <ModelViewer />
+            //   ))
+          }
+
           {!showModel && showForm && (
             <ScriptCaller
               newObjectKey={newObjKey}
@@ -348,9 +359,6 @@ function EditWork({ closeNewWork, clientId }) {
                     </h3>
                     {itemDetails.includes(object.objectId) && (
                       <div>
-                        {console.log(
-                          dispatch(getCreatedItemsByObject(object.objectId))
-                        )}
                         {dispatch(getCreatedItemsByObject(object.objectId)).map(
                           (item) => (
                             <div key={item.itemId}>
@@ -371,7 +379,7 @@ function EditWork({ closeNewWork, clientId }) {
             })}
         </Container>
       </Container>
-    </>
+    </div>
   );
 }
 
