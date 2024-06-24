@@ -6,7 +6,7 @@ import { DragControls } from "three/examples/jsm/controls/DragControls";
 
 import { getAllCreatedItems, getObjectById } from "../data/getters";
 
-function ObjectViewer({ objectId }) {
+function ObjectViewer({ objectId, partsAreMoving }) {
   const dispatch = useDispatch();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -89,14 +89,12 @@ function ObjectViewer({ objectId }) {
       if (dragControls) {
         dragControls.removeEventListener("dragstart", () => {});
         dragControls.removeEventListener("dragend", () => {});
-        dragControls.dispose(); // Töröld a DragControlsot
+        dragControls.dispose();
       }
 
-      // Clear previous objects
       while (scene.children.length > 0) {
         scene.remove(scene.children[0]);
       }
-
       currentItems.forEach((currentItem) => {
         console.log(renderer);
         //console.log(currentItem);
@@ -115,19 +113,20 @@ function ObjectViewer({ objectId }) {
       });
 
       // Objektumok kiválasztása DragControls számára
-      /*   const objects = scene.children.filter((obj) => obj instanceof THREE.Mesh);
+      const objects = scene.children.filter((obj) => obj instanceof THREE.Mesh);
+      if (partsAreMoving) {
+        // DragControls inicializálása
+        dragControls = new DragControls(objects, camera, renderer.domElement);
 
-      // DragControls inicializálása
-      dragControls = new DragControls(objects, camera, renderer.domElement);
+        // Eseményfigyelők hozzáadása a dragstart és dragend eseményekhez
+        dragControls.addEventListener("dragstart", () => {
+          controls.enabled = false; // Ne lehessen mozgatni az OrbitControls-szal
+        });
 
-      // Eseményfigyelők hozzáadása a dragstart és dragend eseményekhez
-      dragControls.addEventListener("dragstart", () => {
-        controls.enabled = false; // Ne lehessen mozgatni az OrbitControls-szal
-      });
-
-      dragControls.addEventListener("dragend", () => {
-        controls.enabled = true; // Engedélyezd újra az OrbitControls használatát
-      });*/
+        dragControls.addEventListener("dragend", () => {
+          controls.enabled = true; // Engedélyezd újra az OrbitControls használatát
+        });
+      }
     };
 
     createObject();

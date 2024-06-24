@@ -24,6 +24,8 @@ import { addWork } from "../data/store/actions/workStoreFunctions";
 import objectApi from "../data/api/objectApi";
 import { useParams } from "react-router-dom";
 import ObjectViewer from "../model/ObjectViewer";
+import { Modal } from "react-bootstrap";
+
 function EditWork({ closeNewWork, clientId }) {
   const dispatch = useDispatch();
 
@@ -39,6 +41,9 @@ function EditWork({ closeNewWork, clientId }) {
   const [settingDetails, setSettingDetails] = useState([]);
   const [modifiedObject, setModifiedObject] = useState(null);
   const [currentObject, setCurrentObject] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [objectToDelete, setObjectToDelete] = useState(null);
+
   let newObjKey = 999;
 
   function parseSetting(setting) {
@@ -217,8 +222,37 @@ function EditWork({ closeNewWork, clientId }) {
     closeNewWork();
   };
 
+  const handleDeleteObject = (objectId) => {
+    setObjectToDelete(objectId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteObject = async () => {
+    if (objectToDelete !== null) {
+      await dispatch(objectApi.deleteObjectApi(objectToDelete));
+      setObjects(dispatch(getAllObjects()));
+      setShowDeleteModal(false);
+      setObjectToDelete(null);
+    }
+  };
+
   return (
     <div className=" mt-0">
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to delete this object?</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDeleteObject}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Nav
         key="nav"
         variant="tabs"
@@ -265,6 +299,16 @@ function EditWork({ closeNewWork, clientId }) {
                   style={{ cursor: "pointer" }}
                 >
                   {obj.objectId}
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteObject(obj.objectId);
+                    }}
+                  >
+                    x
+                  </Button>
                 </Nav.Link>
               </Nav.Item>
             );
@@ -325,7 +369,7 @@ function EditWork({ closeNewWork, clientId }) {
           {
             showModel && (
               //  (selectedTab !== "0" ? (
-              <ObjectViewer objectId={selectedTab} />
+              <ObjectViewer objectId={selectedTab} partsAreMoving={true} />
             )
             //  ) : (
             //    <ModelViewer />

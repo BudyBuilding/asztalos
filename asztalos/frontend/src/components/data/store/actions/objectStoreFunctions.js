@@ -26,6 +26,11 @@ export const updateObject = (modifiedObject) => ({
   payload: modifiedObject,
 });
 
+export const deleteObject = (objectId) => ({
+  type: "DELETE_OBJECT",
+  payload: objectId,
+});
+
 export const selectObject = (objectId) => ({
   type: "SELECT_OBJECT",
   payload: objectId,
@@ -79,6 +84,8 @@ export const objectReducer = (state = initialState.objects, action) => {
       return state.map((obj) =>
         obj.objectId === action.payload.objectId ? action.payload : obj
       );
+    case "DELETE_OBJECT":
+      return state.filter((obj) => obj.objectId !== action.payload);
     default:
       return state;
   }

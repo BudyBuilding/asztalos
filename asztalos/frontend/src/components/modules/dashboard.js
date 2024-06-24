@@ -20,7 +20,7 @@ import { deleteWork } from "../data/api/apiService";
 import store from "../data/store/store";
 import Loading from "../reusable/Loading";
 import ClientUpdateModal from "../reusable/ClientUpdateModal";
-import { getAllClients, getAllWorks } from "../data/getters";
+import { getAllClients, getAllWorks, getWorkById } from "../data/getters";
 import {
   fetchCreatedItemsForWork,
   fetchObjectsForWork,
@@ -84,6 +84,8 @@ function Dashboard() {
       fetchTables(workId);
       fetchObjectsForWork(workId);
       fetchCreatedItemsForWork(workId);
+      const clientId = dispatch(getWorkById(workId)).client.clientId;
+      dispatch(selectClient(clientId));
       navigate(`/workAnalyzer/${workId}`);
       setLoading(false);
     } catch (error) {
