@@ -45,10 +45,10 @@ const getObjectOfWorkApi = async (selectedWork) => {
 const deleteObjectApi = (objectId) => {
   return async (dispatch) => {
     try {
-      console.log(objectId);
+      console.log("Object to delete: ", objectId);
       await axiosInstance.delete(`/objects/${objectId}`);
       console.log("Object deleted successfully.");
-      //dispatch(deleteObject(objectId));
+      dispatch(deleteObject(objectId));
     } catch (error) {
       console.error("Error while deleting object:", error);
       throw error;
