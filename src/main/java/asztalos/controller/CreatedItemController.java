@@ -216,6 +216,34 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("delete/items")
+public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    User currentUser = userService.findByUsername(username).orElse(null);
+
+    if (currentUser == null) {
+        return ResponseEntity.status(403).build();
+    }
+
+    for (Long id : ids) {
+        CreatedItem item = createdItemService.findById(id).orElse(null);
+
+        if (item == null) {
+            return ResponseEntity.status(404).build();
+        }
+
+        if (!currentUser.getRole().equals("admin") && !item.getObject().getUser().getUsername().equals(username)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        createdItemService.delete(id);
+    }
+
+    return ResponseEntity.noContent().build();
+}
+
+
      @PutMapping("/{id}")
     public ResponseEntity<?> updateCreatedItem(@PathVariable Long id, @RequestBody CreatedItem updatedItem) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
