@@ -4,7 +4,8 @@ import store from "../store/store"; // Redux store importálása
 import {
   addCreatedItem,
   addMoreCreatedItems,
-  //deleteCreatedItem,
+  deleteCreatedItem,
+  deleteMoreCreatedItems,
   //updateCreatedItem,
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
@@ -63,13 +64,12 @@ const getAllCreatedItemsForWorkApi = async (workId) => {
   }
 };
 
-/*
 // Delete a createdItem
 const deleteCreatedItemApi = (createdItemId) => {
   return async (dispatch) => {
     try {
       console.log(createdItemId);
-      await axiosInstance.delete(`/createdItems/${createdItemId}`);
+      await axiosInstance.delete(`/created-items/${createdItemId}`);
       console.log("CreatedItem deleted successfully.");
       dispatch(deleteCreatedItem(createdItemId));
     } catch (error) {
@@ -78,6 +78,24 @@ const deleteCreatedItemApi = (createdItemId) => {
     }
   };
 };
+
+// Delete a createdItem
+const deleteMultipleCreatedItemsApi = (createdItemList) => {
+  return async (dispatch) => {
+    try {
+      console.log(createdItemList);
+      await axiosInstance.delete(`/created-items/delete/items`, {
+        data: createdItemList,
+      });
+      console.log("CreatedItem deleted successfully.");
+      dispatch(deleteMoreCreatedItems(createdItemList));
+    } catch (error) {
+      console.error("Error while deleting createdItem:", error);
+      throw error;
+    }
+  };
+};
+/*
 ////////////////////
 // Updating section
 const updateCreatedItemApi = (createdItemId, updatedCreatedItemData) => {
@@ -158,7 +176,8 @@ export default {
   getAllCreatedItemsForObjectApi,
   createMultipleCreatedItemsApi,
   getAllCreatedItemsForWorkApi,
-  //  deleteCreatedItemApi,
+  deleteCreatedItemApi,
+  deleteMultipleCreatedItemsApi,
   //  updateCreatedItemApi,
   createCreatedItemApi,
   getCreatedItemOfUserAdminApi,

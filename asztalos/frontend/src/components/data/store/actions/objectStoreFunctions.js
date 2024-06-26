@@ -51,6 +51,16 @@ export const addMoreCreatedItems = (createdItems) => ({
   payload: createdItems,
 });
 
+export const deleteCreatedItem = (createdItemId) => ({
+  type: "DELETE_CREATED_ITEMS",
+  payload: createdItemId,
+});
+
+export const deleteMoreCreatedItems = (createdItems) => ({
+  type: "DELETE_MORE_CREATED_ITEMS",
+  payload: createdItems,
+});
+
 ///////////
 // Initialstate
 const initialState = {
@@ -124,6 +134,14 @@ export const createdItemsReducer = (
           (createdItem) => !state.some((s) => s.itemId === createdItem.itemId)
         ),
       ];
+    case "DELETE_CREATED_ITEMS":
+      return state.filter(
+        (createdItem) => createdItem.itemId !== action.payload
+      );
+    case "DELETE_MORE_CREATED_ITEMS":
+      return state.filter(
+        (createdItem) => !action.payload.includes(createdItem.itemId)
+      );
     default:
       return state;
   }

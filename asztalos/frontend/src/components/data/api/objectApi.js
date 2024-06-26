@@ -11,6 +11,8 @@ import {
   // Delete a object
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
+import { getAllCreatedItems } from "../getters";
+import createdItemApi from "./createdItemApi";
 
 const getAllObjectsApi = async () => {
   try {
@@ -41,13 +43,25 @@ const getObjectOfWorkApi = async (selectedWork) => {
     throw error;
   }
 };
+
 // Delete a object
 const deleteObjectApi = (objectId) => {
   return async (dispatch) => {
     try {
+      const createdItems = dispatch(getAllCreatedItems())
+        .filter((item) => item.object.objectId == objectId)
+        .map((item) => item.itemId);
+
+      if (createdItems.length > 0) {
+        console.log(createdItems);
+        await dispatch(
+          createdItemApi.deleteMultipleCreatedItemsApi(createdItems)
+        );
+      }
       console.log("Object to delete: ", objectId);
       await axiosInstance.delete(`/objects/${objectId}`);
       console.log("Object deleted successfully.");
+
       dispatch(deleteObject(objectId));
     } catch (error) {
       console.error("Error while deleting object:", error);
@@ -55,6 +69,7 @@ const deleteObjectApi = (objectId) => {
     }
   };
 };
+
 ////////////////////
 // Updating section
 const updateObjectApi = (objectId, updatedObjectData) => {

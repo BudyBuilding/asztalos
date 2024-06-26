@@ -3,7 +3,10 @@ package asztalos.controller;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import asztalos.model.User;
 import asztalos.model.Work;
@@ -39,52 +45,87 @@ public class ObjectController {
 
     @Autowired
     private WorkService workService;
+    
+    private static final Logger logger = LoggerFactory.getLogger(ObjectController.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    @GetMapping
-    public ResponseEntity<?> getObjects(@RequestParam(required = false) Long objectId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        Optional<User> currentUser = userService.findByUsername(username);
-        
-        // checking if the user from the token is available
-        if (!currentUser.isPresent()) {
-            return ResponseEntity.status(403).build();
-        }
 
-        // checking if the user wants only one or more objects to load
-        if (objectId != null) {
-            Optional<WorkObject> workObject = objectService.findById(objectId);
+@GetMapping
+public ResponseEntity<?> getObjects(@RequestParam(required = false) Long objectId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
 
-            // if only one, so the user gave an objectId we must check if the user is the same with the user in the token
-            // so no one could check the others objects
-            if (workObject.isPresent() && (workObject.get().getUser().getUserId().equals(currentUser.get().getUserId()) || currentUser.get().getRole().equals("admin"))) {
-                return ResponseEntity.ok(workObject.get());
-            } else {
-                // if there is no work object or the user cannot check that object 
-                return ResponseEntity.status(403).build();
-            }
+    // Checking if the user from the token is available
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
+    }
+
+    // Checking if the user wants only one or more objects to load
+    if (objectId != null) {
+        Optional<WorkObject> workObject = objectService.findById(objectId);
+
+        // If only one object is requested, verify ownership or admin status
+        if (workObject.isPresent() && (workObject.get().getUser().getUserId().equals(currentUser.get().getUserId()) || currentUser.get().getRole().equals("admin"))) {
+            return ResponseEntity.ok(workObject.get());
         } else {
-            // if the user want to get all the objects
-            // we must check if the user is admin or not
-            if (currentUser.get().getRole().equals("admin")) {
-                //if is admin then we must give them all the objects
-                List<WorkObject> workObjects = objectService.findAll();
-                return ResponseEntity.ok(workObjects);
-            } else {
-                // if is not admin then we must show them only their objects
-                List<WorkObject> workObjects = objectService.findByUser(currentUser.get());
-                return ResponseEntity.ok(workObjects);
-            }
+            return ResponseEntity.status(403).build(); // User cannot access this object
+        }
+    } else {
+        // If the user wants to get all objects
+        if (currentUser.get().getRole().equals("admin")) {
+            // Admin can access all objects
+            List<WorkObject> workObjects = objectService.findAll();
+            return ResponseEntity.ok(workObjects);
+        } else {
+            // Non-admin users can only access their own objects
+            List<WorkObject> workObjects = objectService.findByUser(currentUser.get());
+            return ResponseEntity.ok(workObjects);
         }
     }
-    ///////////////////////////////
+}
+///////////////////////////////
    
-        @GetMapping("/work/{workId}")
-        public ResponseEntity<List<WorkObject>> getScriptItemsByScriptId(@PathVariable Long workId) {
-        Work work = workService.findById(workId).get();
-        List<WorkObject> objects = objectService.findByWork(work);
-        return ResponseEntity.ok(objects);
+@GetMapping("/work/{workId}")
+public ResponseEntity<List<WorkObject>> getObjectsByWorkId(@PathVariable Long workId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    Optional<User> currentUser = userService.findByUsername(username);
+    // Checking if the user from the token is available
+    if (!currentUser.isPresent()) {
+        return ResponseEntity.status(403).build();
     }
+    Long currentUserId = currentUser.get().getUserId();
+    logger.info("Current user found with id: {}", currentUserId);
+
+    // Az adott munka azonosító alapján lekérdezzük a munkát
+    Work work = workService.findById(workId).orElse(null);
+
+    if (work == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    // Lekérdezzük az objektumokat az adott munkához
+    List<WorkObject> objects = objectService.findByWork(work);
+        try {
+            String objectJson = mapper.writeValueAsString(objects);
+            logger.info("Object details: {}", objectJson);
+        } catch (JsonProcessingException e) {
+            logger.error("Error converting object to JSON", e);
+        }
+    // Szűrjük azokat az objektumokat, amelyek csak a bejelentkezett felhasználóhoz tartoznak
+    List<WorkObject> filteredObjects = objects.stream()
+            .filter(obj -> obj.getUser() != null && obj.getUser().getUserId().equals(currentUserId))
+            .collect(Collectors.toList());
+        try {
+            String objectJson = mapper.writeValueAsString(filteredObjects);
+            logger.info("FilteredObject details: {}", objectJson);
+        } catch (JsonProcessingException e) {
+            logger.error("Error converting object to JSON", e);
+        }
+    return ResponseEntity.ok(filteredObjects);
+}
+
     @PostMapping
     public ResponseEntity<?> createObject(@RequestBody WorkObject workObject) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
