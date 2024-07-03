@@ -1,16 +1,20 @@
+// NewClientModal.js
+// this function sends a new client to the database
+
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
-import { useDispatch, useSelector } from "react-redux";
-import { addClient } from "../../data/api/apiService"; // Az addClient függvény importálása az apiService-ből
+import { useDispatch } from "react-redux";
 import clientApi from "../../data/api/clientApi";
+import ErrorMessage from "../helpers/ErrorMessage";
 
-function NewClient({ onClose }) {
+function NewClientModal({ onClose }) {
+  const dispatch = useDispatch();
   const [clientName, setClientName] = useState("");
   const [clientTel, setClientTel] = useState("");
   const [clientAddress, setClientAddress] = useState("");
+  const [error, setError] = useState("");
 
-  const dispatch = useDispatch();
-
+  // these handles all the changes
   const handleNameChange = (e) => {
     setClientName(e.target.value);
   };
@@ -26,18 +30,24 @@ function NewClient({ onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // we are checking is the attributes are empty or not, if yes it must give an error
+    if (!clientName || !clientTel || !clientAddress) {
+      setError("Please fill out all fields.");
+      return;
+    }
+
     const newClientData = {
       name: clientName,
       telephone: clientTel,
       address: clientAddress,
     };
 
+    // trying to save the new client, if there is any error it should write it out
     try {
-      console.log("creating new client");
-      dispatch(clientApi.createClientApi(newClientData));
-      onClose(); // A modális ablak bezárása
+      await dispatch(clientApi.createClientApi(newClientData));
+      onClose();
     } catch (error) {
-      console.error("Error while adding client:", error);
+      setError("Internal server error, please try again later.");
     }
   };
 
@@ -71,6 +81,7 @@ function NewClient({ onClose }) {
             onChange={handleAddressChange}
           />
         </Form.Group>
+        {error && <ErrorMessage message={error} />}
         <Button variant="primary" type="submit">
           Add Client
         </Button>
@@ -79,4 +90,4 @@ function NewClient({ onClose }) {
   );
 }
 
-export default NewClient;
+export default NewClientModal;

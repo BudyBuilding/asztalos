@@ -10,7 +10,7 @@ import Loading from "../helpers/Loading";
 import ClientWorkListItem from "../helpers/clientWorksListItem";
 
 import ClientUpdateModal from "../modals/ClientUpdateModal";
-import NewWorkModal from "../modals/newWorkModal";
+import NewWorkModal from "../modals/NewWorkModal";
 import {
   fetchCreatedItemsForWork,
   fetchObjectsForWork,
