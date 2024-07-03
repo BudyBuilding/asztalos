@@ -27,7 +27,7 @@ import {
   fetchTables,
 } from "../reusable/managers/storeManager";
 
-function Dashboard() {
+function UserDashboard() {
   const dispatch = useDispatch();
 
   const [works, setWorks] = useState([]);
@@ -331,4 +331,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default UserDashboard;
