@@ -1,17 +1,43 @@
-import React, { useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { DragControls } from "three/examples/jsm/controls/DragControls";
+import {
+  getAllCreatedItems,
+  getAllObjects,
+  getObjectById,
+} from "../data/getters";
 
-function ModelViewer() {
+const ModelViewer = ({ objectId }) => {
+  const dispatch = useDispatch();
+  const [createdItems, setCreatedItems] = useState([]);
+  const [boxes, setBoxes] = useState([]);
+  const [objects, setObjects] = useState([]);
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
-  const selectedObject = useSelector((state) => state.selectedObject);
-  const createdItems = useSelector((state) => state.createdItems);
+  const sceneRef = useRef(new THREE.Scene());
+  const cameraRef = useRef(null);
+  const rendererRef = useRef(null);
 
   useEffect(() => {
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffe9);
+    const fetchItems = async () => {
+      const items = await dispatch(getAllCreatedItems());
+      setCreatedItems(items);
+    };
+
+    const fetchObjects = async () => {
+      const objects = await dispatch(getAllObjects());
+      setObjects(objects);
+    };
+
+    fetchItems();
+    fetchObjects();
+  }, [dispatch]);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    scene.background = new THREE.Color(0xfffff0);
 
     const camera = new THREE.PerspectiveCamera(
       60,
@@ -21,6 +47,8 @@ function ModelViewer() {
       0.5,
       100000
     );
+    camera.position.set(0, 100, 900);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(
@@ -31,12 +59,13 @@ function ModelViewer() {
         ? containerRef.current.clientHeight
         : window.innerHeight
     );
+    rendererRef.current = renderer;
 
     if (canvasRef.current) {
       canvasRef.current.appendChild(renderer.domElement);
+    } else {
+      console.error("canvasRef.current is null");
     }
-
-    camera.position.set(0, 2500, 5000);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -58,12 +87,96 @@ function ModelViewer() {
 
     window.addEventListener("resize", handleResize);
 
-    // Cleanup function
+    if (createdItems.length > 0) {
+      if (objectId === "0") {
+        const allBoxes = [];
+        objects.forEach((object) => {
+          const objectSize = parseStringToArray(object.size);
+          const objectPosition = parseStringToArray(object.position);
+          const objectRotation = convertToRadians(
+            parseStringToArray(object.rotation)
+          );
+
+          const objectGeometry = new THREE.BoxGeometry(
+            objectSize[0],
+            objectSize[1],
+            objectSize[2]
+          );
+          const objectMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+          });
+          const objectBox = new THREE.Mesh(objectGeometry, objectMaterial);
+          objectBox.position.set(
+            objectPosition[0],
+            objectPosition[1],
+            objectPosition[2]
+          );
+          objectBox.rotation.set(
+            objectRotation[0],
+            objectRotation[1],
+            objectRotation[2]
+          );
+
+          const currentItems = itemFilter(object.objectId, createdItems);
+          const newBoxes = createObjects(object.objectId, currentItems);
+
+          newBoxes.forEach((box) => objectBox.add(box));
+          scene.add(objectBox);
+          allBoxes.push(objectBox);
+        });
+
+        setBoxes(allBoxes);
+
+        const dragControls = new DragControls(
+          allBoxes,
+          camera,
+          renderer.domElement
+        );
+        dragControls.addEventListener("dragstart", function (event) {
+          controls.enabled = false; // Disable OrbitControls
+          event.object.material.emissive.set(0xaaaaaa); // Highlight the dragged object
+        });
+
+        dragControls.addEventListener("dragend", function (event) {
+          controls.enabled = true; // Enable OrbitControls
+          event.object.material.emissive.set(0x000000); // Reset the object color
+        });
+      } else {
+        const currentItems = itemFilter(objectId, createdItems);
+        const newBoxes = createObjects(objectId, currentItems);
+        newBoxes.forEach((box) => scene.add(box));
+        setBoxes(newBoxes);
+
+        const dragControls = new DragControls(
+          newBoxes,
+          camera,
+          renderer.domElement
+        );
+        dragControls.addEventListener("dragstart", function (event) {
+          controls.enabled = false; // Disable OrbitControls
+          event.object.material.emissive.set(0xaaaaaa); // Highlight the dragged object
+        });
+
+        dragControls.addEventListener("dragend", function (event) {
+          controls.enabled = true; // Enable OrbitControls
+          event.object.material.emissive.set(0x000000); // Reset the object color
+        });
+      }
+    }
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
     return () => {
       window.removeEventListener("resize", handleResize);
-      renderer.dispose(); // Clean up renderer resources
+      renderer.dispose();
     };
-  }, [selectedObject, createdItems]); // Dependencies for useEffect
+  }, [objectId, createdItems, objects]);
 
   return (
     <div
@@ -73,6 +186,40 @@ function ModelViewer() {
       <div ref={canvasRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );
-}
+};
 
 export default ModelViewer;
+
+// Helper functions (ensure these are properly defined in your component or imported)
+const parseStringToArray = (str) => {
+  if (!str) return [0, 0, 0];
+  const trimmedStr = str.replace(/[\[\]']+/g, "");
+  return trimmedStr.split(",").map(Number);
+};
+
+const convertToRadians = (degreesArray) => {
+  return degreesArray.map((degree) => degree * (Math.PI / 180));
+};
+
+const itemFilter = (objectId, createdItems) => {
+  return createdItems.filter((item) => item.object.objectId === objectId);
+};
+
+const createObjects = (objectId, currentItems) => {
+  return currentItems.map((currentItem) => {
+    const size = parseStringToArray(currentItem.size);
+    const position = parseStringToArray(currentItem.position);
+    const rotation = convertToRadians(parseStringToArray(currentItem.rotation));
+
+    const geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
+    const material = new THREE.MeshLambertMaterial({ color: 0xb58868 });
+    const box = new THREE.Mesh(geometry, material);
+    box.position.set(position[0], position[1], position[2]);
+    box.rotation.set(rotation[0], rotation[1], rotation[2]);
+
+    box.castShadow = true;
+    box.receiveShadow = true;
+
+    return box;
+  });
+};
