@@ -1,165 +1,178 @@
-import * as THREE from "three";
+const ModelViewer = ({ objectId }) => {
+  const dispatch = useDispatch();
+  const [createdItems, setCreatedItems] = useState([]);
+  const [boxes, setBoxes] = useState([]);
+  const [objects, setObjects] = useState([]);
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const sceneRef = useRef(new THREE.Scene());
+  const cameraRef = useRef(null);
+  const rendererRef = useRef(null);
 
-import { DragControls } from "three/addons/controls/DragControls.js";
+  useEffect(() => {
+    const fetchItems = async () => {
+      const items = await dispatch(getAllCreatedItems());
+      setCreatedItems(items);
+    };
 
-let container;
-let camera, scene, renderer;
-let controls, group;
-let enableSelection = false;
+    const fetchObjects = async () => {
+      const objects = await dispatch(getAllObjects());
+      setObjects(objects);
+    };
 
-const objects = [];
+    fetchItems();
+    fetchObjects();
+  }, [dispatch]);
 
-const mouse = new THREE.Vector2(),
-  raycaster = new THREE.Raycaster();
+  useEffect(() => {
+    const scene = sceneRef.current;
+    scene.background = new THREE.Color(0xfffff0);
 
-init();
-/*
-
-<div>
-    <canvas data-engine="three.js r163" width="1170" height="953"
-  style="display: block; width: 1170px; height: 953px; touch-action: none;"  />
-</div>;
-*/
-function init() {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-
-  camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    500
-  );
-  camera.position.z = 25;
-
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xf0f0f0);
-
-  scene.add(new THREE.AmbientLight(0xaaaaaa));
-
-  const light = new THREE.SpotLight(0xffffff, 10000);
-  light.position.set(0, 25, 50);
-  light.angle = Math.PI / 9;
-
-  light.castShadow = true;
-  light.shadow.camera.near = 10;
-  light.shadow.camera.far = 100;
-  light.shadow.mapSize.width = 1024;
-  light.shadow.mapSize.height = 1024;
-
-  scene.add(light);
-
-  group = new THREE.Group();
-  scene.add(group);
-
-  const geometry = new THREE.BoxGeometry();
-
-  for (let i = 0; i < 200; i++) {
-    const object = new THREE.Mesh(
-      geometry,
-      new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff })
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      containerRef.current
+        ? containerRef.current.clientWidth / containerRef.current.clientHeight
+        : 1,
+      0.5,
+      100000
     );
+    camera.position.set(0, 100, 900);
+    cameraRef.current = camera;
 
-    object.position.x = Math.random() * 30 - 15;
-    object.position.y = Math.random() * 15 - 7.5;
-    object.position.z = Math.random() * 20 - 10;
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(
+      containerRef.current
+        ? containerRef.current.clientWidth
+        : window.innerWidth,
+      containerRef.current
+        ? containerRef.current.clientHeight
+        : window.innerHeight
+    );
+    rendererRef.current = renderer;
 
-    object.rotation.x = Math.random() * 2 * Math.PI;
-    object.rotation.y = Math.random() * 2 * Math.PI;
-    object.rotation.z = Math.random() * 2 * Math.PI;
+    if (canvasRef.current) {
+      canvasRef.current.appendChild(renderer.domElement);
+    } else {
+      console.error("canvasRef.current is null");
+    }
 
-    object.scale.x = Math.random() * 2 + 1;
-    object.scale.y = Math.random() * 2 + 1;
-    object.scale.z = Math.random() * 2 + 1;
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    controls.screenSpacePanning = false;
+    controls.maxPolarAngle = Math.PI / 2;
 
-    object.castShadow = true;
-    object.receiveShadow = true;
+    const handleResize = () => {
+      if (!containerRef.current) return;
 
-    scene.add(object);
+      camera.aspect =
+        containerRef.current.clientWidth / containerRef.current.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(
+        containerRef.current.clientWidth,
+        containerRef.current.clientHeight
+      );
+    };
 
-    objects.push(object);
-  }
+    window.addEventListener("resize", handleResize);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+    if (createdItems.length > 0) {
+      if (objectId === "0") {
+        const allBoxes = [];
+        objects.forEach((object) => {
+          const objectSize = parseStringToArray(object.size);
+          const objectPosition = parseStringToArray(object.position);
+          const objectRotation = convertToRadians(
+            parseStringToArray(object.rotation)
+          );
 
-  container.appendChild(renderer.domElement);
+          const objectGeometry = new THREE.BoxGeometry(
+            objectSize[0],
+            objectSize[1],
+            objectSize[2]
+          );
+          const objectMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00ff00,
+          });
+          const objectBox = new THREE.Mesh(objectGeometry, objectMaterial);
+          objectBox.position.set(
+            objectPosition[0],
+            objectPosition[1],
+            objectPosition[2]
+          );
+          objectBox.rotation.set(
+            objectRotation[0],
+            objectRotation[1],
+            objectRotation[2]
+          );
 
-  controls = new DragControls([...objects], camera, renderer.domElement);
-  controls.rotateSpeed = 2;
-  controls.addEventListener("drag", render);
+          const currentItems = itemFilter(object.objectId, createdItems);
+          const newBoxes = createObjects(object.objectId, currentItems);
 
-  window.addEventListener("resize", onWindowResize);
+          newBoxes.forEach((box) => objectBox.add(box));
+          scene.add(objectBox);
+          allBoxes.push(objectBox);
+        });
 
-  document.addEventListener("click", onClick);
-  window.addEventListener("keydown", onKeyDown);
-  window.addEventListener("keyup", onKeyUp);
+        setBoxes(allBoxes);
 
-  render();
-}
+        const dragControls = new DragControls(
+          allBoxes,
+          camera,
+          renderer.domElement
+        );
+        dragControls.addEventListener("dragstart", function (event) {
+          controls.enabled = false; // Disable OrbitControls
+          event.object.material.emissive.set(0xaaaaaa); // Highlight the dragged object
+        });
 
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  render();
-}
-
-function onKeyDown(event) {
-  enableSelection = event.keyCode === 16 ? true : false;
-
-  if (event.keyCode === 77) {
-    controls.mode = controls.mode === "translate" ? "rotate" : "translate";
-  }
-}
-
-function onKeyUp() {
-  enableSelection = false;
-}
-
-function onClick(event) {
-  event.preventDefault();
-
-  if (enableSelection === true) {
-    const draggableObjects = controls.getObjects();
-    draggableObjects.length = 0;
-
-    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersections = raycaster.intersectObjects(objects, true);
-
-    if (intersections.length > 0) {
-      const object = intersections[0].object;
-
-      if (group.children.includes(object) === true) {
-        object.material.emissive.set(0x000000);
-        scene.attach(object);
+        dragControls.addEventListener("dragend", function (event) {
+          controls.enabled = true; // Enable OrbitControls
+          event.object.material.emissive.set(0x000000); // Reset the object color
+        });
       } else {
-        object.material.emissive.set(0xaaaaaa);
-        group.attach(object);
+        const currentItems = itemFilter(objectId, createdItems);
+        const newBoxes = createObjects(objectId, currentItems);
+        newBoxes.forEach((box) => scene.add(box));
+        setBoxes(newBoxes);
+
+        const dragControls = new DragControls(
+          newBoxes,
+          camera,
+          renderer.domElement
+        );
+        dragControls.addEventListener("dragstart", function (event) {
+          controls.enabled = false; // Disable OrbitControls
+          event.object.material.emissive.set(0xaaaaaa); // Highlight the dragged object
+        });
+
+        dragControls.addEventListener("dragend", function (event) {
+          controls.enabled = true; // Enable OrbitControls
+          event.object.material.emissive.set(0x000000); // Reset the object color
+        });
       }
-
-      controls.transformGroup = true;
-      draggableObjects.push(group);
     }
 
-    if (group.children.length === 0) {
-      controls.transformGroup = false;
-      draggableObjects.push(...objects);
-    }
-  }
+    const animate = () => {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    };
 
-  render();
-}
+    animate();
 
-function render() {
-  renderer.render(scene, camera);
-}
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      renderer.dispose();
+    };
+  }, [objectId, createdItems, objects]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ width: "100%", height: "100%", overflow: "hidden" }}
+    >
+      <div ref={canvasRef} style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
+};

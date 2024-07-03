@@ -230,9 +230,12 @@ function EditWork({ closeNewWork, clientId }) {
   const confirmDeleteObject = async () => {
     if (objectToDelete !== null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
-      setObjects(dispatch(getAllObjects()));
+      const newObjectList = dispatch(getAllObjects());
+      setObjects(newObjectList);
+      handleSelectedTab("0");
       setShowDeleteModal(false);
       setObjectToDelete(null);
+      setCurrentObject(newObjectList);
     }
   };
 
@@ -366,15 +369,7 @@ function EditWork({ closeNewWork, clientId }) {
           style={{ overflowY: "auto" }}
           key="middleNewWorkBox"
         >
-          {
-            showModel && (
-              //  (selectedTab !== "0" ? (
-              <ObjectViewer objectId={selectedTab} partsAreMoving={true} />
-            )
-            //  ) : (
-            //    <ModelViewer />
-            //   ))
-          }
+          {showModel && <ModelViewer objectId={selectedTab} />}
 
           {!showModel && showForm && (
             <ScriptCaller
