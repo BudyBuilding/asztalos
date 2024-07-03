@@ -6,7 +6,7 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
-import DashboardListItem from "../helpers/dashboardListItem";
+import DashboardListItem from "../helpers/DashboardWorkListItem";
 import ClientAnalyzer from "./clientAnalyzer";
 import NewClientModal from "../modals/NewClientModal";
 import sorting from "../helpers/sort";

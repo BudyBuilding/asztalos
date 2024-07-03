@@ -1,3 +1,7 @@
+// DashboardWorkListItem.js
+// this is a list item for works in the userdashboard component
+// right now just shows some data and calls the delete function
+
 import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
 import { IonIcon } from "@ionic/react";

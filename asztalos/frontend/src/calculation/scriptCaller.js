@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Form, Button } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
-import Item from "../modules/helpers/item";
+import Item from "../modules/helpers/Item";
 import {
   getAllScripts,
   getSelectedClient,
@@ -209,6 +209,10 @@ export default function ScriptCaller({ onSave }) {
     }
   }
 
+  const onItemChange = (item) => {
+    console.log("hello");
+  };
+
   return (
     <>
       {!selectedScript ? (
@@ -351,7 +355,15 @@ export default function ScriptCaller({ onSave }) {
               <h3 className="fw-bold text-center">Results</h3>
               {generatedItems.length != 0 &&
                 generatedItems.map((result, index) => {
-                  return <Item key={result.key || index} Item={result} />;
+                  return (
+                    <Item
+                      key={result.key || index}
+                      Item={result}
+                      onItemChange={(updatedItem) => {
+                        onItemChange(updatedItem);
+                      }}
+                    />
+                  );
                 })}
             </div>
           </Container>

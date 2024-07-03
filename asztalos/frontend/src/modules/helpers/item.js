@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Form, Container, Row, Col } from "react-bootstrap";
+import { Form, Container, Row, Col, Button } from "react-bootstrap";
+import ErrorModal from "./ErrorModal";
 
-export default function Item({ Item, onItemChange, objectID }) {
-  const [item, setItem] = useState(Item); // Állapot létrehozása és inicializálása
+export default function Item({ Item, onItemChange }) {
+  const [item, setItem] = useState(Item);
+  const [showError, setShowError] = useState(false);
+
+  // a function which from string makes an array, cause in the databes the size, rotation and position is stored in "[0,0,0]" format
   function parseStringToArray(str) {
     try {
       return JSON.parse(str);
@@ -11,11 +15,8 @@ export default function Item({ Item, onItemChange, objectID }) {
       return [];
     }
   }
-  /*
-  useEffect(() => {
-    console.log(item);
-  }, [item]);*/
 
+  // here we are calling the parsing function at the start
   useEffect(() => {
     const parsedSize = parseStringToArray(Item.size);
     setItem((prevItem) => ({
@@ -23,9 +24,42 @@ export default function Item({ Item, onItemChange, objectID }) {
       size: parsedSize,
     }));
   }, [Item.size]);
-  const handleItemChange = (updatedItem) => {
-    setItem(updatedItem); // Frissítjük az állapotot az új elemmel
-    onItemChange(updatedItem, objectID); // Változások továbbítása a szülő komponens felé
+
+  // checking if the input is correct
+  const validateForm = () => {
+    if (item.size.length !== 3) {
+      setShowError(true);
+      return false;
+    }
+
+    if (
+      item.size.some((value) => isNaN(value)) ||
+      item.size.some((value) => value <= 0)
+    ) {
+      setShowError(true);
+      return false;
+    }
+
+    if (item.qty === "" || isNaN(item.qty) || item.qty <= 0) {
+      setShowError(true);
+      return false;
+    }
+
+    return true;
+  };
+
+  // if we are changing an item we must save it by onItemChange
+  const handleChange = (field, value) => {
+    const updatedItem = { ...item, [field]: value };
+    if (validateForm()) {
+      setItem(updatedItem);
+      setShowError(false); // Clear previous error when changing fields
+      onItemChange(updatedItem);
+    }
+  };
+
+  const handleCloseErrorModal = () => {
+    setShowError(false);
   };
 
   return (
@@ -39,7 +73,11 @@ export default function Item({ Item, onItemChange, objectID }) {
                   className="border-0 p-0 text-center m-0"
                   value={item.size[0]}
                   onChange={(e) =>
-                    handleItemChange({ ...item, length: e.target.value })
+                    handleChange("size", [
+                      e.target.value,
+                      item.size[1],
+                      item.size[2],
+                    ])
                   }
                 />
               </Form.Group>
@@ -49,7 +87,11 @@ export default function Item({ Item, onItemChange, objectID }) {
                   className="border-0 p-0 text-center m-0"
                   value={item.size[1]}
                   onChange={(e) =>
-                    handleItemChange({ ...item, width: e.target.value })
+                    handleChange("size", [
+                      item.size[0],
+                      e.target.value,
+                      item.size[2],
+                    ])
                   }
                 />
               </Form.Group>
@@ -58,9 +100,7 @@ export default function Item({ Item, onItemChange, objectID }) {
                 <Form.Control
                   className="border-0 p-0 text-center m-0"
                   value={item.qty}
-                  onChange={(e) =>
-                    handleItemChange({ ...item, qty: e.target.value })
-                  }
+                  onChange={(e) => handleChange("qty", e.target.value)}
                 />
               </Form.Group>
             </Col>
@@ -74,9 +114,7 @@ export default function Item({ Item, onItemChange, objectID }) {
                   as="select"
                   className="p-0 text-center m-0 w-50"
                   value={item.cantType}
-                  onChange={(e) =>
-                    handleItemChange({ ...item, cantType: e.target.value })
-                  }
+                  onChange={(e) => handleChange("cantType", e.target.value)}
                 >
                   <option>-</option>
                   <option>04</option>
@@ -95,12 +133,9 @@ export default function Item({ Item, onItemChange, objectID }) {
             <Col className="me-2">
               <Form.Group>
                 <Form.Control
-                  className="border-0 p-0 text-center m-0"
                   as="select"
                   value={item.longCant}
-                  onChange={(e) =>
-                    handleItemChange({ ...item, longCant: e.target.value })
-                  }
+                  onChange={(e) => handleChange("longCant", e.target.value)}
                 >
                   <option>0</option>
                   <option>1</option>
@@ -111,12 +146,9 @@ export default function Item({ Item, onItemChange, objectID }) {
             <Col className="me-2">
               <Form.Group>
                 <Form.Control
-                  className="border-0 p-0 text-center m-0"
                   as="select"
                   value={item.shortCant}
-                  onChange={(e) =>
-                    handleItemChange({ ...item, shortCant: e.target.value })
-                  }
+                  onChange={(e) => handleChange("shortCant", e.target.value)}
                 >
                   <option>0</option>
                   <option>1</option>
@@ -132,14 +164,18 @@ export default function Item({ Item, onItemChange, objectID }) {
               <Form.Control
                 className="border-0 p-0 text-center m-0"
                 value={item.type}
-                onChange={(e) =>
-                  handleItemChange({ ...item, type: e.target.value })
-                }
+                onChange={(e) => handleChange("type", e.target.value)}
               />
             </Col>
           </Form.Group>
         </Col>
       </Row>
+      {showError && (
+        <ErrorModal
+          error="Please fill out all fields correctly."
+          onClose={handleCloseErrorModal}
+        />
+      )}
     </Container>
   );
 }
