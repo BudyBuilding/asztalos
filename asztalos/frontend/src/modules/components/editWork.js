@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
-import ColorSelector from "./colorSelector"; // Importing ColorSelector
-import store from "../data/store/store";
-import Item from "./item";
-import ScriptCaller from "../calculation/scriptCaller";
-import ModelViewer from "../model/ModelViewer";
+import ScriptCaller from "../../calculation/scriptCaller";
+import store from "../../data/store/store";
+import Item from "../helpers/item";
+import ModelViewer from "../../model/ModelViewer";
 import {
   getSelectedObject,
   getAllWorks,
@@ -14,16 +13,14 @@ import {
   getObjectById,
   getCreatedItemsByObject,
   getSettingById,
-} from "../data/getters";
+} from "../../data/getters";
 import {
   selectObject,
   updateObject,
-  addObject,
-} from "../data/store/actions/objectStoreFunctions";
-import { addWork } from "../data/store/actions/workStoreFunctions";
-import objectApi from "../data/api/objectApi";
+} from "../../data/store/actions/objectStoreFunctions";
+import { addWork } from "../../data/store/actions/workStoreFunctions";
+import objectApi from "../../data/api/objectApi";
 import { useParams } from "react-router-dom";
-import ObjectViewer from "../model/ObjectViewer";
 import { Modal } from "react-bootstrap";
 
 function EditWork({ closeNewWork, clientId }) {

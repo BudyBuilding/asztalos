@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { getClientById } from "../data/getters";
+import { getClientById } from "../../data/getters";
 const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
   const dispatch = useDispatch();
   const [clientData, setClientData] = useState(null);

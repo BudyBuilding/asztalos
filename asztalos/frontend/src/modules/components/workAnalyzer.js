@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button, ListGroup, Table } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
-import { getAllTables, getClientById, getWorkById } from "../data/getters";
+import { getAllTables, getClientById, getWorkById } from "../../data/getters";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
-import Loading from "./Loading";
+import Loading from "../helpers/Loading";
 
 function WorkAnalyzer() {
   const [selectedWork, setSelectedWork] = useState(null);

@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Container, Form, Button } from "react-bootstrap";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
-import store from "../data/store/store";
-import Item from "../reusable/item";
-import { getScripts } from "../data/api/apiService";
+import Item from "../modules/helpers/item";
 import {
-  getAllObjects,
   getAllScripts,
   getSelectedClient,
   getSettingById,
   getSelectedWork,
   getLatestObject,
-  getUser,
 } from "../data/getters";
 
 import objectApi from "../data/api/objectApi";
 import createdItemApi from "../data/api/createdItemApi";
-import { fetchScriptItemsForScript } from "../reusable/managers/storeManager";
+import { fetchScriptItemsForScript } from "../data/storeManager";
 import { clearSelectedScriptItems } from "../data/store/actions/scriptStoreFunctions";
 
 export default function ScriptCaller({ onSave }) {

@@ -1,12 +1,12 @@
 //storeManager.js
-import clientApi from "../../data/api/clientApi";
-import objectApi from "../../data/api/objectApi";
-import scriptApi from "../../data/api/scriptApi";
-import scriptItemApi from "../../data/api/scriptItemApi";
-import tableApi from "../../data/api/tableApi";
-import workApi from "../../data/api/workApi";
-import createdItemApi from "../../data/api/createdItemApi";
-import settingsApi from "../../data/api/settingsApi";
+import clientApi from "./api/clientApi";
+import objectApi from "./api/objectApi";
+import scriptApi from "./api/scriptApi";
+import scriptItemApi from "./api/scriptItemApi";
+import tableApi from "./api/tableApi";
+import workApi from "./api/workApi";
+import createdItemApi from "./api/createdItemApi";
+import settingsApi from "./api/settingsApi";
 
 export const fetchClients = () => {
   console.log("fetching the clients");

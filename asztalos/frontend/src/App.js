@@ -1,18 +1,18 @@
 import React, { useEffect } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Login from "./components/modules/login";
-import UserDashboard from "./components/modules/UserDashboard";
-import ClientAnalyzer from "./components/reusable/clientAnalyzer";
-import WorkAnalyzer from "./components/reusable/workAnalyzer";
-import AdminDashboard from "./components/modules/AdminDashboard"; // Importáljuk az AdminDashboard komponenst
+import Login from "./modules/components/login";
+import UserDashboard from "./modules/components/UserDashboard";
+import ClientAnalyzer from "./modules/components/clientAnalyzer";
+import WorkAnalyzer from "./modules/components/workAnalyzer";
+import AdminDashboard from "./modules/adminFiles/AdminDashboard"; // Importáljuk az AdminDashboard komponenst
 import { Provider, useDispatch, useSelector } from "react-redux";
-import store from "./components/data/store/store";
+import store from "./data/store/store";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { fetchAll } from "./components/reusable/managers/storeManager";
-import EditWork from "./components/reusable/editWork";
-import authApi from "./components/data/api/authApi";
-import { getUser } from "./components/data/getters";
+import { fetchAll } from "./data/storeManager";
+import EditWork from "./modules/components/editWork";
+import authApi from "./data/api/authApi";
+import { getUser } from "./data/getters";
 
 function App() {
   const dispatch = useDispatch();
