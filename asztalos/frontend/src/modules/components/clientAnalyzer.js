@@ -1,27 +1,28 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import store from "../data/store/store";
+import store from "../../data/store/store";
 import { useParams } from "react-router-dom";
 
 import { Button, ListGroup } from "react-bootstrap";
 import { Modal } from "react-bootstrap";
-import Loading from "./Loading";
+import Loading from "../helpers/Loading";
 
-import ClientWorkListItem from "./clientWorksListItem";
-import ClientUpdateModal from "./ClientUpdateModal";
+import ClientWorkListItem from "../helpers/clientWorksListItem";
+
+import ClientUpdateModal from "../modals/ClientUpdateModal";
+import NewWorkModal from "../modals/newWorkModal";
 import {
   fetchCreatedItemsForWork,
   fetchObjectsForWork,
-} from "./managers/storeManager";
-import sorting from "./sort";
-import { deleteWork } from "../data/api/apiService";
-import clientApi from "../data/api/clientApi";
-import workApi from "../data/api/workApi";
-import { getClientById } from "../data/getters";
-import { selectWork } from "../data/store/actions/workStoreFunctions";
-import { fetchTables } from "./managers/storeManager";
+  fetchTables,
+} from "../../data/storeManager";
+import sorting from "../helpers/sort";
+import { deleteWork } from "../../data/api/apiService";
+import clientApi from "../../data/api/clientApi";
+import workApi from "../../data/api/workApi";
+import { getClientById } from "../../data/getters";
+import { selectWork } from "../../data/store/actions/workStoreFunctions";
 import { useNavigate } from "react-router-dom";
-import NewWorkModal from "./newWorkModal";
 
 function ClientAnalyzer() {
   const dispatch = useDispatch();

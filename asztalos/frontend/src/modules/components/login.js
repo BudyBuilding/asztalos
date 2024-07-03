@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { login, loginStart } from "../data/store/actions/storeFunctions";
-import authApi from "../data/api/authApi";
+import { login, loginStart } from "../../data/store/actions/storeFunctions";
+import authApi from "../../data/api/authApi";
 
 const Login = () => {
   const [username, setUsername] = useState("");

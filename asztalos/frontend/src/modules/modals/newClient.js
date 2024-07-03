@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Form, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addClient } from "../data/api/apiService"; // Az addClient függvény importálása az apiService-ből
-import clientApi from "../data/api/clientApi";
+import { addClient } from "../../data/api/apiService"; // Az addClient függvény importálása az apiService-ből
+import clientApi from "../../data/api/clientApi";
 
 function NewClient({ onClose }) {
   const [clientName, setClientName] = useState("");

@@ -6,26 +6,27 @@ import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
-import DashboardListItem from "../reusable/dashboardListItem";
-import ClientAnalyzer from "../reusable/clientAnalyzer";
-import NewClient from "../reusable/newClient";
-import sorting from "../reusable/sort";
+import DashboardListItem from "../helpers/dashboardListItem";
+import ClientAnalyzer from "./clientAnalyzer";
+import NewClient from "../modals/newClient";
+import sorting from "../helpers/sort";
 import { useNavigate } from "react-router-dom";
-import { selectClient } from "../data/store/actions/clientStoreFunctions";
-import { selectWork } from "../data/store/actions/workStoreFunctions";
-import authApi from "../data/api/authApi";
-import clientApi from "../data/api/clientApi";
-import workApi from "../data/api/workApi";
-import { deleteWork } from "../data/api/apiService";
-import store from "../data/store/store";
-import Loading from "../reusable/Loading";
-import ClientUpdateModal from "../reusable/ClientUpdateModal";
-import { getAllClients, getAllWorks, getWorkById } from "../data/getters";
+import { selectClient } from "../../data/store/actions/clientStoreFunctions";
+import { selectWork } from "../../data/store/actions/workStoreFunctions";
+import authApi from "../../data/api/authApi";
+import clientApi from "../../data/api/clientApi";
+import workApi from "../../data/api/workApi";
+import { deleteWork } from "../../data/api/apiService";
+import store from "../../data/store/store";
+import Loading from "../helpers/Loading";
+import { getAllClients, getAllWorks, getWorkById } from "../../data/getters";
+
 import {
   fetchCreatedItemsForWork,
   fetchObjectsForWork,
   fetchTables,
-} from "../reusable/managers/storeManager";
+} from "../../data/storeManager";
+import ClientUpdateModal from "../modals/ClientUpdateModal";
 
 function UserDashboard() {
   const dispatch = useDispatch();

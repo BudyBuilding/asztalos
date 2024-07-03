@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, Button, Form, Row, Col } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux"; // useSelector hozzáadva
-import { addColor } from "../data/api/apiService";
+import { addColor } from "../../data/api/apiService";
 
 const ColorSelector = ({ show, handleClose }) => {
   const dispatch = useDispatch();

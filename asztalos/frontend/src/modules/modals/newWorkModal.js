@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
-import { getClientById, getSelectedClient } from "../data/getters";
+import { getClientById, getSelectedClient } from "../../data/getters";
 
 const NewWorkModal = ({ show, handleClose, onSubmit }) => {
   const dispatch = useDispatch();

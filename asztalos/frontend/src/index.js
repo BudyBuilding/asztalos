@@ -4,7 +4,7 @@ import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "react-redux"; // Provider importálása a react-redux csomagból
-import store from "./components/data/store/store"; // Redux store importálása
+import store from "./data/store/store"; // Redux store importálása
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
