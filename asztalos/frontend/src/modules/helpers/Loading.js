@@ -1,3 +1,6 @@
+// Loading.js
+// this class is used for showing that if we are loading something from store or from backend
+
 import React from "react";
 import Spinner from "react-bootstrap/Spinner";
 

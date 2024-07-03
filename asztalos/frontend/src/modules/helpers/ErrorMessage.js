@@ -1,5 +1,5 @@
 // ErrorMessage.js
-
+// returns a default errortext
 import React from "react";
 
 const ErrorMessage = ({ message }) => {
