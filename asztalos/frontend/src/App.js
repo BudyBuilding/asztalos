@@ -2,18 +2,20 @@ import React, { useEffect } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./components/modules/login";
-import Dashboard from "./components/modules/dashboard";
+import UserDashboard from "./components/modules/UserDashboard";
 import ClientAnalyzer from "./components/reusable/clientAnalyzer";
 import WorkAnalyzer from "./components/reusable/workAnalyzer";
-import { Provider } from "react-redux";
+import AdminDashboard from "./components/modules/AdminDashboard"; // Importáljuk az AdminDashboard komponenst
+import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./components/data/store/store";
-import { useSelector, useDispatch } from "react-redux";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { fetchAll } from "./components/reusable/managers/storeManager";
 import EditWork from "./components/reusable/editWork";
 import authApi from "./components/data/api/authApi";
+import { getUser } from "./components/data/getters";
 
 function App() {
+  const dispatch = useDispatch();
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const navigate = useNavigate();
 
@@ -27,8 +29,14 @@ function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
+      const currentuser = dispatch(getUser());
+      console.log(currentuser);
       fetchAll();
-      navigate("/dashboard");
+      if (currentuser.role == "admin") {
+        navigate("/adminDashboard"); // Admin esetén az adminDashboard-ra navigálunk
+      } else {
+        navigate("/userDashboard"); // Normál felhasználó esetén a userDashboard-ra navigálunk
+      }
     } else {
       navigate("/login");
     }
@@ -37,12 +45,13 @@ function App() {
   return (
     <Provider store={store}>
       <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/adminDashboard" element={<AdminDashboard />} />{" "}
+        <Route path="/userDashboard" element={<UserDashboard />} />
         <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
         <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
         <Route path="/editWork/:workId" element={<EditWork />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={isLoggedIn ? <Dashboard /> : <Login />} />
+        <Route path="/" element={isLoggedIn ? <UserDashboard /> : <Login />} />
       </Routes>
     </Provider>
   );

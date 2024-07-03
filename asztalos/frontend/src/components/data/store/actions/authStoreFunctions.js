@@ -31,7 +31,12 @@ const initialState = {};
 ///////////
 // Reducers
 const authReducer = (
-  state = { isLoggedIn: false, user: null, error: null },
+  state = {
+    isLoggedIn: false,
+    user: null,
+    error: null,
+    isAdminLoggedIn: false,
+  },
   action
 ) => {
   switch (action.type) {
