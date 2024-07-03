@@ -8,7 +8,7 @@ import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
 import DashboardListItem from "../helpers/dashboardListItem";
 import ClientAnalyzer from "./clientAnalyzer";
-import NewClient from "../modals/newClient";
+import NewClientModal from "../modals/NewClientModal";
 import sorting from "../helpers/sort";
 import { useNavigate } from "react-router-dom";
 import { selectClient } from "../../data/store/actions/clientStoreFunctions";
@@ -175,7 +175,7 @@ function UserDashboard() {
           <Modal.Title>Add New Client</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <NewClient onClose={handleNewClientClose} />
+          <NewClientModal onClose={handleNewClientClose} />
         </Modal.Body>
       </Modal>
 
