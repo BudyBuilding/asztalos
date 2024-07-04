@@ -6,6 +6,7 @@ import {
   loginFailure,
   logoutSuccess,
   logoutFailure,
+  addAllUsers,
 } from "../store/actions/authStoreFunctions"; // Frissítsd az elérési utat, ha szükséges
 
 // Login
@@ -31,6 +32,21 @@ const loginApi = async (username, password, beRemembered) => {
   } catch (error) {
     console.error("Error during login:", error);
     store.dispatch(loginFailure(error));
+    throw error;
+  }
+};
+
+// Login
+const getAllUsersApi = async () => {
+  try {
+    const response = await axiosInstance.get("/users");
+    console.log("Loading users from server response: ", response);
+    if (response.status === 200) {
+      store.dispatch(addAllUsers(response.data)); // Dispatching to update Redux store
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
     throw error;
   }
 };
@@ -70,4 +86,4 @@ const logoutApi = () => {
   }
 };
 
-export default { loginApi, checkTokenApi, logoutApi };
+export default { loginApi, checkTokenApi, logoutApi, getAllUsersApi };

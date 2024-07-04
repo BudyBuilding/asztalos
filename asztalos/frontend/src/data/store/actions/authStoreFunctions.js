@@ -24,6 +24,10 @@ export const logoutSuccess = () => ({
   type: "auth/logout",
 });
 
+export const addAllUsers = () => ({
+  type: "auth/getAllusers",
+});
+
 ///////////
 // Initialstate
 const initialState = {};
@@ -36,6 +40,7 @@ const authReducer = (
     user: null,
     error: null,
     isAdminLoggedIn: false,
+    allUsers: [],
   },
   action
 ) => {
@@ -45,6 +50,12 @@ const authReducer = (
         ...state,
         isLoggedIn: true,
         user: action.payload,
+        error: null,
+      };
+    case "auth/getAllusers":
+      return {
+        ...state,
+        allUsers: action.payload,
         error: null,
       };
     case "auth/loginFailure":
