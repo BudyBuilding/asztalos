@@ -6,6 +6,13 @@ export const getUser = () => {
   };
 };
 
+export const getAllUsers = () => {
+  return (dispatch) => {
+    const users = store.getState().auth.allUsers;
+    return users;
+  };
+};
+
 /////////////
 //client
 export const getClientById = (clientId) => {

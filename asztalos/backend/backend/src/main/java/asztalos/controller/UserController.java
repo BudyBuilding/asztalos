@@ -1,6 +1,7 @@
 package asztalos.controller;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.User;
@@ -30,7 +33,48 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    
+    // Loading only one or all users 
+    // Considerating that if the user is an admin
+    // Could be done only by admin
+   @GetMapping
+    public ResponseEntity<?> getUsers(@RequestParam(required = false) Long userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Optional<User> currentUser = userService.findByUsername(username);
+        
+        // checking if the user from the token is available
+        // cannot give problem (but who de hell knows)
+        if (!currentUser.isPresent()) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // checking if the user wants only one or more user to load
+        if (userId != null) {
+            Optional<User> user = userService.findById(userId);
+
+            // if only one, so the user gave a userId we must check if the user is the same with the user in the token
+            // so no one could check the others users
+            if (user.isPresent() && currentUser.get().getRole().equals("admin")) {
+                return ResponseEntity.ok(user.get());
+            } else {
+                // if there is no user or the user cannot check that user 
+                return ResponseEntity.status(403).build();
+            }
+        } else {
+            // if the user want to get all the user
+            // we must check if the user is admin or not
+            if (currentUser.get().getRole().equals("admin")) {
+                //if is admin then we must give them all the users
+                List<User> users = userService.findAll();
+                return ResponseEntity.ok(users);
+            } else {
+                // if is not admin then it must get an error
+                return ResponseEntity.status(403).build();
+            }
+        }
+    }
+
+
     // this function updates an another user
     // important that the user who calls it, who is in the token must be an admin
     @PutMapping("/{id}")

@@ -9,7 +9,7 @@ import AdminDashboard from "./modules/adminFiles/AdminDashboard"; // Importálju
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./data/store/store";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { fetchAll } from "./data/storeManager";
+import { fetchAll, fetchUsers } from "./data/storeManager";
 import EditWork from "./modules/components/EditWork";
 import authApi from "./data/api/authApi";
 import { getUser } from "./data/getters";
@@ -33,6 +33,7 @@ function App() {
       console.log(currentuser);
       fetchAll();
       if (currentuser.role == "admin") {
+        fetchUsers();
         navigate("/adminDashboard"); // Admin esetén az adminDashboard-ra navigálunk
       } else {
         navigate("/userDashboard"); // Normál felhasználó esetén a userDashboard-ra navigálunk

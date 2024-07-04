@@ -7,6 +7,12 @@ import tableApi from "./api/tableApi";
 import workApi from "./api/workApi";
 import createdItemApi from "./api/createdItemApi";
 import settingsApi from "./api/settingsApi";
+import authApi from "./api/authApi";
+
+export const fetchUsers = () => {
+  console.log("fetching the users");
+  authApi.getAllUsersApi();
+};
 
 export const fetchClients = () => {
   console.log("fetching the clients");
