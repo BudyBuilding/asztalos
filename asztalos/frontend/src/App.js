@@ -30,10 +30,11 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       const currentuser = dispatch(getUser());
-      console.log(currentuser);
-      fetchAll();
       if (currentuser.role == "admin") {
         fetchUsers();
+      }
+      fetchAll();
+      if (currentuser.role == "admin") {
         navigate("/adminDashboard"); // Admin esetén az adminDashboard-ra navigálunk
       } else {
         navigate("/userDashboard"); // Normál felhasználó esetén a userDashboard-ra navigálunk

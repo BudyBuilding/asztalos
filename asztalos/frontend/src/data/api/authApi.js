@@ -36,7 +36,7 @@ const loginApi = async (username, password, beRemembered) => {
   }
 };
 
-// Login
+// Get All Users
 const getAllUsersApi = async () => {
   try {
     const response = await axiosInstance.get("/users");
