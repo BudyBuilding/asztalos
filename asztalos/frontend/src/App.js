@@ -1,16 +1,16 @@
 import React, { useEffect } from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Login from "./modules/components/login";
+import Login from "./modules/components/Login";
 import UserDashboard from "./modules/components/UserDashboard";
-import ClientAnalyzer from "./modules/components/clientAnalyzer";
-import WorkAnalyzer from "./modules/components/workAnalyzer";
+import ClientAnalyzer from "./modules/components/ClientAnalyzer";
+import WorkAnalyzer from "./modules/components/WorkAnalyzer";
 import AdminDashboard from "./modules/adminFiles/AdminDashboard"; // Importáljuk az AdminDashboard komponenst
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./data/store/store";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { fetchAll } from "./data/storeManager";
-import EditWork from "./modules/components/editWork";
+import EditWork from "./modules/components/EditWork";
 import authApi from "./data/api/authApi";
 import { getUser } from "./data/getters";
 
