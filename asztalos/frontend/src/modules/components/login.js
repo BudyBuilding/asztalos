@@ -1,3 +1,6 @@
+// Login.js
+// the Login class handles the login page and the methods
+
 import React, { useState, useEffect } from "react";
 import { Form, Button, Container } from "react-bootstrap";
 import { useDispatch } from "react-redux";
@@ -10,11 +13,13 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const dispatch = useDispatch();
 
+  // here we are calling the login method
   const handleLogin = (e) => {
     e.preventDefault();
     authApi.loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
   };
 
+  // if the user want to be saved then this function handles the method for toggleing the saving
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
   };

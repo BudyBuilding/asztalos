@@ -1,3 +1,8 @@
+// WorkAnalyzer.js
+// is used for analyzing a selected work
+// the user can check the generated files, neccessary tables, prices
+//also can modify it, and open the EditWork which is for the objects and created items
+
 import React, { useState, useEffect } from "react";
 import { Button, ListGroup, Table } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
@@ -18,6 +23,7 @@ function WorkAnalyzer() {
   const navigate = useNavigate();
   const { workId } = useParams();
 
+  // this is only for illustrate the generated files for the work
   const [files, setFiles] = useState([
     {
       id: 1,
@@ -33,6 +39,7 @@ function WorkAnalyzer() {
     },
   ]);
 
+  // the first loading, and also loads at every changes
   useEffect(() => {
     const loadWorkData = async () => {
       setLoading(true);
@@ -50,6 +57,7 @@ function WorkAnalyzer() {
     loadWorkData();
   }, [dispatch, workId]);
 
+  // loads the neccessary tables and calculates the price of them
   useEffect(() => {
     const loadTables = async () => {
       try {
@@ -65,6 +73,7 @@ function WorkAnalyzer() {
     loadTables();
   }, [dispatch]);
 
+  // if the user want to edit the work, add new objects etc. this is the function which opens the editor
   const handleEditWork = async () => {
     try {
       navigate(`/editWork/${workId}`);

@@ -1,4 +1,6 @@
-//newWork.js
+//EditWork.js
+// is used for editing a work, as adding, deleting, modifying objects and settings for a work
+
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
@@ -7,7 +9,6 @@ import store from "../../data/store/store";
 import Item from "../helpers/Item";
 import ModelViewer from "../../model/ModelViewer";
 import {
-  getSelectedObject,
   getAllWorks,
   getAllObjects,
   getObjectById,
@@ -43,6 +44,7 @@ function EditWork({ closeNewWork, clientId }) {
 
   let newObjKey = 999;
 
+  // the settings are in a string, and this function creats a map, list or smth like that from them
   function parseSetting(setting) {
     if (!setting) {
       return {};
@@ -54,13 +56,17 @@ function EditWork({ closeNewWork, clientId }) {
     pairs.forEach((pair) => {
       const [key, value] = pair.split(":");
       if (key && value) {
-        parsedSettings[key.trim()] = parseInt(value.trim(), 10); // Fontos: alapértelmezett számrendszer (10)
+        parsedSettings[key.trim()] = parseInt(value.trim(), 10);
       }
     });
 
     return parsedSettings;
   }
 
+  // here we can change between the objects and this handles the change between them
+  // the newObject tab is for creating a new object
+  // the 0 is for showing every objects for the work
+  // any other is for shoving a specific object
   useEffect(() => {
     setShowModel(false);
 
@@ -79,6 +85,7 @@ function EditWork({ closeNewWork, clientId }) {
     }
   }, [selectedTab]);
 
+  // this function handles which objects items should be visible, which is open
   function itemDetailing(objectId) {
     console.log(objectId);
     let newDetails = [...itemDetails];
@@ -94,6 +101,7 @@ function EditWork({ closeNewWork, clientId }) {
     setItemDetails(newDetails);
   }
 
+  // this function handles which objects settings should be visible, which is open
   function settingDetailing(objectId) {
     let newDetails = [...settingDetails];
     if (newDetails.includes(objectId)) {
@@ -108,21 +116,12 @@ function EditWork({ closeNewWork, clientId }) {
     setSettingDetails(newDetails);
   }
 
+  // this loads the from the store
   useEffect(() => {
     if (!loading) {
       setObjects(dispatch(getAllObjects()));
     }
   }, [loading]);
-
-  store.subscribe(() => {
-    //console.log("State changed:", store.getState());
-    setLoading(store.getState().objectLoading);
-  });
-
-  const addNewObject = async (object, generatedItems) => {
-    console.log("adding the object to the backend");
-    objectApi.createObjectApi(object);
-  };
 
   const colors = useSelector((state) => state.colors);
 
@@ -130,6 +129,7 @@ function EditWork({ closeNewWork, clientId }) {
     setShowColorSelector(false);
   }
 
+  // this handles the selected tab, so this sets the main variables for them
   function handleSelectedTab(key) {
     if (key !== selectedTab) {
       setSelectedTab(key);
@@ -137,12 +137,15 @@ function EditWork({ closeNewWork, clientId }) {
     }
   }
 
+  // save all the modify of an object
   function saveModify(object) {
     const objs = objects.map((obj) => (obj.key === object.key ? object : obj));
     setObjects(objs);
     dispatch(updateObject(object));
   }
 
+  //if we modify an item, here we are saving it,
+  //I do not thin is alright right not TODO
   function handleModifiedItem(modifiedItem, objectID) {
     let object;
     if (objectID) {
@@ -160,33 +163,22 @@ function EditWork({ closeNewWork, clientId }) {
     }
   }
 
+  // this is triggered at every change on an item
   const handleItemChange = (modifiedItem, objectID) => {
     handleModifiedItem(modifiedItem, objectID);
   };
 
-  const handleSave = () => {
-    if (modifiedObject) {
-      setModifiedObject(null);
-    }
-  };
-  const handleCreateObject = () => {
+  // this is for setting up the initial state after creating a new object
+  const init = () => {
     setShowForm(false);
     setShowModel(true);
-    dispatch(selectObject("0")); // Válasszuk ki a "0"-s fület a Nav-ban
-    setObjects(dispatch(getAllObjects())); // Ez csak egy megjegyzés, hogy itt dispatch(getAllObjects) hívás nincs zárójelben, ami azt jelenti, hogy dispatch(getAllObjects) lesz a setObjects új értéke
-    setSelectedTab("0"); // Állítsuk be a kiválasztott fület "0"-ra
+    setObjects(dispatch(getAllObjects()));
+    setSelectedTab("0");
   };
 
+  // TODO I do not think is alright
   const handleSaveWork = async () => {
-    // Lekérjük az ügyfél adatait
     const client = await dispatch(getObjectById(clientId));
-
-    // Lekérjük az összes munkát a store-ból
-    const works = await dispatch(getAllWorks());
-
-    // Generáljuk a workId-t: kiválasztjuk a legnagyobb workId-t, majd hozzáadunk egyet
-    const maxWorkId = Math.max(...works.map((work) => work.workId));
-    const newWorkId = maxWorkId + 1;
 
     // Lekérjük a mai dátumot és formázzuk yyyy-mm-dd formátumra
     const today = new Date();
@@ -203,7 +195,6 @@ function EditWork({ closeNewWork, clientId }) {
 
     // Elkészítjük az új munka objektumot
     const newWork = {
-      workId: newWorkId,
       ClientId: clientId,
       Client: client.Name, // Például csak az ügyfél nevét vesszük fel
       Date: currentDate,
@@ -219,11 +210,14 @@ function EditWork({ closeNewWork, clientId }) {
     closeNewWork();
   };
 
+  // this is the first step of deleting an object
   const handleDeleteObject = (objectId) => {
     setObjectToDelete(objectId);
     setShowDeleteModal(true);
   };
 
+  // after confirming the deletion of work then firstly the generated items must be deleted
+  // after the pervious step the object could be deleted
   const confirmDeleteObject = async () => {
     if (objectToDelete !== null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
@@ -369,10 +363,7 @@ function EditWork({ closeNewWork, clientId }) {
           {showModel && <ModelViewer objectId={selectedTab} />}
 
           {!showModel && showForm && (
-            <ScriptCaller
-              newObjectKey={newObjKey}
-              onSave={handleCreateObject}
-            />
+            <ScriptCaller newObjectKey={newObjKey} onSave={init} />
           )}
         </Container>
         <Container
