@@ -24,13 +24,13 @@ export const logoutSuccess = () => ({
   type: "auth/logout",
 });
 
-export const addAllUsers = () => ({
-  type: "auth/getAllusers",
+export const addAllUsers = (users) => ({
+  type: "auth/addAllUsers",
+  payload: users,
 });
 
 ///////////
 // Initialstate
-const initialState = {};
 
 ///////////
 // Reducers
@@ -52,7 +52,7 @@ const authReducer = (
         user: action.payload,
         error: null,
       };
-    case "auth/getAllusers":
+    case "auth/addAllUsers":
       return {
         ...state,
         allUsers: action.payload,
