@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import Button from "react-bootstrap/Button";
 import store from "../../data/store/store";
 import Loading from "../helpers/Loading";
-import { Nav, Table } from "react-bootstrap";
+import { Nav, Table, Modal } from "react-bootstrap";
 import { getAllClients, getAllUsers, getAllWorks } from "../../data/getters";
-import "bootstrap-icons/font/bootstrap-icons.css"; // Bootstrap Icons CSS importálása
+import "bootstrap-icons/font/bootstrap-icons.css";
+import AddColorModal from "../modals/AddColorModal";
 
 function AdminDashboard() {
   const dispatch = useDispatch();
@@ -17,6 +18,9 @@ function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState("dashboard");
   const [render, setRender] = useState(true);
   const [showNav, setShowNav] = useState(true);
+
+  // State for controlling modal visibility
+  const [showColorModal, setShowColorModal] = useState(false);
 
   useEffect(() => {
     setClients(loadClients());
@@ -153,6 +157,13 @@ function AdminDashboard() {
           <div>
             <h1>Colors Management</h1>
             <p>Manage your colors here.</p>
+            <Button variant="primary" onClick={() => setShowColorModal(true)}>
+              Add Color
+            </Button>
+            <AddColorModal
+              show={showColorModal}
+              onHide={() => setShowColorModal(false)}
+            />
           </div>
         );
       default:
@@ -264,9 +275,7 @@ function AdminDashboard() {
               >
                 <i
                   className={`bi ${
-                    selectedTab === "works"
-                      ? "bi-briefcase-fill"
-                      : "bi-briefcase"
+                    selectedTab === "works" ? "bi-archive-fill" : "bi-archive"
                   }`}
                 ></i>
               </Nav.Link>

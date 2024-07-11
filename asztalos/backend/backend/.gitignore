@@ -24,7 +24,6 @@ target/
 *.ear
 
 # Dependency directories
-repository/
 
 src/main/resources/
 
