@@ -1,5 +1,8 @@
 package asztalos.controller;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,14 +29,37 @@ public class FilesController {
         String response = filesService.storeFile(file);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
-   @GetMapping("/getFileByName/{fileName}")
+    @GetMapping("/getFileByName/{fileName}")
     public ResponseEntity<byte[]> getFileByName(@PathVariable String fileName) {
         try {
-            byte[] fileData = filesService.getFiles(fileName);
-            return ResponseEntity.ok().contentType(MediaType.valueOf("image/jpg")).body(fileData);
-        } catch (Exception e) {
-            // Kezeljük a hibát, ha a fájl nem található vagy más hiba történik
+            byte[] fileData = filesService.downloadFilesFromFileSystem(fileName);
+
+            // Determine content type dynamically based on file extension
+            MediaType mediaType = getMediaTypeForFileName(fileName);
+            if (mediaType == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity.ok().contentType(mediaType).body(fileData);
+        } catch (IOException e) {
+            // Handle file read exception
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // Helper method to determine MediaType based on file extension
+    private MediaType getMediaTypeForFileName(String fileName) {
+        String mimeType = null;
+        try {
+            Path path = Paths.get(fileName);
+            mimeType = Files.probeContentType(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (mimeType != null && !mimeType.isEmpty()) {
+            return MediaType.parseMediaType(mimeType);
+        }
+        return null;
     }
 }
