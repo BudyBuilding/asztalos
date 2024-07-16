@@ -1,65 +1,82 @@
 import React, { useState } from "react";
-import { Modal, Button, Form, Col, Row, Image } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Col,
+  Row,
+  Image,
+  FloatingLabel,
+} from "react-bootstrap";
+import colorApi from "../../data/api/colorApi";
+import { useDispatch } from "react-redux";
 
 const AddColorModal = ({ show, onHide }) => {
+  const dispatch = useDispatch();
   const [colorName, setColorName] = useState("");
+  const [colorType, setColorType] = useState("PAL");
+  const [colorRotable, setColorRotable] = useState(true);
+  const [colorActive, setColorActive] = useState(true);
+  const [colorPrice, setColorPrice] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null); // Általános előnézet a kiválasztott képhez
   const [fullScreenImage, setFullScreenImage] = useState(null); // Állapot a teljes képernyős kép megjelenítéséhez
-
+  const [colorDimension, setColorDimension] = useState("2780 * 2050 * 18");
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    setSelectedFile(file);
-    setColorName(file.name.split(".")[0]); // Beállítjuk a Color Name mezőt a fájl nevével
-
-    // Kép előnézet generálása
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewImage(reader.result);
-    };
     if (file) {
+      setSelectedFile(file);
+      setColorName(file.name.split(".")[0]); // Beállítjuk a Color Name mezőt a fájl nevével
+
+      // Kép előnézet generálása
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        console.log(reader.result);
+        console.log(reader);
+        setPreviewImage(reader.result);
+      };
       reader.readAsDataURL(file);
     } else {
+      setSelectedFile(null);
       setPreviewImage(null);
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-
     if (!selectedFile) {
       alert("Please select a file.");
       return;
     }
 
-    // Create FormData object to send file and color name
-    const formData = new FormData();
-    formData.append("colorName", colorName);
-    formData.append(
-      "file",
-      selectedFile,
-      `${colorName}.${selectedFile.name.split(".").pop()}`
-    );
+    try {
+      const imageData = previewImage;
+      const newColor = {
+        active: colorActive,
+        dimension: colorDimension,
+        materialType: colorType,
+        name: colorName,
+        rotable: colorRotable,
+        price: colorPrice,
+      };
 
-    // Example fetch request to send formData to server
-    fetch("/api/upload-color", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // Reset form fields
-        setColorName("");
-        setSelectedFile(null);
-        setPreviewImage(null);
-        // Close modal
-        onHide();
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        // Handle error
-      });
+      await dispatch(colorApi.createColorApi(newColor, imageData));
+
+      // Reset form fields
+      setColorName("");
+      setSelectedFile(null);
+      setPreviewImage(null);
+      setColorType("PAL");
+      setColorRotable(true);
+      setColorActive(true);
+      setColorPrice(0);
+      setColorDimension("2780 * 2050 * 18");
+
+      // Close modal
+      onHide();
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   const openFullScreenImage = () => {
@@ -77,9 +94,12 @@ const AddColorModal = ({ show, onHide }) => {
           <Modal.Title>Add Color</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="colorName">
-              <Form.Label>Color Name</Form.Label>
+          <Form onSubmit={handleSubmit} className="form-inline floating-input">
+            <FloatingLabel
+              controlId="floatingInput"
+              label="Color Name"
+              className="mb-3"
+            >
               <Form.Control
                 type="text"
                 placeholder="Enter color name"
@@ -87,27 +107,113 @@ const AddColorModal = ({ show, onHide }) => {
                 onChange={(e) => setColorName(e.target.value)}
                 required
               />
-            </Form.Group>
-            <Form.Group controlId="imageUpload">
-              <Form.Label>Upload Image</Form.Label>
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="colorType"
+              label="Material type"
+              className="mb-3"
+            >
+              <Form.Select
+                id="colorTypeSelect"
+                value={colorType}
+                onChange={(e) => {
+                  setColorType(e.target.value);
+                  switch (e.target.value) {
+                    case "MDF":
+                      setColorDimension("NaN");
+                      break;
+                    case "Gizir":
+                      setColorDimension("2780 * 1200 * 18");
+                      break;
+                    default:
+                      setColorDimension("2780 * 2050 * 18");
+                  }
+                }}
+              >
+                <option value="PAL">PAL</option>
+                <option value="MDF">MDF</option>
+                <option value="Gizir">Gizir</option>
+                <option value="PFL">PFL</option>
+              </Form.Select>
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="dimension"
+              label="Dimension"
+              className="mb-3"
+            >
+              <Form.Select id="dimensionSelect" value={colorDimension} disabled>
+                <option value="2780 * 2050 * 18">2780 * 2050 * 18</option>
+                <option value="2780 * 2050 * 18">2780 * 2050 * 18</option>
+                <option value="NaN">NaN</option>
+                <option value="2780 * 1200 * 18">2780 * 1200 * 18</option>
+              </Form.Select>
+            </FloatingLabel>
+
+            <FloatingLabel controlId="rotable" className="mt-3" label="Rotable">
+              <Form.Select
+                id="rotableSelect"
+                value={colorRotable}
+                onChange={(e) => setColorRotable(e.target.value === "true")}
+              >
+                <option value="true">Rotable</option>
+                <option value="false">Non rotable</option>
+              </Form.Select>
+            </FloatingLabel>
+
+            <FloatingLabel controlId="active" className="mt-3" label="Active">
+              <Form.Select
+                id="activeSelect"
+                value={colorActive}
+                onChange={(e) => setColorActive(e.target.value === "true")}
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </Form.Select>
+            </FloatingLabel>
+
+            <FloatingLabel controlId="price" className="mt-3" label="Price">
+              <Form.Control
+                type="number"
+                placeholder="Enter color price"
+                value={colorPrice}
+                onChange={(e) => setColorPrice(e.target.value)}
+                required
+              />
+            </FloatingLabel>
+
+            <FloatingLabel
+              controlId="imageUpload"
+              className="mt-3"
+              label="Upload Image"
+            >
               <Form.Control
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
                 required
               />
-            </Form.Group>
+            </FloatingLabel>
             {previewImage && (
-              <Form.Group as={Row} controlId="imagePreview">
-                <Form.Label column sm={3}>
-                  Preview
-                </Form.Label>
+              <FloatingLabel
+                as={Row}
+                controlId="imagePreview"
+                label="Preview"
+                className="mt-3"
+              >
                 <Col sm={9}>
                   <div style={{ position: "relative" }}>
                     <Image
                       src={previewImage}
                       alt="Preview"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      style={{
+                        border: "thin solid black",
+                        borderRadius: "10%",
+                        maxWidth: "100%",
+                        maxHeight: "200px",
+                        margin: "auto",
+                      }}
                       onClick={openFullScreenImage}
                       className="cursor-pointer"
                     />
@@ -124,14 +230,16 @@ const AddColorModal = ({ show, onHide }) => {
                     </Button>
                   </div>
                 </Col>
-              </Form.Group>
+              </FloatingLabel>
             )}
-            <Button variant="secondary" onClick={onHide}>
-              Close
-            </Button>
-            <Button variant="primary" type="submit">
-              Save Changes
-            </Button>
+            <div className="buttonbox mt-3">
+              <Button variant="secondary" onClick={onHide}>
+                Close
+              </Button>
+              <Button variant="primary" type="submit" className="ms-2">
+                Save Changes
+              </Button>
+            </div>
           </Form>
         </Modal.Body>
       </Modal>
@@ -144,7 +252,7 @@ const AddColorModal = ({ show, onHide }) => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Full Screen Preview</Modal.Title>
+          <Modal.Title>Full Screen Preview - {colorName}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
           <Image
