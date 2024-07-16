@@ -121,10 +121,6 @@ function UserDashboard() {
     setWorks(sorted);
   };
 
-  const handleLogout = () => {
-    authApi.logoutApi();
-  };
-
   const handleModifyClient = (event, clientId) => {
     console.log(clientId);
     event.preventDefault();
@@ -217,9 +213,6 @@ function UserDashboard() {
               className="me-3"
             >
               New client
-            </Button>
-            <Button variant="danger" onClick={handleLogout}>
-              Logout
             </Button>
           </div>
         </div>
