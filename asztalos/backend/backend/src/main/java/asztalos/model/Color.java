@@ -27,7 +27,9 @@ public class Color {
 
     private Boolean rotable;
 
-    private String imgUrl;
+    private String imageId; // changed imgUrl to imageId
+
+    private Double price; // new price field
 
     // Getters and setters
     @JsonCreator
@@ -86,12 +88,19 @@ public class Color {
     public void setRotable(Boolean rotable) {
         this.rotable = rotable;
     }
-
-    public String getImgUrl() {
-        return imgUrl;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setImgUrl(String imgUrl) {
-        this.imgUrl = imgUrl;
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 }

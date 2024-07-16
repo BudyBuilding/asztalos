@@ -10,13 +10,13 @@ import {
 } from "../actions/clientStoreFunctions";
 import authReducer from "../actions/authStoreFunctions";
 import {
-  objectLoading,
   objectReducer,
   selectedObjectReducer,
   objectLoadingReducer,
   createdItemsReducer,
 } from "../actions/objectStoreFunctions";
-import colorReducer from "../actions/colorStoreFunctions";
+import { colorReducer } from "../actions/colorStoreFunctions";
+import { imageReducer } from "../actions/imageStoreFunctions";
 import {
   scriptReducer,
   selectedScriptReducer,
@@ -25,12 +25,8 @@ import {
 import { tablesReducer } from "../actions/tableStoreFunctions";
 import { settingReducer } from "../actions/settingStoreFunctions";
 const initialState = {
-  colors: {
-    door: [],
-    side: [],
-    countertop: [],
-    saved: [],
-  },
+  colors: [],
+  images: [],
   settings: [],
   items: [],
   objects: [],
@@ -71,6 +67,7 @@ const reducers = combineReducers({
   works: worksReducer,
   auth: authReducer,
   colors: colorReducer,
+  images: imageReducer,
   scripts: scriptReducer,
   selectedObject: selectedObjectReducer,
   settings: settingsReducer,

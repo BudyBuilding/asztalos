@@ -208,3 +208,57 @@ export const getAllSettings = () => {
     return settings;
   };
 };
+
+/////////////////////
+// colors
+export const getAllColors = () => {
+  return (dispatch) => {
+    const colors = store.getState().colors;
+    return colors;
+  };
+};
+
+/////////////////////
+// images
+export const getAllImages = () => {
+  return (dispatch) => {
+    const images = store.getState().images;
+    return images;
+  };
+};
+
+export const getAllImageId = () => {
+  return (dispatch) => {
+    const images = store.getState().images;
+    const imageId = [];
+    images.forEach((image) => {
+      imageId.push(image.image.imageId);
+    });
+    return imageId;
+  };
+};
+
+export const getImageById = (imageId) => {
+  return (dispatch, getState) => {
+    const images = getState().images; // Az aktuális állapot lekérése
+    //  console.log("Current images state:", images); // Logoljuk az aktuális képállapotot
+
+    if (!images || !Array.isArray(images)) {
+      //      console.log("Images state is empty or not an array:", images); // Logoljuk, ha a képállapot üres vagy nem tömb
+      return null; // Üres állapot kezelése, ha szükséges
+    }
+
+    const foundImage = images.find((image) => {
+      console.log(`Comparing imageId: ${image.image.imageId} == ${imageId}`);
+      return image.image.imageId == imageId;
+    }); // Keresés az imageId alapján
+
+    if (foundImage) {
+      console.log("Found image:", foundImage); // Logoljuk a megtalált képet
+      return foundImage.data; // Visszaadjuk a megtalált kép adatait
+    } else {
+      console.log("Image with specified id not found:", imageId); // Logoljuk, ha nem találjuk meg a képet
+      return null; // Ha nem találtunk képet, null-t adunk vissza
+    }
+  };
+};

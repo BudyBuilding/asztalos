@@ -2,6 +2,8 @@
 import clientApi from "./api/clientApi";
 import objectApi from "./api/objectApi";
 import scriptApi from "./api/scriptApi";
+import colorApi from "./api/colorApi";
+import imageApi from "./api/imageApi";
 import scriptItemApi from "./api/scriptItemApi";
 import tableApi from "./api/tableApi";
 import workApi from "./api/workApi";
@@ -10,78 +12,78 @@ import settingsApi from "./api/settingsApi";
 import authApi from "./api/authApi";
 import store from "./store/store";
 
+// users
 export const fetchUsers = () => {
-  //console.log("fetching the users");
   authApi.getAllUsersApi();
 };
 
+// clients
 export const fetchClients = () => {
-  //console.log("fetching the clients");
   clientApi.getAllClientsApi();
 };
 
+// works
 export const fetchWorks = () => {
-  //console.log("fetching the works");
   workApi.getAllWorksApi();
 };
 
+// tables
 export const fetchTables = (workId) => {
-  //console.log("fetching the tables");
   tableApi.getAllTableOfWorkApi(workId);
 };
 
+// scripts
 export const fetchScripts = () => {
-  //console.log("fetching the scripts");
   scriptApi.getAllScriptsApi();
 };
 
+// colors
+export const fetchColors = () => {
+  colorApi.getAllColorsApi();
+};
+
+// images
+export const fetchImages = () => {
+  imageApi.getAllImagesApi();
+};
+
+// script Items
 export const fetchScriptItemsForScript = (selectedScript) => {
-  //console.log("fetching the script items for: ", selectedScript);
   scriptItemApi.getAllScriptItemsForScriptApi(selectedScript);
 };
 
+// objects
 export const fetchObjects = () => {
-  //console.log("fetching the objects");
-  scriptApi.getAllObjectsApi();
+  objectApi.getAllObjectsApi();
 };
 
+// created items for object
 export const fetchCreatedItemsForObject = (objectId) => {
-  //console.log("fetching the scripts for object: ", objectId);
   createdItemApi.getAllCreatedItemsForObjectApi(objectId);
 };
 
+// created items for work
 export const fetchCreatedItemsForWork = (workId) => {
-  //console.log("fetching the scripts for work: ", workId);
   createdItemApi.getAllCreatedItemsForWorkApi(workId);
 };
 
+// objects for work
 export const fetchObjectsForWork = (selectedWork) => {
-  //console.log("fetching objects for the ", selectedWork);
   objectApi.getObjectOfWorkApi(selectedWork);
 };
 
+// settings
 export const fetchSettings = () => {
-  //console.log("fetching the settings");
   settingsApi.getAllSettingsApi();
 };
 
+// settings by work
 export const fetchSettingsByWork = () => {
-  //console.log("fetching the settings");
   settingsApi.getAllSettingOfWorkApi();
 };
-/*
-export const fetchSettingsByObject = () => {
-  //console.log("fetching the settings");
-  settingsApi.getAllSettingsApi();
-};
 
-export const fetchSettingsByScript = () => {
-  //console.log("fetching the settings");
-  settingsApi.getAllSettingsApi();
-};
-*/
+// settings
 export const fetchSettingsByList = () => {
-  //console.log("fetching the settings");
   settingsApi.getAllSettingOfListOfIdsApi();
 };
 
@@ -93,6 +95,8 @@ export const fetchAll = async () => {
     if (currentUser.role === "admin") {
       await fetchUsers();
     }
+    await fetchColors();
+    await fetchImages();
     await fetchClients();
     await fetchWorks();
     await fetchScripts();
