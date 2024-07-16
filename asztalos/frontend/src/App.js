@@ -13,7 +13,7 @@ import { fetchAll, fetchUsers } from "./data/storeManager";
 import EditWork from "./modules/components/EditWork";
 import authApi from "./data/api/authApi";
 import { getUser } from "./data/getters";
-
+import TopNavigationBar from "./modules/components/TopNavigation";
 function App() {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
@@ -34,6 +34,7 @@ function App() {
         fetchUsers();
       }
       fetchAll();
+
       if (currentuser.role == "admin") {
         navigate("/adminDashboard"); // Admin esetén az adminDashboard-ra navigálunk
       } else {
@@ -46,8 +47,9 @@ function App() {
 
   return (
     <Provider store={store}>
+      {isLoggedIn ? <TopNavigationBar /> : <></>}
       <Routes>
-        <Route path="/adminDashboard" element={<AdminDashboard />} />{" "}
+        <Route path="/adminDashboard" element={<AdminDashboard />} />
         <Route path="/userDashboard" element={<UserDashboard />} />
         <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
         <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />

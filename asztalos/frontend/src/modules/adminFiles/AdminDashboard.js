@@ -80,7 +80,7 @@ function AdminDashboard() {
         );
       case "users":
         return (
-          <div style={{ overflowY: "auto", height: "100%" }}>
+          <div style={{ overflowY: "hidden", height: "100%" }}>
             {loading ? (
               <Loading />
             ) : (
@@ -269,7 +269,7 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="d-flex" style={{ height: "100vh" }}>
+    <div className="d-flex flex" style={{ minHeight: "90vh" }}>
       <div
         className="d-flex flex-column position-relative"
         style={{
