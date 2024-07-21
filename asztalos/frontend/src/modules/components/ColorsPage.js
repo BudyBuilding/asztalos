@@ -37,7 +37,6 @@ function ColorsPage() {
     <div>
       <h1>Colors Page</h1>
       <div>
-        <h1>Colors Management</h1>
         <p>Manage your colors here.</p>
         <Button variant="primary" onClick={() => setShowColorModal(true)}>
           Add Color
