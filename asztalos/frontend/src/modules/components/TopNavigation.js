@@ -98,15 +98,6 @@ function TopNavigationBar() {
         <Container fluid>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
-            <Nav
-              className=" my-2 my-lg-0"
-              style={{ maxHeight: "100px" }}
-              navbarScroll
-            >
-              <Nav.Link href="#action1">Home</Nav.Link>
-              <Nav.Link href="#action2">Link</Nav.Link>
-            </Nav>
-
             <Container
               className="  position-relative "
               style={{

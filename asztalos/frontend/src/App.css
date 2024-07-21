@@ -36,3 +36,43 @@
     transform: rotate(360deg);
   }
 }
+/* App.css */
+.app-container {
+  display: flex;
+}
+
+.side-nav {
+  width: 13%; /* Állítsd be a kívánt szélességet */
+  transition: width 0.3s;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+.app-container {
+  display: flex;
+}
+
+.side-navigation {
+  width: 13%;
+  transition: width 0.3s;
+  border-right: 1px solid #dee2e6;
+}
+
+.side-navigation.collapsed {
+  width: 3%;
+}
+
+.content-area {
+  flex-grow: 1;
+  transition: margin-left 0.3s;
+}
+
+.content-area.with-nav {
+  margin-left: 13%;
+}
+
+.content-area.no-nav {
+  margin-left: 3%;
+}

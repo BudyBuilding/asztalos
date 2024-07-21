@@ -165,7 +165,7 @@ function UserDashboard() {
   };
 
   return (
-    <>
+    <div>
       <Modal show={showNewClient} onHide={handleNewClientClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Client</Modal.Title>
@@ -321,7 +321,7 @@ function UserDashboard() {
           ))}
         </ListGroup>
       </div>
-    </>
+    </div>
   );
 }
 
