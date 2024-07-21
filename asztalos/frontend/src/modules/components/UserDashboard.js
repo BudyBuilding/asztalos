@@ -203,7 +203,7 @@ function UserDashboard() {
         </Modal.Footer>
       </Modal>
 
-      <Container className="container d-xl-block">
+      <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
           <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
           <div>
@@ -216,7 +216,7 @@ function UserDashboard() {
             </Button>
           </div>
         </div>
-      </Container>
+      </div>
 
       <Container className="d-xl-block">
         <p className="fs-2 fw-bold text-start">Clients</p>
