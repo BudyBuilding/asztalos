@@ -1,10 +1,7 @@
 // ClientsPage.js
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import Button from "react-bootstrap/Button";
-import store from "../../data/store/store";
 import Loading from "../helpers/Loading";
-import { Nav, Table, Modal, Image } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { getAllClients } from "../../data/getters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
