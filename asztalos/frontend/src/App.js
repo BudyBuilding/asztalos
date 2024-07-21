@@ -58,9 +58,9 @@ function App() {
 
   return (
     <Provider store={store}>
-      <div className="app-container">
+      <div className="app-container h-100">
         {isLoggedIn && <SideNavigation />}
-        <div className="main-content">
+        <div className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-">
           <Routes>
             <Route
               path="/dashboard"

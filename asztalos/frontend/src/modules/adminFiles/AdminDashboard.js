@@ -25,9 +25,7 @@ function AdminDashboard() {
   const [render, setRender] = useState(true);
   const [showNav, setShowNav] = useState(true);
   const [colors, setColors] = useState([]);
-  // State for controlling modal visibility
   const [showColorModal, setShowColorModal] = useState(false);
-  // State for fullscreen image view
   const [fullscreenImage, setFullscreenImage] = useState("");
 
   useEffect(() => {
