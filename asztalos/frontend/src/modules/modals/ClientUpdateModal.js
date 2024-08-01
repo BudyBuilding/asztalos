@@ -84,70 +84,48 @@ const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
 
   return (
     <>
-      <Modal
-        show={true}
-        onHide={() => {}}
-        backdrop="static"
-        keyboard={false}
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
+      {showError ? (
+        <ErrorMessage message="Error: Unable to fetch client data." />
+      ) : isLoading ? (
+        <Loading />
+      ) : (
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3" controlId="formClientName">
+            <Form.Label>Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter client name"
+              name="name"
+              value={updatedClientData.name || ""}
+              onChange={handleChange}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formClientTel">
+            <Form.Label>Telephone</Form.Label>
+            <Form.Control
+              type="tel"
+              placeholder="Enter client telephone"
+              name="telephone"
+              value={updatedClientData.telephone || ""}
+              onChange={handleChange}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formClientAddress">
+            <Form.Label>Address</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter client address"
+              name="address"
+              value={updatedClientData.address || ""}
+              onChange={handleChange}
+            />
+          </Form.Group>
+          <Button variant="primary" type="submit" style={{ cursor: "pointer" }}>
             Update Client
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {showError ? (
-            <ErrorMessage message="Error: Unable to fetch client data." />
-          ) : isLoading ? (
-            <Loading />
-          ) : (
-            <Form onSubmit={handleSubmit}>
-              <Form.Group className="mb-3" controlId="formClientName">
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter client name"
-                  name="name"
-                  value={updatedClientData.name || ""}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3" controlId="formClientTel">
-                <Form.Label>Telephone</Form.Label>
-                <Form.Control
-                  type="tel"
-                  placeholder="Enter client telephone"
-                  name="telephone"
-                  value={updatedClientData.telephone || ""}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3" controlId="formClientAddress">
-                <Form.Label>Address</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter client address"
-                  name="address"
-                  value={updatedClientData.address || ""}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Button
-                variant="primary"
-                type="submit"
-                style={{ cursor: "pointer" }}
-              >
-                Update Client
-              </Button>
-            </Form>
-          )}{" "}
-          {errorOnSubmit && (
-            <ErrorMessage message="Error: No changes were made." />
-          )}
-        </Modal.Body>
-      </Modal>
+          </Button>
+        </Form>
+      )}{" "}
+      {errorOnSubmit && <ErrorMessage message="Error: No changes were made." />}
     </>
   );
 };

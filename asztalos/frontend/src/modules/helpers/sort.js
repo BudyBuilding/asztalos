@@ -68,7 +68,24 @@ const sorting = (items, config) => {
       return direction === 1 ? dateA - dateB : dateB - dateA;
     }
 
-    return direction === 1 ? a[key] - b[key] : b[key] - a[key];
+    const aValue = a[key];
+    const bValue = b[key];
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      // Case-insensitive string comparison
+      const comparison = aValue.localeCompare(bValue, undefined, {
+        sensitivity: "base",
+      });
+      return direction === 1 ? comparison : -comparison;
+    } else if (typeof aValue === "number" && typeof bValue === "number") {
+      // Numerical comparison
+      return direction === 1 ? aValue - bValue : bValue - aValue;
+    } else if (aValue instanceof Date && bValue instanceof Date) {
+      // Date comparison
+      return direction === 1 ? aValue - bValue : bValue - aValue;
+    } else {
+      // Fallback for mixed types or unhandled cases
+      return 0;
+    }
   });
 
   return sortableItems;
