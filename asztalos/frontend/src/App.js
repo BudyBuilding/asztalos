@@ -55,12 +55,23 @@ function App() {
 
     handleAuth();
   }, [isLoggedIn]);
+  useEffect(() => {
+    if (isLoggedIn) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isLoggedIn]);
 
   return (
     <Provider store={store}>
-      <div className="app-container h-100">
+      <div className="app-container">
         {isLoggedIn && <SideNavigation />}
-        <div className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-">
+        <div className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-hidden">
           <Routes>
             <Route
               path="/dashboard"
