@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Form, Button } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import processScript from "./itemGenerator/processScript";
-import Item from "../modules/helpers/Item";
+import Item from "../modules/helpers/item.js";
 import {
   getAllScripts,
   getSelectedClient,

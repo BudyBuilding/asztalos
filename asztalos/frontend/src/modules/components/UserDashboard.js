@@ -7,7 +7,6 @@ import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
 import DashboardListItem from "../helpers/DashboardWorkListItem";
-import ClientAnalyzer from "./ClientAnalyzer";
 import NewClientModal from "../modals/NewClientModal";
 import sorting from "../helpers/sort";
 import { useNavigate } from "react-router-dom";
