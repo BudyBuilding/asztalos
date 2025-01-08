@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
 import ScriptCaller from "../../calculation/scriptCaller";
 import store from "../../data/store/store";
-import Item from "../helpers/Item";
+import Item from "../helpers/item.js";
 import ModelViewer from "../../model/ModelViewer";
 import {
   getAllWorks,

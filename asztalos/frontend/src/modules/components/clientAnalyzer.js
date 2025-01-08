@@ -9,7 +9,7 @@ import { Button, ListGroup, Modal } from "react-bootstrap";
 import Loading from "../helpers/Loading";
 import ClientWorkListItem from "../helpers/ClientWorkListItem";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
-import NewWorkModal from "../modals/NewWorkModal";
+import NewWorkModal from "../modals/newWorkModal.js";
 import {
   fetchCreatedItemsForWork,
   fetchObjectsForWork,
