@@ -10,11 +10,15 @@ import {
 } from "../store/actions/authStoreFunctions"; // Frissítsd az elérési utat, ha szükséges
 
 // Login
+// Login
 const loginApi = async (username, password, beRemembered) => {
+  console.log("Login API called with:", username, password, beRemembered);
   try {
     const response = await axiosInstance.post("/account/login", {
-      username,
-      password,
+      "username": username,
+      "password": password,
+    }, {
+      withCredentials: true,
     });
 
     console.log("Server response:", response);
@@ -30,9 +34,24 @@ const loginApi = async (username, password, beRemembered) => {
 
     return response;
   } catch (error) {
-    console.error("Error during login:", error);
-    store.dispatch(loginFailure(error));
-    throw error;
+    console.error("Error during login:");
+    
+    // Részletesebb hiba információk
+    if (error.response) {
+      // A válasz létezik, így az error.response az axios válasz objektum
+      console.error("Response error:", error.response);
+      console.error("Response status:", error.response.status);
+      console.error("Response data:", error.response.data);
+    } else if (error.request) {
+      // Ha nem volt válasz, de a kérés elküldésre került
+      console.error("Request error:", error.request);
+    } else {
+      // Egyéb hiba, például konfigurációs probléma
+      console.error("General error:", error.message);
+    }
+
+    store.dispatch(loginFailure(error.message));
+    throw error;  // Hibát dobunk, hogy a hívó is kezelhesse, ha szükséges
   }
 };
 
@@ -46,7 +65,7 @@ const getAllUsersApi = async () => {
     }
     return response.data;
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("Error fetching users:", error.message);
     throw error;
   }
 };
@@ -67,8 +86,8 @@ const checkTokenApi = async (token) => {
     }
     return response;
   } catch (error) {
-    console.error("Error during token check:", error);
-    store.dispatch(loginFailure(error));
+    console.error("Error during token check:", error.message);
+    store.dispatch(loginFailure(error.message));
     throw error;
   }
 };
@@ -80,8 +99,8 @@ const logoutApi = () => {
     localStorage.removeItem("userToken");
     localStorage.removeItem("rememberToken");
   } catch (error) {
-    console.error("Error during logout:", error);
-    store.dispatch(logoutFailure(error));
+    console.error("Error during logout:", error.message);
+    store.dispatch(logoutFailure(error.message));
     throw error;
   }
 };
