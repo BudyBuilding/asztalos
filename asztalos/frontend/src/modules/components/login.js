@@ -11,18 +11,37 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); // Állapot a hibaüzenet tárolására
   const dispatch = useDispatch();
 
-  // here we are calling the login method
-  const handleLogin = (e) => {
+  // Bejelentkezési függvény
+  const handleLogin = async (e) => {
     e.preventDefault();
-    authApi.loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
+    try {
+      await authApi.loginApi(username, password, rememberMe); // API hívás a bejelentkezéshez
+      // Sikeres bejelentkezés esetén töröljük a hibaüzenetet
+      setErrorMessage("");
+    } catch (error) {
+      // Sikertelen bejelentkezés esetén beállítjuk a hibaüzenetet
+      setErrorMessage("Invalid username or password.");
+      console.error("Login failed:", error.message); // Részletes hibaüzenet a konzolra
+    }
   };
 
-  // if the user want to be saved then this function handles the method for toggleing the saving
+  // Remember me toggle függvény
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
   };
+
+  // Hibaüzenet eltüntetése 5 másodperc után
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage("");
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
 
   return (
     <Container className="mt-5 pt-5 w-25">
@@ -50,21 +69,29 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div className="d-grid gap-2 mt-3">
-              <button type="submit" className="btn btn-primary">
-                Submit
-              </button>
+            <div className="form-group mt-3">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={handleRememberMe}
+              />
+              <label className="ms-2">Remember me</label>
             </div>
-            <p className="forgot-password text-right mt-2">
-              <a href="#">Forgot password?</a>
-            </p>
+            {errorMessage && (
+              <div className="alert alert-danger mt-3" role="alert">
+                {errorMessage}
+              </div>
+            )}
+            <div className="d-grid gap-2 mt-3">
+              <Button type="submit" className="btn btn-primary">
+                Sign In
+              </Button>
+              <Button variant="link" className="btn btn-link">
+                Forget Password?
+              </Button>
+            </div>
           </div>
         </form>
-        <div className="d-grid gap-2 mt-3">
-          <Button variant="secondary" onClick={handleRememberMe}>
-            {rememberMe ? "Forget Me" : "Remember Me"}
-          </Button>
-        </div>
       </div>
     </Container>
   );
