@@ -3,6 +3,7 @@ package asztalos.controller;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import java.util.Optional;
@@ -35,7 +36,7 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.validation.Valid;
 
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/account")
 public class AccountController {
@@ -51,6 +52,9 @@ public class AccountController {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @PostMapping("/checkToken")
     public ResponseEntity<Object> checkToken(@RequestBody Map<String, String> request) {
@@ -96,43 +100,54 @@ public class AccountController {
     
     @PostMapping("/login")
     public ResponseEntity<Object> login(@Valid @RequestBody LoginDto loginDto, BindingResult result) {
-
+        System.out.println("🔒 Login attempt with username: " + loginDto.getUsername());
         if (result.hasErrors()) {
             var errorsList = result.getAllErrors();
             var errorsMap = new HashMap<String, String>();
-
+    
             for (int i = 0; i < errorsList.size(); i++) {
                 var error = (FieldError) errorsList.get(i);
                 errorsMap.put(error.getField(), error.getDefaultMessage());
             }
             return ResponseEntity.badRequest().body(errorsMap);
-
         }
-
+    
         try {
-            authenticationManager
-                    .authenticate(
-                            new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword()));
-
+            String plainPassword = loginDto.getPassword();
+            String hashedPasswordInput = passwordEncoder.encode(plainPassword);
+    
+            System.out.println("➡️ Megadott jelszó: " + plainPassword);
+            System.out.println("🔒 Megadott jelszó titkosítva: " + hashedPasswordInput);
+    
             Optional<User> userOptional = userRepository.findByUsername(loginDto.getUsername());
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
+                String storedHashedPassword = user.getPassword();
+    
+                System.out.println("📦 Adatbázisban tárolt titkosított jelszó: " + storedHashedPassword);
+                System.out.println("📂 (Teszt) Adatbázisban tárolt jelszó titkosítatlanul: " + user.getPassword());
+                System.out.println("🔍 Jelszó egyezik? " + passwordEncoder.matches(plainPassword, storedHashedPassword));
+    
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(loginDto.getUsername(), plainPassword)
+                );
+    
                 String jwtToken = createJwtToken(user);
-
                 var response = new HashMap<String, Object>();
                 response.put("token", jwtToken);
                 response.put("user", user);
                 return ResponseEntity.ok(response);
             } else {
+                System.out.println("❌ Hiba: Felhasználó nem található");
                 return ResponseEntity.badRequest().body("User not found");
             }
-
         } catch (AuthenticationException e) {
-            System.out.println("There was an error");
+            System.out.println("❌ Authentication error: " + e.getMessage());
         }
-
+    
         return ResponseEntity.badRequest().body("Bad username or password");
     }
+    
     
     @PostMapping("/register")
     public ResponseEntity<Object> register(
@@ -185,6 +200,25 @@ public class AccountController {
         }
 
         return ResponseEntity.badRequest().body("Error");
+    }
+
+    @PostMapping("/resetPassword")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String newPassword = request.get("newPassword");
+
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+        } else {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        // Fetch all users and return them with the response
+        List<User> users = userRepository.findAll();
+        return ResponseEntity.ok(users);
     }
 
     private String createJwtToken(User user) {
