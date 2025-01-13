@@ -222,20 +222,26 @@ public class AccountController {
     }
 
     private String createJwtToken(User user) {
-    Instant now = Instant.now();
-    Date issuedAt = Date.from(now);
-    Date expiryDate = Date.from(now.plusSeconds(30 * 24 * 3600)); // Token expiry time set to 24 hours
+        Instant now = Instant.now();
+        Date issuedAt = Date.from(now);
+        Date expiryDate = Date.from(now.plusSeconds(30 * 24 * 3600)); // 15 perc lejárati idő
+    
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("username", user.getUsername());
+        claims.put("role", user.getRole());
+        claims.put("email", user.getEmail());
+    
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getUsername())
+                .setIssuer(jwtIssuer)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiryDate)
+                .signWith(Keys.hmacShaKeyFor(jwtSecretKey.getBytes()), SignatureAlgorithm.HS256)
+                .compact();
+    }
+    
 
-    Map<String, Object> claims = new HashMap<>();
-    claims.put("role", user.getRole());
 
-    return Jwts.builder()
-            .setClaims(claims)
-            .setSubject(user.getUsername())
-            .setIssuer(jwtIssuer)
-            .setIssuedAt(issuedAt)
-            .setExpiration(expiryDate)
-            .signWith(Keys.hmacShaKeyFor(jwtSecretKey.getBytes()), SignatureAlgorithm.HS256)
-            .compact();
-}
 }
