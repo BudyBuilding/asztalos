@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import asztalos.service.UserService;
 
@@ -24,39 +25,44 @@ import asztalos.service.UserService;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Value("${security.jwt.secret-key}")
     private String jwtSecretKey;
 
     @Autowired
     private UserService userService;
-@Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    return http
-    .csrf(csrf -> csrf.disable())
-    .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/account/register", "/account/resetPassword", "/account/login", "/account/checkToken").permitAll()
-        .anyRequest().authenticated())
-    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-    .build();
-}
-
-
+    
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/account/register", "/account/resetPassword", "/account/login", "/account/checkToken").permitAll()
+                .anyRequest().authenticated())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    
+        return http.build();
+    }
+    
     @Bean
     public JwtDecoder jwtDecoder() {
         var secretKey = new SecretKeySpec(jwtSecretKey.getBytes(), "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(secretKey)
             .macAlgorithm(MacAlgorithm.HS256).build();
     }
-
+    
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userService);
         provider.setPasswordEncoder(new BCryptPasswordEncoder());
-
+    
         return new ProviderManager(provider);
     }
-
+    
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
