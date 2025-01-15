@@ -289,7 +289,7 @@ function SideNavigation() {
             ) : (
               <i className="bi bi-person me-2"></i>
             )}
-            {showNav ? "users" : ""}
+            {showNav ? "Users" : ""}
           </Nav.Link>
         ) : null}
         <Nav.Link
