@@ -76,7 +76,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                userRole === "admin" ? <AdminDashboard /> : <UserDashboard />
+                userRole === "admin" ? <UserDashboard /> : <UserDashboard />
               }
             />
             <Route path="/users" element={<UsersPage />} />
