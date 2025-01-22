@@ -20,52 +20,56 @@ import WorksPage from "./modules/components/WorksPage";
 import ColorsPage from "./modules/components/ColorsPage";
 import SettingsPage from "./modules/components/SettingsPage";
 import ScriptsPage from "./modules/components/ScriptsPage";
-
+import Loading from "./modules/helpers/Loading.js";
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
   const [userRole, setUserRole] = useState(null);
+  const [isTokenChecked, setIsTokenChecked] = useState(false);
 
   useEffect(() => {
     const checkToken = async () => {
       const rememberToken = localStorage.getItem("rememberToken");
       if (rememberToken) {
-        await authApi.checkTokenApi(rememberToken);
+        try {
+          await authApi.checkTokenApi(rememberToken);
+        } catch (error) {
+          console.error("Token invalid or expired:", error.message);
+        }
       }
+      setIsTokenChecked(true);
     };
     checkToken();
   }, []);
 
   useEffect(() => {
     const handleAuth = async () => {
-      if (isLoggedIn) {
-        const currentuser = await dispatch(getUser());
-        setUserRole(currentuser.role);
+      if (isTokenChecked) {
+        if (isLoggedIn) {
+          const currentuser = await dispatch(getUser());
+          setUserRole(currentuser.role);
 
-        if (currentuser.role === "admin") {
-          await fetchUsers();
+          if (currentuser.role === "admin") {
+            await fetchUsers();
+          }
+          await fetchAll();
+          navigate("/dashboard");
+        } else {
+          navigate("/login");
         }
-        await fetchAll();
-        navigate("/dashboard");
-      } else {
-        navigate("/login");
       }
     };
 
     handleAuth();
-  }, [isLoggedIn]);
-  useEffect(() => {
-    if (isLoggedIn) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isTokenChecked]);
+  if (!isTokenChecked) {
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
+  }
 
   return (
     <Provider store={store}>
@@ -76,7 +80,7 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                userRole === "admin" ? <UserDashboard /> : <UserDashboard />
+                userRole === "admin" ? <AdminDashboard /> : <UserDashboard />
               }
             />
             <Route path="/users" element={<UsersPage />} />
