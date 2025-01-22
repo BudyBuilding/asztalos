@@ -1,25 +1,28 @@
 // authApi.js
 import axiosInstance from "./mainApi";
-import store from "../store/store"; // Redux store importálása
+import store from "../store/store";
 import {
   loginSuccess,
   loginFailure,
   logoutSuccess,
   logoutFailure,
-  addAllUsers,
-} from "../store/actions/authStoreFunctions"; // Frissítsd az elérési utat, ha szükséges
-
+  addAllUsers
+} from "../store/actions/authStoreFunctions";
 // Login
 // Login
 const loginApi = async (username, password, beRemembered) => {
   console.log("Login API called with:", username, password, beRemembered);
   try {
-    const response = await axiosInstance.post("/account/login", {
-      "username": username,
-      "password": password,
-    }, {
-      withCredentials: true,
-    });
+    const response = await axiosInstance.post(
+      "/account/login",
+      {
+        username: username,
+        password: password
+      },
+      {
+        withCredentials: true
+      }
+    );
 
     console.log("Server response:", response);
 
@@ -35,23 +38,19 @@ const loginApi = async (username, password, beRemembered) => {
     return response;
   } catch (error) {
     console.error("Error during login:");
-    
-    // Részletesebb hiba információk
+
     if (error.response) {
-      // A válasz létezik, így az error.response az axios válasz objektum
       console.error("Response error:", error.response);
       console.error("Response status:", error.response.status);
       console.error("Response data:", error.response.data);
     } else if (error.request) {
-      // Ha nem volt válasz, de a kérés elküldésre került
       console.error("Request error:", error.request);
     } else {
-      // Egyéb hiba, például konfigurációs probléma
       console.error("General error:", error.message);
     }
 
     store.dispatch(loginFailure(error.message));
-    throw error;  // Hibát dobunk, hogy a hívó is kezelhesse, ha szükséges
+    throw error;
   }
 };
 
@@ -74,7 +73,7 @@ const getAllUsersApi = async () => {
 const checkTokenApi = async (token) => {
   try {
     const response = await axiosInstance.post("/account/checkToken", {
-      token,
+      token
     });
 
     console.log("Token check response:", response);
@@ -105,4 +104,5 @@ const logoutApi = () => {
   }
 };
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default { loginApi, checkTokenApi, logoutApi, getAllUsersApi };
