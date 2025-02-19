@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { IonIcon } from "@ionic/react";
-import { pencil, trash } from "ionicons/icons";
+import { filter, options, pencil, trash } from "ionicons/icons";
 import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import Table from "react-bootstrap/Button";
+import OverlayTrigger from "react-bootstrap/Button";
+import Tooltip from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
 import DashboardListItem from "../helpers/DashboardWorkListItem";
 import NewClientModal from "../modals/NewClientModal";
@@ -63,6 +66,13 @@ function UserDashboard() {
     setLoading(false);
     return getAllClients();
   }
+  const formatDate = (dateString) => {
+    if (dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("hu-HU");  // Magyar nyelvi beállítás, vagy testre szabható
+    }
+    return "";
+  };
 
   function loadWorks() {
     setLoading(false);
@@ -130,11 +140,11 @@ function UserDashboard() {
     }
     setSortConfig({ key, direction });
     const sorted = sorting(works, { key, direction });
-    setWorks(sorted);
+   // setWorks(sorted);
   };
 
   const handleModifyClient = (event, clientId) => {
-    console.log(clientId);
+  //  console.log(clientId);
     event.preventDefault();
     event.stopPropagation();
     setClientIdToModify(clientId);
@@ -147,7 +157,7 @@ function UserDashboard() {
   };
 
   const handleClientUpdate = async (updatedClientData) => {
-    console.log("Updating client:", clientIdToModify, updatedClientData);
+  //  console.log("Updating client:", clientIdToModify, updatedClientData);
     await dispatch(
       clientApi.updateClientApi(clientIdToModify, updatedClientData)
     );
@@ -171,10 +181,10 @@ function UserDashboard() {
   const handleCancelDelete = () => {
     setShowDeleteConfirmation(false);
   };
-  const handleDeleteWork = async (workId) => {
+/*  const handleDeleteWork = async (workId) => {
     await dispatch(workApi.deleteWorkApi(workId));
     rendering();
-  };
+  };*/
 
   // Statistics calculation functions
   const calculateWorkStats = () => {
@@ -212,7 +222,7 @@ function UserDashboard() {
 
   useEffect(() => {
     setClients(loadClients());
-    setWorks(loadWorks());
+   // setWorks(loadWorks());
   }, [render]);
 
   useEffect(() => {
@@ -247,7 +257,7 @@ function UserDashboard() {
         chartInstance.destroy();
       };
     }
-  }, [workStats]);
+  }, [workStats, works]);
 
   useEffect(() => {
     if (paymentStatusChartRef.current) {
@@ -271,7 +281,7 @@ function UserDashboard() {
   }, [paymentStats]);
 
   return (
-    <div>
+    <div className="pb-5">
       <Modal show={showNewClient} onHide={handleNewClientClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Client</Modal.Title>
@@ -311,7 +321,7 @@ function UserDashboard() {
 
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
-          <p className="fs-1 fw-bold text-start mb-0">Dashboard</p>
+          <p className="fs-1 fw-bold text-start mb-0 ">Dashboard</p>
           <div>
             <Button
               variant="primary"
@@ -324,7 +334,7 @@ function UserDashboard() {
         </div>
       </div>
       {/* Statistics Section */}
-      <Container className="d-xl-block">
+      <Container className="d-xl-block pb-4">
         <div
           className="d-flex justify-content-between align-items-center"
           onClick={toggleStatistics}
@@ -354,7 +364,7 @@ function UserDashboard() {
         )}
       </Container>
 
-      <Container className="d-xl-block">
+      <Container className="d-xl-block pb-4">
         <div
           className="d-flex justify-content-between align-items-center"
           onClick={toggleClients}
@@ -363,12 +373,36 @@ function UserDashboard() {
           }}
         >
           <p className="fs-2 fw-bold text-start mb-0">Clients</p>
+          <div>
+          <Button
+            variant="link"
+            style={{ fontSize: "20px", textDecoration: "none" }}
+            onClick={(e) => {
+              e.stopPropagation(); // Megakadályozza a toggleWorks futását
+              // Itt lehet hozzáadni a rendezés logikáját
+              //handleSort();
+            }}
+          >
+            <IonIcon icon={options} />
+          </Button>
+          <Button
+            variant="link"
+            style={{ fontSize: "20px", textDecoration: "none" }}
+            onClick={(e) => {
+              e.stopPropagation(); // Megakadályozza a toggleWorks futását
+              // Itt lehet hozzáadni a rendezés logikáját
+              //handleSort();
+            }}
+          >
+              <IonIcon icon={filter} />
+          </Button>
           <Button
             variant="link"
             style={{ fontSize: "24px", textDecoration: "none" }}
           >
             {showClients ? "−" : "+"}
           </Button>
+          </div>
         </div>
 
         {showClients && (
@@ -377,56 +411,71 @@ function UserDashboard() {
               <Loading />
             ) : (
               <div className="d-flex flex-nowrap overflow-x-scroll">
-                {clients &&
-                  clients.map((client) => (
-                    <div
-                      key={client.clientId}
-                      className="p-3 border rounded"
-                      style={{ minWidth: "200px", margin: "10px" }}
-                      onClick={() => handleSelectClient(client.clientId)}
-                    >
-                      <p className="fw-bold">{client.name}</p>
-                      <p>Tel: {client.telephone}</p>
-                      <p>Address: {client.address}</p>
-                      <div className="d-flex">
-                        <p className="fs-xs">Id: {client.clientId}</p>
-                        <Button
-                          variant="primary"
-                          onClick={(event) =>
-                            handleModifyClient(event, client.clientId)
-                          }
-                          style={{
-                            background: "transparent",
-                            border: "1px solid #007bff",
-                            borderRadius: "40%",
-                            marginLeft: "0.5rem",
-                          }}
-                        >
-                          <IonIcon
-                            icon={pencil}
-                            style={{ fontSize: "20px", color: "#007bff" }}
-                          />
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={(event) =>
-                            handleDeleteClient(event, client.clientId)
-                          }
-                          style={{
-                            background: "transparent",
-                            border: "1px solid #dc3545",
-                            borderRadius: "40%",
-                            marginLeft: "0.5rem",
-                          }}
-                        >
-                          <IonIcon
-                            icon={trash}
-                            style={{ fontSize: "20px", color: "#dc3545" }}
-                          />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+            {clients &&
+  clients.map((client) => (
+    <div
+      key={client.clientId}
+      style={{
+        minWidth: "20vh",
+        margin: "10px",
+        backgroundColor: "white",
+        borderRadius: "15px",
+        marginBottom: "15px",
+        height: "20vh",
+        padding: "10px",
+        paddingBottom: "0px",
+        position: "relative", // A gombok számára referencia pozíció
+      }}
+      onClick={() => handleSelectClient(client.clientId)}
+    >
+      <p className="fw-bold">{client.name}</p>
+      <p>Tel: {client.telephone}</p>
+      <p>Address: {client.address}</p>
+      <div className="d-flex">
+        <p className="fs-xs" style={{fontSize: "13px", color: "#6c757d"}}>Id: {client.clientId}</p>
+      </div>
+
+      {/* A gombok elhelyezése a jobb alsó sarokban */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "10px", // Az alján 10px távolságra
+          right: "10px",  // A jobb szélén 10px távolságra
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          variant="primary"
+          onClick={(event) => handleModifyClient(event, client.clientId)}
+          style={{
+            background: "transparent",
+            border: "none",
+            width: "30px",
+          }}
+        >
+          <IonIcon
+            icon={pencil}
+            style={{ fontSize: "20px", color: "#6c757d" }}
+          />
+        </Button>
+        <Button
+          variant="danger"
+          onClick={(event) => handleDeleteClient(event, client.clientId)}
+          style={{
+            background: "transparent",
+            border: "none",
+          }}
+        >
+          <IonIcon
+            icon={trash}
+            style={{ fontSize: "20px", color: "#6c757d" }}
+          />
+        </Button>
+      </div>
+    </div>
+  ))}
+
               </div>
             )}
           </>
@@ -441,66 +490,109 @@ function UserDashboard() {
             cursor: "pointer",
           }}
         >
-          <p className="fs-2 fw-bold text-start mb-0">Recent works</p>
+          <p className="fs-2 fw-bold text-start mb-3">Recent works</p>
+          <div>
+     
+          <Button
+            variant="link"
+            style={{ fontSize: "20px", textDecoration: "none" }}
+                onClick={(e) => {
+                e.stopPropagation(); // Megakadályozza a toggleWorks futását
+                // Itt lehet hozzáadni a rendezés logikáját
+                //handleSort();
+              }}
+          >
+            <IonIcon icon={options} />
+          </Button>
+
+          <Button
+            variant="link"
+            style={{ fontSize: "20px", textDecoration: "none"}}
+              onClick={(e) => {
+              e.stopPropagation(); // Megakadályozza a toggleWorks futását
+              // Itt lehet hozzáadni a rendezés logikáját
+              //handleSort();
+            }}
+          >
+          <IonIcon icon={filter} />
+          </Button>
           <Button
             variant="link"
             style={{ fontSize: "24px", textDecoration: "none" }}
           >
             {showWorks ? "−" : "+"}
           </Button>
+          </div>
+
         </div>
         {showWorks && (
-          <>
-            <ListGroup.Item className="p-0 m-0">
-              <div className="d-flex w-100 m-0 p-3 pb-2 justify-content-between">
-                <div className="w-100 text-start" style={{ width: "25%" }}>
-                  <Button
-                    variant="primary"
-                    onClick={() => requestSort("client")}
-                  >
-                    Client
-                  </Button>
-                </div>
-                <div className="w-100 text-center" style={{ width: "25%" }}>
-                  <Button variant="primary" onClick={() => requestSort("Date")}>
-                    Date
-                  </Button>
-                </div>
-                <div className="w-100 text-center" style={{ width: "25%" }}>
-                  <Button
-                    variant="primary"
-                    onClick={() => requestSort("status")}
-                  >
-                    Status
-                  </Button>
-                </div>
-                <div className="w-100 text-center" style={{ width: "25%" }}>
-                  <Button
-                    variant="primary"
-                    onClick={() => requestSort("price")}
-                  >
-                    Price
-                  </Button>
-                </div>
-                <div className="w-100 text-end" style={{ width: "25%" }}>
-                  <Button variant="primary" onClick={() => requestSort("paid")}>
-                    Paid
-                  </Button>
-                </div>
-              </div>
-            </ListGroup.Item>
+        <>
+          <div style={{ 
+            border: "thin solid #dee2e6",
+            borderRadius: "0.25rem",
+          }}>
+            <Table striped hover responsive className="w-100" 
+              style={{ 
+                tableLayout: "fixed", 
+                backgroundColor: "white", 
+                color: "black",
+                border: "none",
+                padding: "0",
+              }}
+            >
+              {/* Fixált fejléc */}
+              <thead style={{ 
+                position: "sticky", 
+                top: "0", 
+                backgroundColor: "#E9E7F1", 
+                zIndex: "10",
+                padding: "10px", /* Fejléc padding */
+                borderBottom: "5px solid black"
+              }}>
+                <tr style={{ height: "60px", boxSizing: "border-box", width: "100%" }}>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Client</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Name</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Paid</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Price</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Label</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Status</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Measured</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Ordered</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Completed</th>
+                  <th style={{  width: "11%", textAlign: "left", padding: "10px" }}>Actions</th>
+                </tr>
+              </thead>
 
-            <ListGroup>
-              {works.map((work) => (
-                <DashboardListItem
-                  key={work.workId}
-                  work={work}
-                  onDelete={handleDeleteWork}
-                  onClick={handleSelectWork}
-                />
-              ))}
-            </ListGroup>
-          </>
+              {/* Görgethető test */}
+              <tbody style={{ display: "block", maxHeight: "540px", overflowY: "overlay", padding: "10px", paddingRight: "20px" }}>
+                {works.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="text-center">There are no works, create one</td>
+                  </tr>
+                ) : (
+                  works.map((work) => (
+                    <tr key={work.workId} style={{ height: "50px", display: "table", width: "100%", borderBottom: "thin solid #E9E7F1" }}>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.client.name}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.name}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.paid}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.price}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.label}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.status}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{formatDate(work.measureDate)}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{formatDate(work.ordereDate)}</td>
+                      <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{formatDate(work.finishDate)}</td>
+                      <td className="text-start" style={{ width: "12%", verticalAlign: "middle", }}>
+                        <button style={{ color: "red",  border: "none", background: "none", cursor: "pointer" }}>
+                          🗑
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </Table>
+          </div>
+        </>
         )}
       </div>
     </div>
