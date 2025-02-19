@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "react-bootstrap/Navbar";
 import Container from "react-bootstrap/Container";
-import Nav from "react-bootstrap/Nav";
-import Form from "react-bootstrap/Form";
+  import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Dropdown from "react-bootstrap/Dropdown";
@@ -17,30 +16,24 @@ import { useDispatch } from "react-redux";
 
 function TopNavigationBar() {
   const dispatch = useDispatch();
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await dispatch(getUser());
-      setUser(userData);
       setIsAdmin(userData.role === "admin");
     };
     fetchUser();
   }, [dispatch]);
 
-  const handleMouseEnter = () => setShowDropdown(true);
-  const handleMouseLeave = () => setShowDropdown(false);
 
   const handleLogout = () => {
     authApi.logoutApi();
   };
 
-  const handleShowModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
   const handleConfirmLogout = () => {
     setShowModal(false);
