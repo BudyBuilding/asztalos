@@ -21,6 +21,7 @@ import ColorsPage from "./modules/components/ColorsPage";
 import SettingsPage from "./modules/components/SettingsPage";
 import ScriptsPage from "./modules/components/ScriptsPage";
 import Loading from "./modules/helpers/Loading.js";
+import TopNavigationBar from "./modules/components/TopNavigation.js";
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -72,38 +73,40 @@ function App() {
   }
 
   return (
-    <Provider store={store}>
-      <div className="app-container">
-        {isLoggedIn && <SideNavigation />}
-        <div className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-hidden">
-          <Routes>
-            <Route
-              path="/dashboard"
-              element={
-                userRole === "admin" ? <AdminDashboard /> : <UserDashboard />
-              }
-            />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/scripts" element={<ScriptsPage />} />
-            <Route path="/colors" element={<ColorsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/works" element={<WorksPage />} />
-            <Route
-              path="/clientAnalyzer/:clientId"
-              element={<ClientAnalyzer />}
-            />
-            <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
-            <Route path="/editWork/:workId" element={<EditWork />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={isLoggedIn ? <UserDashboard /> : <Login />}
-            />
-          </Routes>
-        </div>
+<Provider store={store}>
+  <div className="app-container" style={{ backgroundColor: "#F3F5F7", display: "flex", flexDirection: "column", minHeight: "120vh"}}>
+    
+    {/* Felső navigációs sáv */}
+    {isLoggedIn && <TopNavigationBar />}
+
+    {/* Tartalom konténer: SideNavigation + main-content egymás mellett */}
+    <div className="content-wrapper" style={{ display: "flex", flex: 1 }}>
+      
+      {/* Oldalsó navigáció */}
+      {isLoggedIn && <SideNavigation style={{ width: "250px", flexShrink: 0 }} />}
+      
+      {/* Fő tartalom */}
+      <div className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-hidden" style={{ flexGrow: 1 }}>
+        <Routes>
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/scripts" element={<ScriptsPage />} />
+          <Route path="/colors" element={<ColorsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/clients" element={<ClientsPage />} />
+          <Route path="/works" element={<WorksPage />} />
+          <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
+          <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
+          <Route path="/editWork/:workId" element={<EditWork />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={isLoggedIn ? <UserDashboard /> : <Login />} />
+        </Routes>
       </div>
-    </Provider>
+
+    </div>
+  </div>
+</Provider>
+
   );
 }
 
