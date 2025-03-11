@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { IonIcon } from "@ionic/react";
-import { filter, options, pencil, trash } from "ionicons/icons";
+import { filter, options, pencil, trash, radioButtonOn, radioButtonOffOutline } from "ionicons/icons";
 import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
@@ -12,6 +12,7 @@ import { Modal } from "react-bootstrap";
 import DashboardListItem from "../helpers/DashboardWorkListItem";
 import NewClientModal from "../modals/NewClientModal";
 import sorting from "../helpers/sort";
+import filtering from "../helpers/filter";
 import { useNavigate } from "react-router-dom";
 import { selectClient } from "../../data/store/actions/clientStoreFunctions";
 import { selectWork } from "../../data/store/actions/workStoreFunctions";
@@ -45,12 +46,48 @@ function UserDashboard() {
   const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
   const [render, setRender] = useState(true);
+  const [showSortWork, setShowSortWork] = useState(false);
+  const [showSortClients, setShowSortClients] = useState(false);
+  const [showFilterWork, setShowFilterWork] = useState(false);
+  const [showFilterClients, setShowFilterClients] = useState(false);
+  const [workList, setWorkList] = useState([]);
+  const [clientList, setClientList] = useState([]);
   const navigate = useNavigate();
+  const [workFilterOptions, setWorkFilterOptions] = useState( [
+    { label: "Client", vkey: "client.name", type: "string", value: "" },
+    { label: "Name", vkey: "name", type: "string", value: "" },
+    { label: "Paid", vkey: "Paid", type: "interval", min: getMin(works, "paid"), max: getMax(works, "paid")},
+    { label: "Status", vkey: "status", type: "valueList", values: getValues(works, "status") , value: getValues(works, "status") },
+    { label: "Measured", vkey: "measureDate", type: "interval", min: getMin(works, "measureDate"), max: getMax(works, "measureDate")  },
+    { label: "Ordered", vkey: "orderDate", type: "interval", min: getMin(works, "orderDate"), max: getMax(works, "orderDate")  },
+    { label: "Completed", vkey: "finishDate", type: "interval", min: getMin(works, "finishDate"), max: getMax(works, "finishDate")  },
+  ]);
+  const [visibleStatus, setVisibleStatus] = useState(false);
+
+  // Kattintás eseménykezelő, ami a blokk láthatóságát váltja
+  const handleToggleVisibility = () => {
+    if (showFilterWork) {
+      setVisibleStatus(!visibleStatus);
+    }
+  };
 
   useEffect(() => {
     setClients(loadClients());
     setWorks(loadWorks());
+    setWorkList(loadWorks());
+    setClientList(loadClients());
+    setWorkFilterOptions( [
+      { label: "Client", vkey: "client.name", type: "string", value: "" },
+      { label: "Name", vkey: "name", type: "string", value: "" },
+      { label: "Paid", vkey: "paid", type: "interval", min: getMin(works, "paid"), max: getMax(works, "paid")},
+      { label: "Status", vkey: "status", type: "valueList", values: getValues(works, "status") , value: getValues(works, "status") },
+      { label: "Measured", vkey: "measureDate", type: "interval", min: getMin(works, "measureDate"), max: getMax(works, "measureDate")  },
+      { label: "Ordered", vkey: "orderDate", type: "interval", min: getMin(works, "orderDate"), max: getMax(works, "orderDate")  },
+      { label: "Completed", vkey: "finishDate", type: "interval", min: getMin(works, "finishDate"), max: getMax(works, "finishDate")  },
+    ]);
   }, [render]);
+
+
 
   // State for collapsible sections
   const [showClients, setShowClients] = useState(true);
@@ -58,8 +95,12 @@ function UserDashboard() {
   const [showStatistics, setShowStatistics] = useState(true);
 
   // Toggle functions for collapsible sections
-  const toggleClients = () => setShowClients(!showClients);
-  const toggleWorks = () => setShowWorks(!showWorks);
+  const toggleClients = () => {
+    if (!showSortClients) {
+    setShowClients(!showClients);
+    }
+  }
+  const toggleWorks = () => { if (!showSortWork && !showFilterWork) {setShowWorks(!showWorks);}}
   const toggleStatistics = () => setShowStatistics(!showStatistics);
 
   function loadClients() {
@@ -74,10 +115,210 @@ function UserDashboard() {
     return "";
   };
 
+    const workSortOptions = [
+      { label: "Client", value: "client.clientId" },
+      { label: "Name", value: "name" },
+      { label: "Paid", value: "paid" },
+      { label: "Status", value: "status" },
+      { label: "Measured", value: "measured" },
+      { label: "Ordered", value: "ordered" },
+      { label: "Completed", value: "completed" },
+    ];
+
+    const clientSortOptions = [
+      { label: "Name", value: "name" }, 
+      { label: "Last Update", value: "clientId" },
+    ];
+
+
+    let clientFilterOptions = [
+      { label: "Name", value: "name", type: "string"  }, 
+      { label: "Last Update", value: "clientId", type: "interval"  },
+    ];
+
+    function loadMinMax(itemType, vkey, minMax) {
+      if (itemType === "works") {
+        const option = workFilterOptions.find(option => option.vkey === vkey); // Keresés find-al
+        if (option) {
+          if (minMax === "min") {
+            return option.min;
+          } else {
+            return option.max;
+          }
+        }
+      }
+      return null; // Ha nem találunk megfelelő választ, adjunk vissza null-t
+    }
+
+      function startFilter(itemType, key, type, actionType, value) {
+        if (itemType === "works") {
+          let updatedWorkConfig = workFilterOptions.map((config) => {
+            if (config.vkey === key) {
+              let newConfig = { ...config }; // Új objektum másolat
+      
+              if (type === "string") {
+                newConfig.value = value;
+              }
+      
+              if (type === "interval") {
+                if (actionType === "min") {
+                  newConfig.min = value;
+                } else {
+                  newConfig.max = value;
+                }
+              }
+
+
+              if (type === "valueList") {
+                console.log("ValueList", config.value);
+                if (newConfig.value.includes(value)) {
+                  // Ha már benne van, kivesszük
+                  newConfig.value = newConfig.value.filter((val) => val !== value);
+                } else {
+                  // Ha nincs benne, hozzáadjuk
+                  newConfig.value = [...newConfig.value, value];
+                }
+              }
+      
+              return newConfig;
+            }
+            return config;
+          });
+      
+          // 🔹 Frissítjük az állapotot és azonnal használjuk az új értéket!
+          setWorkFilterOptions(updatedWorkConfig);
+          setWorkList(filtering(works, updatedWorkConfig)); // <<< Ezt kell átadni, nem a régit!
+        }
+      }
+      
+      
+
+
+    function getValues(items, key) {
+      const values = [];
+      items.forEach(item => {
+        if (!values.includes(item[key])) {
+          values.push(item[key]);
+        }
+      });
+      return values;
+    }
+
+
+    function getMin(items, key) {
+      if (Array.isArray(items) && items.length > 0 && key != null) {
+        let min = -1;
+    
+        items.forEach(item => {
+          const value = item[key];
+          if (min === -1 && value != null)
+          {
+            min = value;
+          }
+          if (value != null && value < min) {
+            min = value;
+          }
+        });
+        return min;
+      } else {
+        return 0; 
+      }
+    }
+    
+
+    function getMax(items, key) {
+      if (Array.isArray(items) && items.length > 0 && key != null) {
+        let max = -1;
+    
+        items.forEach(item => {
+          const value = item[key];
+          if (max === -1 && value != null)
+          {
+            max = value;
+          }
+          if (value != null && value > max) {
+            max = value;
+          }
+        });
+    
+        return max;
+      } else {
+        return 0; 
+      }
+    }
+
+
   function loadWorks() {
     setLoading(false);
     return getAllWorks();
   }
+
+  function handleShowSortClients() {
+    if (showSortClients) {
+      setShowSortClients(false);
+    } else
+      {
+        if (showClients) {
+          setShowSortClients(true);
+        }
+      };
+    setTimeout(() => {
+      if (showSortClients) {
+      setShowSortClients(false);
+      }
+    }, 5000);
+  }
+  
+  function handleShowSortWork() {
+    if (showSortWork) {
+      setShowSortWork(false);
+    } else
+      {
+        if (showWorks) {
+          setShowSortWork(true);
+        }
+      };
+    setTimeout(() => {
+      if (showSortWork) {
+        setShowSortWork(false);
+      }
+    }, 5000);
+  }
+/////////////////////////////////////
+function handleShowFilterClients() {
+  if (showFilterClients) {
+    setShowFilterClients(false);
+  } else
+    {
+      if (showClients) {
+        setShowFilterClients(true);
+      }
+    };
+  setTimeout(() => {
+    if (showFilterClients) {
+    setShowFilterClients(false);
+    }
+  }, 5000);
+}
+
+function handleShowFilterWork() {
+  if (showFilterWork) {
+    setVisibleStatus(false);
+    setShowFilterWork(false);
+  } else
+    {
+      if (showWorks) {
+        setShowFilterWork(true);
+      }
+    };
+  setTimeout(() => {
+    if (showFilterWork) {
+      setShowFilterWork(false);
+    }
+  }, 5000);
+}
+
+  /////////////////////////////////
 
   function rendering() {
     setRender(!render);
@@ -125,26 +366,83 @@ function UserDashboard() {
     setShowNewClient(false);
   };
 
-  const [sortConfig, setSortConfig] = useState({
+  const [workSortConfig, setWorkSortConfig] = useState({
     key: null,
     direction: 1,
   });
 
-  const requestSort = (key) => {
+  const [clientSortConfig, setClientSortConfig] = useState({
+    key: null,
+    direction: 1,
+  });
+
+  const sortWorks = (key) => {
     let direction = 1;
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
+    if (workSortConfig && workSortConfig.key === key && workSortConfig.direction === 1) {
       direction = 2;
     }
     if (key === "Status") {
-      direction = sortConfig.direction === 4 ? 1 : sortConfig.direction + 1;
+      direction = workSortConfig.direction === 5 ? 1 : workSortConfig.direction + 1;
     }
-    setSortConfig({ key, direction });
+    setShowSortWork(false);
+    setWorkSortConfig({ key, direction });
     const sorted = sorting(works, { key, direction });
-   // setWorks(sorted);
+    setWorkList(sorted);
   };
 
+  const sortClients = (key) => {
+    let direction = 1;
+    if (clientSortConfig && clientSortConfig.key === key && clientSortConfig.direction === 1) {
+      direction = 2;
+    }
+
+    setShowSortClients(false);
+    setClientSortConfig({ key, direction });
+    const sorted = sorting(works, { key, direction });
+    setClientList(sorted);
+  };
+
+  const [workFilterConfig, setWorkFilterConfig] = useState({
+    key: null,
+    upperLimit: null,
+    lowerLimit: null,
+  });
+
+  const [clientFilterConfig, setClientFilterConfig] = useState({
+    key: null,
+    upperLimit: null,
+    lowerLimit: null,
+  });
+
+  /////////////////////////////////
+  const filterWorks = (key) => {
+    let direction = 1;
+    if (workFilterConfig && workFilterConfig.key === key && workFilterConfig.direction === 1) {
+      direction = 2;
+    }
+    if (key === "Status") {
+      direction = workFilterConfig.direction === 5 ? 1 : workFilterConfig.direction + 1;
+    }
+    setShowFilterWork(false);
+    setWorkFilterConfig({ key, direction });
+    const filtered = filtering(works, { key, direction });
+    setWorkList(filtered);
+  };
+
+  const filterClients = (key) => {
+    let direction = 1;
+    if (clientFilterConfig && clientFilterConfig.key === key && clientFilterConfig.direction === 1) {
+      direction = 2;
+    }
+
+    setShowFilterClients(false);
+    setClientFilterConfig({ key, direction });
+    const filtered = filtering(works, { key, direction });
+    setClientList(filtered);
+  };
+  /////////////////////////////////
+
   const handleModifyClient = (event, clientId) => {
-  //  console.log(clientId);
     event.preventDefault();
     event.stopPropagation();
     setClientIdToModify(clientId);
@@ -188,12 +486,6 @@ function UserDashboard() {
 
   // Statistics calculation functions
   const calculateWorkStats = () => {
-    const lastMonthWorks = works.filter(
-      (work) =>
-        new Date(work.orderDate) >=
-        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-    );
-
     const pending = works.filter((work) => work.status === "Pending").length;
     const completed = works.filter(
       (work) => work.status === "Completed"
@@ -373,34 +665,110 @@ function UserDashboard() {
           }}
         >
           <p className="fs-2 fw-bold text-start mb-0">Clients</p>
-          <div>
+     
+          <div style={{ position: "relative", display: "inline-block" }}>
           <Button
             variant="link"
             style={{ fontSize: "20px", textDecoration: "none" }}
             onClick={(e) => {
-              e.stopPropagation(); // Megakadályozza a toggleWorks futását
-              // Itt lehet hozzáadni a rendezés logikáját
-              //handleSort();
+              e.stopPropagation();
+              handleShowSortClients();
             }}
           >
             <IonIcon icon={options} />
           </Button>
+
+          {showSortClients &&
+          <div   style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 80,
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                  padding: "8px",
+                  zIndex: 1100,
+                  width: "200px",
+                  borderRadius: "2rem",
+                }}>
+            {
+              
+            clientSortOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant="outline-primary"
+                className="w-100 mb-2"
+                style={{
+                  border: "none",
+                  color: "black",
+                  borderRadius: "3rem",
+                }}
+                  onClick={(e) => {
+                e.stopPropagation();
+                sortClients(option.value)}
+              }
+              >
+                {option.label}
+              </Button>
+            ))
+            
+          }
+          </div>
+          }
+
+
           <Button
             variant="link"
-            style={{ fontSize: "20px", textDecoration: "none" }}
-            onClick={(e) => {
-              e.stopPropagation(); // Megakadályozza a toggleWorks futását
-              // Itt lehet hozzáadni a rendezés logikáját
-              //handleSort();
+            style={{ fontSize: "20px", textDecoration: "none"}}
+              onClick={(e) => {
+              e.stopPropagation(); 
+              handleShowFilterClients();
             }}
           >
-              <IonIcon icon={filter} />
+          <IonIcon icon={filter} />
           </Button>
+
+          {showFilterClients && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              right: 80,
+              backgroundColor: "white",
+              border: "1px solid #ccc",
+              padding: "8px",
+              zIndex: 1100,
+              width: "200px",
+              borderRadius: "2rem",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            {clientFilterOptions
+              .filter((option) => option.type === "string")
+              .map((option) => (
+                <input
+                  key={option.value}
+                  type="text"
+                  placeholder={option.label}
+                  onChange={(e) => filterClients(option.value, e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "1rem",
+                    border: "1px solid #ccc",
+                    marginBottom: "8px",
+                  }}
+                />
+              ))}
+          </div>
+        )}
+
+
           <Button
             variant="link"
             style={{ fontSize: "24px", textDecoration: "none" }}
           >
-            {showClients ? "−" : "+"}
+            {showWorks ? "−" : "+"}
           </Button>
           </div>
         </div>
@@ -412,7 +780,7 @@ function UserDashboard() {
             ) : (
               <div className="d-flex flex-nowrap overflow-x-scroll">
             {clients &&
-  clients.map((client) => (
+  clientList.map((client) => (
     <div
       key={client.clientId}
       style={{
@@ -491,31 +859,283 @@ function UserDashboard() {
           }}
         >
           <p className="fs-2 fw-bold text-start mb-3">Recent works</p>
-          <div>
      
-          <Button
-            variant="link"
-            style={{ fontSize: "20px", textDecoration: "none" }}
+          <div style={{ position: "relative", display: "inline-block" }}>
+              <Button
+                variant="link"
+                style={{ fontSize: "20px", textDecoration: "none" }}
                 onClick={(e) => {
-                e.stopPropagation(); // Megakadályozza a toggleWorks futását
-                // Itt lehet hozzáadni a rendezés logikáját
-                //handleSort();
-              }}
-          >
-            <IonIcon icon={options} />
-          </Button>
+                  e.stopPropagation();
+                  handleShowSortWork();
+                }}
+              >
+                <IonIcon icon={options} />
+              </Button>
+
+          {showSortWork &&
+          <div   style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 80,
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                  padding: "8px",
+                  zIndex: 1100,
+                  width: "200px",
+                  borderRadius: "2rem",
+                }}>
+            {
+              
+            workSortOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant="outline-primary"
+                className="w-100 mb-2"
+                style={{
+                  border: "none",
+                  color: "black",
+                  borderRadius: "3rem",
+                }}
+                  onClick={(e) => {
+                e.stopPropagation();
+                sortWorks(option.value)}
+              }
+              >
+                {option.label}
+              </Button>
+            ))
+            
+          }
+          </div>
+          }
+
 
           <Button
             variant="link"
             style={{ fontSize: "20px", textDecoration: "none"}}
               onClick={(e) => {
-              e.stopPropagation(); // Megakadályozza a toggleWorks futását
-              // Itt lehet hozzáadni a rendezés logikáját
-              //handleSort();
+              e.stopPropagation(); 
+              handleShowFilterWork();
             }}
           >
+
           <IonIcon icon={filter} />
           </Button>
+
+          {showFilterWork && (
+          <div
+            style={{
+              position: "absolute",
+                  top: "100%",
+                  right: 80,
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                  padding: "8px",
+                  zIndex: 1100,
+                  width: "15vw",
+                  borderRadius: "2rem",
+            }}
+          >
+{workFilterOptions.map((option) => {
+  // Ha az option típusa "string", akkor egy szöveges input jelenik meg
+  if (option.type === "string") {
+    return (
+      <div
+      key={option.vkey}>
+         <div style={{ marginBottom: "6px", fontWeight: "bold" }}>
+          {option.label}
+        </div>
+      <input
+        type="text"
+        placeholder={option.label}
+        onChange={(e) => startFilter("works", option.vkey, "string", 'min', e.target.value)}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          padding: "6px",
+          borderRadius: "1rem",
+          border: "1px solid #ccc",
+          marginBottom: "8px",
+        }}
+      />
+      
+      </div>
+    );
+  }
+
+  // Ha az option típusa "interval", akkor két input mezőt jelenítünk meg (min, max)
+  if (option.type === "interval") {
+    const isDateInterval = option.vkey.toLowerCase().includes("date");
+    return (
+      <div key={option.vkey} style={{ marginBottom: "12px" }}>
+        <div style={{ marginBottom: "6px", fontWeight: "bold" }}>
+          {option.label}
+        </div>
+
+        {isDateInterval ? (
+          
+          <>
+            <input
+              type="date"
+              value= {option.min ? new Date(option.min).toISOString().split("T")[0] : ""}
+   //           placeholder={option.min ? new Date(option.min).toISOString().split("T")[0] : ""}
+
+              onChange={(e) =>{
+                  startFilter("works", option.vkey, "interval", 'min', e.target.value);
+                }
+              }
+              style={{
+                width: "47.5%",
+                padding: "6px",
+                borderRadius: "1rem",
+                border: "1px solid #ccc",
+                marginRight: "10px",
+                marginBottom: "8px",
+              }}
+            />
+
+            <input
+              type="date"
+              value= {option.max ? new Date(option.max).toISOString().split("T")[0] : ""}
+//              placeholder={option.max ? new Date(option.max).toISOString().split("T")[0] : ""}
+              onChange={(e) =>{
+                 startFilter("works", option.vkey, "interval", 'max', e.target.value);
+                }
+              }
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "47.5%",
+                padding: "6px",
+                borderRadius: "1rem",
+                border: "1px solid #ccc",
+                marginBottom: "8px",
+              }}
+
+            />
+          </>
+        ) : (
+          // Ha nem dátum típusú intervallum, akkor szám típusú inputokat jelenítünk meg
+          <>
+            <input
+              type="number"
+//              placeholder={loadMinMax("works", option.vkey , "min")}
+              value= {option.min}
+              onChange={(e) =>{
+                startFilter("works", option.vkey, "interval", 'min', e.target.value);
+              }
+              }
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "47.5%",
+                padding: "6px",
+                borderRadius: "1rem",
+                border: "1px solid #ccc",
+                marginRight: "10px",
+                marginBottom: "8px",
+              }}
+            />
+            <input
+              type="number"
+              placeholder={loadMinMax("works", option.vkey , "max")}
+              onChange={(e) =>
+              {
+                startFilter("works", option.vkey, "interval", 'max', e.target.value);
+              }
+              }
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "47.5%",
+                padding: "6px",
+                borderRadius: "1rem",
+                border: "1px solid #ccc",
+                marginBottom: "8px",
+              }}
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (option.type === "valueList") {
+    return (
+      <div key={option.vkey}>
+      <div
+        style={{ marginBottom: "6px", fontWeight: "bold", cursor: "pointer" }}
+        onClick={handleToggleVisibility} // Kattintásra váltja a láthatóságot
+      >
+        {option.label}
+      </div>
+
+      {/* Ha az isVisible igaz, akkor jelenik meg a blokk */}
+      {visibleStatus && (
+        <div style={{ paddingLeft: "10px", marginTop: "10px", position: "relative" }}>
+          <div style={{ paddingLeft: "10px", 
+            position: "absolute",
+            right: 280,
+            top: -40,
+            backgroundColor: "white",
+            padding: "1rem",
+            border: "thin solid #dee2e6",
+            zIndex: "1500",
+            borderRadius: "1.5rem",
+            textAlign: "right",
+            width: "8rem",
+            paddingRight: "0rem",
+           }}>
+
+          <div>
+            {option.values.map((status, index) => (
+            <div
+            key={index}
+            style={{
+              height: "2.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end", // Minden tartalom jobbra kerül
+              gap: "10px", // Kis térköz a szöveg és az ikon között
+              paddingRight: "5px", // Kis térköz a jobb oldaltól
+              cursor: "pointer",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              startFilter("works", option.vkey, "valueList", "noaction", status);
+            }}
+          >
+            <p style={{ margin: 0 }}>{status}</p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "24px",
+                height: "24px",
+              }}
+            >
+              <IonIcon
+                icon={option.value.includes(status) ? radioButtonOn : radioButtonOffOutline}
+                style={{ fontSize: "20px", color: "#6c757d" }}
+              />
+            </div>
+          </div>
+          
+
+            ))}
+          </div>
+            </div>
+        </div>
+      )}
+    </div>
+    );
+  }
+
+  return null;
+})}
+
+
+          </div>
+        )}
+
           <Button
             variant="link"
             style={{ fontSize: "24px", textDecoration: "none" }}
@@ -523,7 +1143,7 @@ function UserDashboard() {
             {showWorks ? "−" : "+"}
           </Button>
           </div>
-
+          
         </div>
         {showWorks && (
         <>
@@ -570,7 +1190,7 @@ function UserDashboard() {
                     <td colSpan="10" className="text-center">There are no works, create one</td>
                   </tr>
                 ) : (
-                  works.map((work) => (
+                  workList.map((work) => (
                     <tr key={work.workId} style={{ height: "50px", display: "table", width: "100%", borderBottom: "thin solid #E9E7F1" }}>
                       <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.client.name}</td>
                       <td className="text-start" style={{ width: "11%", verticalAlign: "middle", }}>{work.name}</td>
