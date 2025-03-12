@@ -32,6 +32,37 @@ public class CreatedItem {
     @JoinColumn(name = "color")
     private Color color;
 
+    @ManyToOne
+    @JoinColumn(name = "table")
+    private CreatedTables table;
+
+    public CreatedTables gettable() {
+        return table;
+    }
+
+    public void settable(CreatedTables table) {
+        this.table = table;
+    }
+
+    private String tableRotation;
+    private String tablePosition;
+
+    public String getTablePosition() {
+        return tablePosition;
+    }
+
+    public void setTablePosition(String tablePosition) {
+        this.tablePosition = tablePosition;
+    }
+
+    public String getTableRotation() {
+        return tableRotation;
+    }
+
+    public void setTableRotation(String tableRotation) {
+        this.tableRotation = tableRotation;
+    }
+
     private Boolean rotable;
 
     @ManyToOne
