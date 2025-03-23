@@ -8,6 +8,7 @@ import scriptItemApi from "./api/scriptItemApi";
 import tableApi from "./api/tableApi";
 import workApi from "./api/workApi";
 import createdItemApi from "./api/createdItemApi";
+import createdTablesApi from "./api/createdTablesApi";
 import settingsApi from "./api/settingsApi";
 import authApi from "./api/authApi";
 import store from "./store/store";
@@ -65,6 +66,16 @@ export const fetchCreatedItemsForObject = (objectId) => {
 // created items for work
 export const fetchCreatedItemsForWork = (workId) => {
   createdItemApi.getAllCreatedItemsForWorkApi(workId);
+};
+
+// created Tables for object
+export const fetchCreatedTablesForObject = (objectId) => {
+  createdTablesApi.getAllCreatedTablesForObjectApi(objectId);
+};
+
+// created Tables for work
+export const fetchCreatedTablesForWork = (workId) => {
+  createdTablesApi.getAllCreatedTablesForWorkApi(workId);
 };
 
 // objects for work

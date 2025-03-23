@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, ListGroup, Table } from "react-bootstrap";
 import { Row, Col } from "react-bootstrap";
-import { getAllTables, getClientById, getWorkById } from "../../data/getters";
+import { getAllTables, getClientById, getWorkById, getAllCreatedTables } from "../../data/getters";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -17,6 +17,7 @@ function WorkAnalyzer() {
   const [loading, setLoading] = useState(selectedWork ? false : true);
   const [selectedClient, setSelectedClient] = useState(null);
   const [tables, setTables] = useState([]);
+  const [createdTables, setCreatedTables] = useState([]);
   const [woodsPrice, setWoodsPrice] = useState(0);
 
   const dispatch = useDispatch();
@@ -62,7 +63,10 @@ function WorkAnalyzer() {
     const loadTables = async () => {
       try {
         const allTables = await dispatch(getAllTables());
+        
+        const allCreatedTables = await dispatch(getAllCreatedTables());
         setTables(allTables);
+        setCreatedTables(allCreatedTables);
         const priceSum = allTables.reduce((sum, table) => sum + table.price, 0);
         setWoodsPrice(priceSum);
       } catch (error) {
@@ -82,6 +86,15 @@ function WorkAnalyzer() {
     }
   };
 
+  const handleShowTables = async () => {
+    try {
+      navigate(`/createdTables/${workId}`);
+    } catch (error) {
+      console.error("Error opening created table viewer:", error);
+    }
+  };
+
+
   return (
     <>
       {loading ? (
@@ -96,6 +109,13 @@ function WorkAnalyzer() {
                 <span className="fs-5">client</span>
               </p>
               <div className="button-box">
+              <Button
+                  variant="success"
+                  onClick={handleShowTables}
+                  className="me-1"
+                >
+                  Show Table
+                </Button>
                 <Button
                   variant="success"
                   onClick={handleEditWork}
