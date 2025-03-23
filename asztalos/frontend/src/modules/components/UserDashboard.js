@@ -27,6 +27,7 @@ import Chart from "chart.js/auto";
 
 import {
   fetchCreatedItemsForWork,
+  fetchCreatedTablesForWork,
   fetchObjectsForWork,
   fetchTables,
 } from "../../data/storeManager";
@@ -348,6 +349,7 @@ function handleShowFilterWork() {
       fetchTables(workId);
       fetchObjectsForWork(workId);
       fetchCreatedItemsForWork(workId);
+      fetchCreatedTablesForWork(workId);
       const clientId = dispatch(getWorkById(workId)).client.clientId;
       dispatch(selectClient(clientId));
       navigate(`/workAnalyzer/${workId}`);

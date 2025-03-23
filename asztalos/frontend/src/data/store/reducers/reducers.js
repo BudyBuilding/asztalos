@@ -14,6 +14,7 @@ import {
   selectedObjectReducer,
   objectLoadingReducer,
   createdItemsReducer,
+  createdTablesReducer,
 } from "../actions/objectStoreFunctions";
 import { colorReducer } from "../actions/colorStoreFunctions";
 import { imageReducer } from "../actions/imageStoreFunctions";
@@ -38,6 +39,8 @@ const initialState = {
   selectedScript: null,
   selectedScriptItems: [],
   objectLoading: false,
+  createdItems: [],
+  createdTables: [],
 };
 
 const settingsReducer = (state = initialState.settings, action) => {
@@ -75,6 +78,7 @@ const reducers = combineReducers({
   objects: objectReducer,
   objectLoading: objectLoadingReducer,
   createdItems: createdItemsReducer,
+  createdTables: createdTablesReducer,
   tables: tablesReducer,
   settings: settingReducer,
 });

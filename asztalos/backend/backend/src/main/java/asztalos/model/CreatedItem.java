@@ -33,15 +33,15 @@ public class CreatedItem {
     private Color color;
 
     @ManyToOne
-    @JoinColumn(name = "table")
-    private CreatedTables table;
+    @JoinColumn(name = "createdTables")
+    private CreatedTables CreatedTables;
 
     public CreatedTables gettable() {
-        return table;
+        return CreatedTables;
     }
 
     public void settable(CreatedTables table) {
-        this.table = table;
+        this.CreatedTables = table;
     }
 
     private String tableRotation;

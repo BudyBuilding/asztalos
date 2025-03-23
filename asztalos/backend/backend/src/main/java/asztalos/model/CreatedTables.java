@@ -20,6 +20,8 @@ public class CreatedTables {
     private Work work;
 
     private Double price;
+    
+    private String size;
 
     @ManyToOne
     @JoinColumn(name = "color_id", nullable = false)
@@ -48,6 +50,14 @@ public class CreatedTables {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
 

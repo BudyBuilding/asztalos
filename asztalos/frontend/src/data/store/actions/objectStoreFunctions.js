@@ -61,12 +61,41 @@ export const deleteMoreCreatedItems = (createdItems) => ({
   payload: createdItems,
 });
 
+export const addCreatedTables = (createdTables) => ({
+  type: "ADD_CREATED_Tables",
+  payload: createdTables,
+});
+
+export const addMoreCreatedTables = (createdTables) => ({
+  type: "ADD_MORE_CREATED_TABLES",
+  payload: createdTables,
+});
+
+export const deleteCreatedTables = (createdTablesId) => ({
+  type: "DELETE_CREATED_TABLES",
+  payload: createdTablesId,
+});
+
+export const deleteMoreCreatedTables = (createdTables) => ({
+  type: "DELETE_MORE_CREATED_TABLES",
+  payload: createdTables,
+});
+export const updateTables = (tables) => ({
+  type: "UPDATE_TABLES",
+  payload: tables,
+});
+
+export const updateItems = (items) => ({
+  type: "UPDATE_ITEMS",
+  payload: items,
+});
 ///////////
 // Initialstate
 const initialState = {
   objects: [],
   selectedObject: "0",
   createdItems: [],
+  createdTables: [],
   objectLoading: false,
 };
 
@@ -78,11 +107,12 @@ export const objectReducer = (state = initialState.objects, action) => {
       if (!state.some((obj) => obj.objectId === action.payload.objectId)) {
         return [...state, action.payload];
       }
+      return state;
     case "ADD_MORE_OBJECTS":
       const newObjects = action.payload.filter(
         (object) =>
           !state.some(
-            (existingObject) => existingObject.objectId == object.objectId
+            (existingObject) => existingObject.objectId === object.objectId
           )
       );
       return [...state, ...newObjects];
@@ -127,6 +157,8 @@ export const createdItemsReducer = (
         return [...state, action.payload];
       }
       return state;
+    case "UPDATE_ITEMS":
+      return [ action.payload];
     case "ADD_MORE_CREATED_ITEMS":
       return [
         ...state,
@@ -146,6 +178,43 @@ export const createdItemsReducer = (
       return state;
   }
 };
+
+export const createdTablesReducer = (
+  state = initialState.createdTables,
+  action
+) => {
+  switch (action.type) {
+    case "ADD_CREATED_TABLES":
+      if (
+        !state.some(
+          (createdTable) => createdTable.TableId === action.payload.TableId
+        )
+      ) {
+        return [...state, action.payload];
+      }
+      return state;
+    case "UPDATE_TABLES":
+        return [ action.payload];
+    case "ADD_MORE_CREATED_TABLES":
+      return [
+        ...state,
+        ...action.payload.filter(
+          (createdTable) => !state.some((s) => s.TableId === createdTable.TableId)
+        ),
+      ];
+    case "DELETE_CREATED_TABLES":
+      return state.filter(
+        (createdTable) => createdTable.TableId !== action.payload
+      );
+    case "DELETE_MORE_CREATED_TABLES":
+      return state.filter(
+        (createdTable) => !action.payload.includes(createdTable.TableId)
+      );
+    default:
+      return state;
+  }
+};
+
 export const objectLoadingReducer = (
   state = initialState.objectLoading,
   action

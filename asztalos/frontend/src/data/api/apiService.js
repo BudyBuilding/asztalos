@@ -22,7 +22,7 @@ import {
 
 const amazonDNS = "ec2-3-92-4-65.compute-1.amazonaws.com";
 
-const BASE_URL = `http://${amazonDNS}:9000`; // Az API alapértelmezett URL-je
+const BASE_URL = `http://${amazonDNS}:9001`; // Az API alapértelmezett URL-je
 
 // Helper function to get the token from localStorage
 const getToken = () => localStorage.getItem("userToken");
@@ -32,6 +32,8 @@ const axiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+
 
 axiosInstance.interceptors.request.use(
   (config) => {

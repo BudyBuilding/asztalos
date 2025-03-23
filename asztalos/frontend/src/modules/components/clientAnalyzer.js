@@ -12,8 +12,9 @@ import ClientUpdateModal from "../modals/ClientUpdateModal";
 import NewWorkModal from "../modals/newWorkModal.js";
 import {
   fetchCreatedItemsForWork,
+  fetchCreatedTablesForWork,
   fetchObjectsForWork,
-  fetchTables,
+  fetchTables
 } from "../../data/storeManager";
 import sorting from "../helpers/sort";
 import clientApi from "../../data/api/clientApi";
@@ -40,15 +41,19 @@ function ClientAnalyzer() {
 
   const allWorks = useSelector((state) => state.works);
   let memoizedWorks = useMemo(
-    () => allWorks.filter((work) => work.client.clientId == clientId),
+    () => allWorks.filter((work) => (work.client.clientId == clientId)),
     [allWorks, clientId]
   );
-
+  //console.log(allWorks);
   // we should call a load function every time when me must render
   // to the rerendering is asigned a variable, if that variable is changing then the clientanalyzer must be rerendered
   useEffect(() => {
     load();
   }, [render]);
+/*
+  for (let i = 0; i < allWorks.length; i++) {
+    console.log(allWorks[i].client.clientId);
+  }*/
 
   // the load function, if fails then must open an errormodal and give a button which navigates back to the dashboard
   async function load() {
@@ -61,7 +66,7 @@ function ClientAnalyzer() {
       setLoading(false);
     }
   }
-  console.log(clientId, clientId + 0);
+ // console.log(clientId, clientId + 0);
 
   // this is the function which is called if the user need a rerender
   function rerender() {
@@ -169,6 +174,14 @@ function ClientAnalyzer() {
       setError("Failed to fetch created items for work");
       console.error("Error while fetching created items:", error);
     }
+    try {
+      await fetchCreatedTablesForWork(workId);
+    } catch (error) {
+      setError("Failed to fetch created items for work");
+      console.error("Error while fetching created items:", error);
+    }
+
+
   };
 
   // handleCloseErrorModal closes the error modal
@@ -221,7 +234,7 @@ function ClientAnalyzer() {
                       onClick={() => setShowClientUpdateModal(true)}
                       style={{
                         border: "1px solid #007bff",
-                        marginLeft: "0.5rem",
+                        marginLeft: "0.5rem"
                       }}
                     >
                       Edit Client

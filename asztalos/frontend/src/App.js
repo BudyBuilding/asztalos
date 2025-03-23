@@ -5,7 +5,6 @@ import Login from "./modules/components/login.js";
 import UserDashboard from "./modules/components/UserDashboard";
 import ClientAnalyzer from "./modules/components/clientAnalyzer.js";
 import WorkAnalyzer from "./modules/components/workAnalyzer.js";
-import AdminDashboard from "./modules/adminFiles/AdminDashboard";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./data/store/store";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
@@ -22,11 +21,12 @@ import SettingsPage from "./modules/components/SettingsPage";
 import ScriptsPage from "./modules/components/ScriptsPage";
 import Loading from "./modules/helpers/Loading.js";
 import TopNavigationBar from "./modules/components/TopNavigation.js";
+import CreatedTable from "./modules/components/CreatedTable.js";
 function App() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  const [userRole, setUserRole] = useState(null);
+//  const [userRole, setUserRole] = useState(null);
   const [isTokenChecked, setIsTokenChecked] = useState(false);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ function App() {
       if (isTokenChecked) {
         if (isLoggedIn) {
           const currentuser = await dispatch(getUser());
-          setUserRole(currentuser.role);
+     //     setUserRole(currentuser.role);
 
           if (currentuser.role === "admin") {
             await fetchUsers();
@@ -74,7 +74,7 @@ function App() {
 
   return (
 <Provider store={store}>
-  <div className="app-container" style={{ backgroundColor: "#F3F5F7", display: "flex", flexDirection: "column", minHeight: "120vh"}}>
+  <div className="app-container" style={{ backgroundColor: "#F3F5F7", display: "flex", flexDirection: "column", minHeight: "150vh"}}>
     
     {/* Felső navigációs sáv */}
     {isLoggedIn && <TopNavigationBar />}
@@ -98,6 +98,7 @@ function App() {
           <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
           <Route path="/workAnalyzer/:workId" element={<WorkAnalyzer />} />
           <Route path="/editWork/:workId" element={<EditWork />} />
+          <Route path="/createdTables/:workId" element={<CreatedTable />} />
           <Route path="/login" element={<Login />} />
           <Route path="/" element={isLoggedIn ? <UserDashboard /> : <Login />} />
         </Routes>

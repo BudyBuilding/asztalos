@@ -192,6 +192,31 @@ export const getCreatedItemsByObject = (objectId) => {
   };
 };
 
+export const getAllCreatedTables = () => {
+  return (dispatch) => {
+    const createdTables = store.getState().createdTables;
+    return createdTables;
+  };
+};
+
+export const getCreatedTablesByWork = (workId) => {
+  return (dispatch) => {
+    const createdTables = store
+      .getState()
+      .createdTables.filter((item) => item.work.workId === workId);
+    return createdTables;
+  };
+};
+
+export const getCreatedTablesByObject = (objectId) => {
+  return (dispatch) => {
+    const createdTables = store
+      .getState()
+      .createdTables.filter((item) => item.object.objectId === objectId);
+    return createdTables || [];
+  };
+};
+
 //////////////////
 // settings
 export const getSettingById = (settingId) => {
