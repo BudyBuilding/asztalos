@@ -1,50 +1,102 @@
-//EditWork.js
-// is used for editing a work, as adding, deleting, modifying objects and settings for a work
-
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Button, Container, Dropdown, Nav, Form } from "react-bootstrap";
+// EditWork.js
+import React, { useState, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Button, Container, Nav } from "react-bootstrap";
 import ScriptCaller from "../../calculation/scriptCaller";
-import store from "../../data/store/store";
 import Item from "../helpers/item.js";
-import ModelViewer from "../../model/ModelViewer";
+import ModelViewer from "../../model/ModelViewer.js";
 import {
-  getAllWorks,
   getAllObjects,
   getObjectById,
   getCreatedItemsByObject,
   getSettingById,
+  getClientById
 } from "../../data/getters";
 import {
   selectObject,
-  updateObject,
+  updateObject
 } from "../../data/store/actions/objectStoreFunctions";
-import { addWork } from "../../data/store/actions/workStoreFunctions";
+import { updateWork } from "../../data/store/actions/workStoreFunctions";
 import objectApi from "../../data/api/objectApi";
-import { useParams } from "react-router-dom";
 import { Modal } from "react-bootstrap";
+import ObjectViewer from "../../model/ObjectViewer.js";
+import { useParams } from "react-router-dom";
 
-function EditWork({ closeNewWork, clientId }) {
+function EditWork() {
   const dispatch = useDispatch();
-
+  const works = useSelector(state => state.works);
   const { workId } = useParams();
-  const [showColorSelector, setShowColorSelector] = useState(false); // State for ColorSelector
   const [loading, setLoading] = useState(true);
-  const [showColors, setShowColors] = useState(false);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
   const [showModel, setShowModel] = useState(true);
-  const [objects, setObjects] = useState(getAllObjects());
+  const [objects, setObjects] = useState([]);
   const [itemDetails, setItemDetails] = useState([]);
   const [settingDetails, setSettingDetails] = useState([]);
-  const [modifiedObject, setModifiedObject] = useState(null);
   const [currentObject, setCurrentObject] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [objectToDelete, setObjectToDelete] = useState(null);
+  const [localWork, setLocalWork] = useState(null);
 
   let newObjKey = 999;
 
-  // the settings are in a string, and this function creats a map, list or smth like that from them
+  // Görgetés letiltása a body-n
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  // Lokális work létrehozása az oldal betöltésekor
+  useEffect(() => {
+    const createLocalWorkFromExisting = async () => {
+      const originalWork = works.find(work => work.workId === parseInt(workId, 10));
+      if (!originalWork) {
+        console.error("Work not found with ID:", workId);
+        setLoading(false);
+        return;
+      }
+
+      const clientData = await dispatch(getClientById(originalWork.ClientId));
+      const today = new Date();
+      const year = today.getFullYear();
+      let month = today.getMonth() + 1;
+      month = month < 10 ? `0${month}` : month;
+      let day = today.getDate();
+      day = day < 10 ? `0${day}` : day;
+      const currentDate = `${year}-${month}-${day}`;
+
+      const newWork = {
+        ...originalWork,
+        Date: currentDate,
+        Status: "Pending",
+        objects: originalWork.objects ? [...originalWork.objects] : [],
+      };
+
+      console.log("Created local work:", newWork);
+      setLocalWork(newWork);
+      setLoading(false);
+    };
+
+    if (works.length > 0) {
+      createLocalWorkFromExisting();
+    }
+  }, [dispatch, workId, works]);
+
+  // Objectek betöltése
+  useEffect(() => {
+    const fetchObjects = async () => {
+      const allObjects = await dispatch(getAllObjects());
+      setObjects(allObjects);
+    };
+
+    if (!loading) {
+      fetchObjects();
+    }
+  }, [loading, dispatch]);
+
+  // Parse settings string into an object
   function parseSetting(setting) {
     if (!setting) {
       return {};
@@ -63,36 +115,32 @@ function EditWork({ closeNewWork, clientId }) {
     return parsedSettings;
   }
 
-  // here we can change between the objects and this handles the change between them
-  // the newObject tab is for creating a new object
-  // the 0 is for showing every objects for the work
-  // any other is for shoving a specific object
+  // Handle tab change
   useEffect(() => {
     setShowModel(false);
 
-    if (selectedTab == 0) {
+    if (selectedTab === "0") {
       setCurrentObject(objects);
     } else {
       const choosenObject = objects.find(
-        (object) => object.objectId == selectedTab
+        (object) => object.objectId === selectedTab
       );
       setCurrentObject([choosenObject]);
     }
-    if (selectedTab != "newObject") {
+    if (selectedTab !== "newObject") {
       setTimeout(() => {
         setShowModel(true);
       }, 0);
     }
-  }, [selectedTab]);
+  }, [selectedTab, objects]);
 
-  // this function handles which objects items should be visible, which is open
+  // Handle item detailing visibility
   function itemDetailing(objectId) {
-    console.log(objectId);
     let newDetails = [...itemDetails];
     if (newDetails.includes(objectId)) {
       newDetails = newDetails.filter((id) => id !== objectId);
     } else {
-      if (selectedTab != "newObject") {
+      if (selectedTab !== "newObject") {
         newDetails.push(objectId);
       } else {
         newDetails = [];
@@ -101,13 +149,13 @@ function EditWork({ closeNewWork, clientId }) {
     setItemDetails(newDetails);
   }
 
-  // this function handles which objects settings should be visible, which is open
+  // Handle setting detailing visibility
   function settingDetailing(objectId) {
     let newDetails = [...settingDetails];
     if (newDetails.includes(objectId)) {
       newDetails = newDetails.filter((id) => id !== objectId);
     } else {
-      if (selectedTab != "newObject") {
+      if (selectedTab !== "newObject") {
         newDetails.push(objectId);
       } else {
         newDetails = [];
@@ -116,20 +164,7 @@ function EditWork({ closeNewWork, clientId }) {
     setSettingDetails(newDetails);
   }
 
-  // this loads the from the store
-  useEffect(() => {
-    if (!loading) {
-      setObjects(dispatch(getAllObjects()));
-    }
-  }, [loading]);
-
-  const colors = useSelector((state) => state.colors);
-
-  function closeSelector() {
-    setShowColorSelector(false);
-  }
-
-  // this handles the selected tab, so this sets the main variables for them
+  // Handle tab selection
   function handleSelectedTab(key) {
     if (key !== selectedTab) {
       setSelectedTab(key);
@@ -137,38 +172,43 @@ function EditWork({ closeNewWork, clientId }) {
     }
   }
 
-  // save all the modify of an object
-  function saveModify(object) {
-    const objs = objects.map((obj) => (obj.key === object.key ? object : obj));
-    setObjects(objs);
+  // Save modifications to an object and update the local work
+  const saveModify = useCallback((object) => {
+    const updatedObjects = objects.map((obj) => (obj.objectId === object.objectId ? object : obj));
+    setObjects(updatedObjects);
     dispatch(updateObject(object));
-  }
 
-  //if we modify an item, here we are saving it,
-  //I do not thin is alright right not TODO
-  function handleModifiedItem(modifiedItem, objectID) {
-    let object;
-    if (objectID) {
-      object = objects.find((obj) => obj.key === objectID);
-      if (object) {
-        let modifiedItems = object.items.map((item) =>
-          item.itemKey === modifiedItem.itemKey ? modifiedItem : item
-        );
-        const updatedObject = {
-          ...object,
-          items: modifiedItems,
-        };
-        saveModify(updatedObject);
-      }
+    if (localWork) {
+      const updatedWork = {
+        ...localWork,
+        objects: updatedObjects.filter(obj => obj.workId === localWork.workId),
+      };
+      console.log("Updating local work with objects:", updatedWork);
+      setLocalWork(updatedWork);
+    }
+  }, [objects, localWork, dispatch]);
+
+  // Handle modified item
+  function handleModifiedItem(modifiedItem, objectId) {
+    const object = objects.find((obj) => obj.objectId === objectId);
+    if (object) {
+      let modifiedItems = dispatch(getCreatedItemsByObject(objectId)).map((item) =>
+        item.itemId === modifiedItem.itemId ? modifiedItem : item
+      );
+      const updatedObject = {
+        ...object,
+        items: modifiedItems
+      };
+      saveModify(updatedObject);
     }
   }
 
-  // this is triggered at every change on an item
-  const handleItemChange = (modifiedItem, objectID) => {
-    handleModifiedItem(modifiedItem, objectID);
+  // Handle item change
+  const handleItemChange = (modifiedItem, objectId) => {
+    handleModifiedItem(modifiedItem, objectId);
   };
 
-  // this is for setting up the initial state after creating a new object
+  // Initialize state after creating a new object
   const init = () => {
     setShowForm(false);
     setShowModel(true);
@@ -176,62 +216,44 @@ function EditWork({ closeNewWork, clientId }) {
     setSelectedTab("0");
   };
 
-  // TODO I do not think is alright
-  const handleSaveWork = async () => {
-    const client = await dispatch(getObjectById(clientId));
-
-    // Lekérjük a mai dátumot és formázzuk yyyy-mm-dd formátumra
-    const today = new Date();
-    const year = today.getFullYear();
-    let month = today.getMonth() + 1;
-    month = month < 10 ? `0${month}` : month;
-    let day = today.getDate();
-    day = day < 10 ? `0${day}` : day;
-    const currentDate = `${year}-${month}-${day}`;
-
-    // Generálunk két véletlenszerű egész számot a Price és Paid mezőknek
-    const price = Math.floor(Math.random() * 1000);
-    const paid = Math.floor(Math.random() * price); // Paid-nek kisebbnek kell lennie, mint a Price
-
-    // Elkészítjük az új munka objektumot
-    const newWork = {
-      ClientId: clientId,
-      Client: client.Name, // Például csak az ügyfél nevét vesszük fel
-      Date: currentDate,
-      Status: "Pending",
-      Price: price,
-      Paid: paid,
-    };
-
-    // Adjuk hozzá az új munkát a store-hoz
-    dispatch(addWork(newWork));
-
-    // Bezárjuk az új munka felvételét kezelő dialógust
-    closeNewWork();
+  // Handle saving the work to the store and closing the page
+  const handleSaveWork = () => {
+    if (localWork) {
+      console.log("Saving work to store:", localWork);
+      dispatch(updateWork(localWork));
+      window.history.back();
+    }
   };
 
-  // this is the first step of deleting an object
+  // Handle delete object
   const handleDeleteObject = (objectId) => {
     setObjectToDelete(objectId);
     setShowDeleteModal(true);
   };
 
-  // after confirming the deletion of work then firstly the generated items must be deleted
-  // after the pervious step the object could be deleted
+  // Confirm delete object
   const confirmDeleteObject = async () => {
     if (objectToDelete !== null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
-      const newObjectList = dispatch(getAllObjects());
+      const newObjectList = await dispatch(getAllObjects());
       setObjects(newObjectList);
       handleSelectedTab("0");
       setShowDeleteModal(false);
       setObjectToDelete(null);
       setCurrentObject(newObjectList);
+
+      if (localWork) {
+        const updatedWork = {
+          ...localWork,
+          objects: newObjectList.filter(obj => obj.workId === localWork.workId),
+        };
+        setLocalWork(updatedWork);
+      }
     }
   };
 
   return (
-    <div className=" mt-0">
+    <div className="mt-0" style={{ height: "100%", overflow: "hidden" }}>
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Deletion</Modal.Title>
@@ -276,7 +298,7 @@ function EditWork({ closeNewWork, clientId }) {
               }
             }}
           >
-            Full modell
+            Full model
           </Nav.Link>
         </Nav.Item>
         {objects &&
@@ -313,7 +335,8 @@ function EditWork({ closeNewWork, clientId }) {
         fluid
         className="d-flex justify-content-between p-0 m-0 w-100"
         style={{
-          height: "calc(90vh)",
+          height: "85vh",
+          overflowY: "auto"
         }}
       >
         <Container
@@ -360,7 +383,12 @@ function EditWork({ closeNewWork, clientId }) {
           style={{ overflowY: "auto" }}
           key="middleNewWorkBox"
         >
-          {showModel && <ModelViewer objectId={selectedTab} />}
+          {showModel &&
+            (selectedTab === "0" ? (
+              <ModelViewer workId={workId} /> // Eredeti workId-t adjuk át
+            ) : (
+              <ObjectViewer objectId={selectedTab} />
+            ))}
 
           {!showModel && showForm && (
             <ScriptCaller newObjectKey={newObjKey} onSave={init} />
