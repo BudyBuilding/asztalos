@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Loading from "../helpers/Loading";
-import { Button, Table, Modal } from "react-bootstrap";
+import { Button, Table, Modal, Form } from "react-bootstrap";
 import { getAllClients } from "../../data/getters";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import sorting from "../helpers/sort";
@@ -8,44 +8,80 @@ import { useDispatch } from "react-redux";
 import clientApi from "../../data/api/clientApi";
 import NewClientModal from "../modals/NewClientModal";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
+import { useNavigate } from "react-router-dom";
+import { selectClient } from "../../data/store/actions/clientStoreFunctions"; // Ellenőrizd az elérési utat
+// Helper function for filtering (assumed to be similar to sorting)
+const filtering = (data, filterConfig) => {
+  if (!filterConfig || !filterConfig.value) return data;
+  return data.filter((item) =>
+    String(item[filterConfig.key])
+      .toLowerCase()
+      .includes(filterConfig.value.toLowerCase())
+  );
+};
+
 
 function ClientsPage() {
   const dispatch = useDispatch();
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [filteredClients, setFilteredClients] = useState([]); // For displaying filtered data
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [clientIdToDelete, setClientIdToDelete] = useState(null);
   const [clientIdToModify, setClientIdToModify] = useState(null);
   const [showClientUpdateModal, setShowClientUpdateModal] = useState(false);
   const [showNewClient, setShowNewClient] = useState(false);
   const [render, setRender] = useState(false);
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: 1,
-  });
-
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 1 });
+  const [filterConfig, setFilterConfig] = useState({ key: "name", value: "" });
+  const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState([]); // Tegyük fel, hogy itt tárolod az ügyfeleket
+  // Toggle render state to refresh data
   function rendering() {
     setRender(!render);
   }
 
+
+  const handleRowClick = async (clientId) => {
+    setLoading(true);
+    try {
+      dispatch(selectClient(clientId));
+      navigate(`/clientAnalyzer/${clientId}`);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error selecting client:", error);
+      setLoading(false);
+    }
+  };
+
+
+  // Load clients on mount or re-render
   useEffect(() => {
     async function loadClients() {
-      setLoading(true); // Start loading
+      setLoading(true);
       const clientsData = await getAllClients();
       setClients(clientsData);
-      setLoading(false); // End loading
+      setFilteredClients(clientsData); // Initialize filtered data
+      setLoading(false);
     }
-
     loadClients();
   }, [render]);
 
-  const handleNewClientClick = () => {
-    setShowNewClient(true);
-  };
+  // Apply filtering whenever filterConfig changes
+  useEffect(() => {
+    const filtered = filtering(clients, filterConfig);
+    setFilteredClients(filtered);
+  }, [clients, filterConfig]);
 
-  const handleNewClientClose = () => {
-    setShowNewClient(false);
-  };
+  // Apply sorting whenever sortConfig changes
+  useEffect(() => {
+    if (sortConfig.key) {
+      const sorted = sorting(filteredClients, sortConfig);
+      setFilteredClients([...sorted]);
+    }
+  }, [sortConfig]);
+
+  const handleNewClientClick = () => setShowNewClient(true);
+  const handleNewClientClose = () => setShowNewClient(false);
 
   const handleModifyClient = (event, clientId) => {
     event.preventDefault();
@@ -60,9 +96,7 @@ function ClientsPage() {
   };
 
   const handleClientUpdate = async (updatedClientData) => {
-    await dispatch(
-      clientApi.updateClientApi(clientIdToModify, updatedClientData)
-    );
+    await dispatch(clientApi.updateClientApi(clientIdToModify, updatedClientData));
     setShowClientUpdateModal(false);
     rendering();
   };
@@ -80,26 +114,35 @@ function ClientsPage() {
     rendering();
   };
 
-  const handleCancelDelete = () => {
-    setShowDeleteConfirmation(false);
-  };
+  const handleCancelDelete = () => setShowDeleteConfirmation(false);
 
   const requestSort = (key) => {
     let direction = 1;
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 1) {
+    if (sortConfig.key === key && sortConfig.direction === 1) {
       direction = -1;
     }
-
     setSortConfig({ key, direction });
-    const sorted = sorting(clients, { key, direction });
-    setClients(sorted);
+  };
+
+  const handleFilterChange = (e) => {
+    setFilterConfig({ ...filterConfig, value: e.target.value });
+  };
+
+  const handleFilterKeyChange = (e) => {
+    setFilterConfig({ ...filterConfig, key: e.target.value });
+  };
+
+  const handleSortChange = (e) => {
+    const [key, direction] = e.target.value.split(":");
+    setSortConfig({ key, direction: parseInt(direction) });
   };
 
   const handleReloadClients = async () => {
-    setLoading(true); // Start loading
+    setLoading(true);
     const clientsData = await getAllClients();
     setClients(clientsData);
-    setLoading(false); // End loading
+    setFilteredClients(clientsData);
+    setLoading(false);
   };
 
   return (
@@ -107,26 +150,48 @@ function ClientsPage() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Clients Page</h1>
         <div>
-          <Button
-            variant="light"
-            className="me-2"
-            onClick={handleReloadClients}
-          >
+          <Button variant="light" className="me-2" onClick={handleReloadClients}>
             <i className="bi bi-arrow-clockwise"></i>
           </Button>
-          <Button
-            variant="secondary"
-            className="me-2"
-            onClick={handleNewClientClick}
-          >
+          <Button variant="secondary" className="me-2" onClick={handleNewClientClick}>
             New Client
           </Button>
         </div>
       </div>
+
+      {/* Filtering and Sorting Controls */}
+      <div className="mb-3 d-flex gap-3">
+        <Form.Group>
+          <Form.Label>Filter by</Form.Label>
+          <Form.Select onChange={handleFilterKeyChange} value={filterConfig.key}>
+            <option value="name">Name</option>
+            <option value="clientSold">Sold</option>
+            <option value="address">Address</option>
+          </Form.Select>
+          <Form.Control
+            type="text"
+            placeholder="Enter filter value"
+            value={filterConfig.value}
+            onChange={handleFilterChange}
+            className="mt-2"
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Sort by</Form.Label>
+          <Form.Select onChange={handleSortChange}>
+            <option value="">Select sorting</option>
+            <option value="name:1">Name (A-Z)</option>
+            <option value="name:-1">Name (Z-A)</option>
+            <option value="clientSold:1">Sold (Low to High)</option>
+            <option value="clientSold:-1">Sold (High to Low)</option>
+          </Form.Select>
+        </Form.Group>
+      </div>
+
       <div
         style={{
-          maxHeight: "90vh", // Specify a max height for scrolling
-          overflowY: "auto", // Enable vertical scrolling
+          maxHeight: "90vh",
+          overflowY: "auto",
           border: "thin solid lightgrey",
           borderRadius: "0.5rem",
         }}
@@ -144,60 +209,45 @@ function ClientsPage() {
               }}
             >
               <tr>
-                <th
-                  onClick={() => requestSort("clientId")}
-                  style={{ cursor: "pointer" }}
-                >
+                <th onClick={() => requestSort("clientId")} style={{ cursor: "pointer" }}>
                   ID
                 </th>
-                <th
-                  onClick={() => requestSort("name")}
-                  style={{ cursor: "pointer" }}
-                >
+                <th onClick={() => requestSort("name")} style={{ cursor: "pointer" }}>
                   Name
                 </th>
-                <th
-                  onClick={() => requestSort("clientSold")}
-                  style={{ cursor: "pointer" }}
-                >
+                <th onClick={() => requestSort("clientSold")} style={{ cursor: "pointer" }}>
                   Sold
                 </th>
                 <th>Address</th>
               </tr>
             </thead>
             <tbody>
-              {clients.map((client) => (
-                <tr key={client.clientId}>
+              {filteredClients.map((client) => (
+                <tr 
+                key={client.clientId}
+              onClick={() => handleRowClick(client.clientId)}
+              style={{ cursor: "pointer", borderBottom: "1px solid #ddd" }}
+                >
                   <td>{client.clientId}</td>
                   <td>{client.name}</td>
                   <td>{client.clientSold}</td>
-                  <td className="d-flex justify-content-between ">
+                  <td className="d-flex justify-content-between">
                     {client.address}
                     <div style={{ display: "flex", alignItems: "center" }}>
                       <Button
                         variant="link"
-                        onClick={(event) =>
-                          handleModifyClient(event, client.clientId)
-                        }
+                        onClick={(event) => handleModifyClient(event, client.clientId)}
                         style={{ padding: 0 }}
                       >
-                        <i
-                          className="bi bi-pencil"
-                          style={{ fontSize: "0.8rem" }}
-                        ></i>
+                        <i className="bi bi-pencil" style={{ fontSize: "0.8rem" }}></i>
                       </Button>
                       <Button
                         variant="link"
-                        onClick={(event) =>
-                          handleDeleteClient(event, client.clientId)
-                        }
+                        onClick={(event) => handleDeleteClient(event, client.clientId)}
                         style={{ padding: 0 }}
                         className="ms-2"
                       >
-                        <i
-                          className="bi bi-trash"
-                          style={{ fontSize: "0.8rem" }}
-                        ></i>
+                        <i className="bi bi-trash" style={{ fontSize: "0.8rem" }}></i>
                       </Button>
                     </div>
                   </td>
@@ -207,6 +257,8 @@ function ClientsPage() {
           </Table>
         )}
       </div>
+
+      {/* Modals */}
       <Modal show={showNewClient} onHide={handleNewClientClose}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Client</Modal.Title>
@@ -227,7 +279,6 @@ function ClientsPage() {
           />
         </Modal.Body>
       </Modal>
-
       <Modal show={showDeleteConfirmation} onHide={handleCancelDelete}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Deletion</Modal.Title>
