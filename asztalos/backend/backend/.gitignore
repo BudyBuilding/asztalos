@@ -1,5 +1,4 @@
 # Maven related
-target/
 !.mvn/wrapper/maven-wrapper.jar  # Keep Maven wrapper
 # IDE related
 .idea/

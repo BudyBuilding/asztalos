@@ -3,9 +3,13 @@ package asztalos.service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -16,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import asztalos.model.Images;
 import asztalos.repository.ImagesRepository;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class ImagesService {
@@ -27,20 +32,31 @@ public class ImagesService {
 
     private final String IMAGE_PATH = "E:\\images\\";
 
+    @Value("${upload.path}")
+    private String uploadPath;
+
+    @PostConstruct
+    public void init() throws IOException {
+        Path uploadDir = Paths.get(uploadPath);
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+    }
+
     public Images storeImage(MultipartFile image) throws IOException {
-        String imagePath = IMAGE_PATH + image.getOriginalFilename();
         String imageName = StringUtils.cleanPath(image.getOriginalFilename());
+        Path imagePath = Paths.get(uploadPath).resolve(imageName);
+        Path target = Paths.get(uploadPath).resolve(imageName);
         Images images = Images.builder()
                 .name(imageName.substring(0, imageName.indexOf('.')))
-                .path(imagePath) // Csak az elérési út mentése
+                .path(target.toString())// Csak az elérési út mentése
                 .type(image.getContentType())
                 .build();
 
         // Adatbázisba mentés (csak az elérési úttal)
         images = imageRepository.save(images);
 
-        // Fájl mentése a fájlrendszerbe
-        image.transferTo(new File(imagePath));
+        image.transferTo(target.toFile());
          
         if (images.getImageId() != null) {
             return images;
