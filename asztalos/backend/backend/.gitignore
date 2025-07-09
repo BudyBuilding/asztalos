@@ -1,7 +1,6 @@
 # Maven related
 target/
 !.mvn/wrapper/maven-wrapper.jar  # Keep Maven wrapper
-/application.properties
 # IDE related
 .idea/
 *.iml
