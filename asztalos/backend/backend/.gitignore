@@ -23,7 +23,3 @@ target/
 *.ear
 
 # Dependency directories
-
-src/main/resources/
-
-/target
