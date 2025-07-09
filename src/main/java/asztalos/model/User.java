@@ -26,6 +26,8 @@ public class User {
     private String address;
     private String telephone;
 
+    private Integer companyId;
+
     private String password;
     
     private String role;
@@ -36,13 +38,13 @@ public class User {
     @Column(nullable = false)
     private double sold;
 
- @JsonCreator
- public User(@JsonProperty("userId") Long userId) {
-     this.userId = userId;
- }
-    
- public User() {
+    @JsonCreator
+    public User(@JsonProperty("userId") Long userId) {
+        this.userId = userId;
     }
+        
+    public User() {
+        }
 
     // Getters és setters
     public Long getUserId() {
@@ -52,6 +54,14 @@ public class User {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
+
+    public Integer getCompanyId() {
+        return companyId;
+    }   
+
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
+    }       
 
     public String getName() {
         return name;

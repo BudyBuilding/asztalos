@@ -39,7 +39,9 @@ public class CreatedTablesService {
     public void deleteCreatedTables(Long id) {
         CreatedTableRepository.deleteById(id);
     }
-
+    public CreatedTables save(CreatedTables table) {
+        return CreatedTableRepository.save(table);
+    }
     // Új metódus az adott munkához tartozó CreatedTables objektumok lekérdezésére
     public List<CreatedTables> findByWork(Work work) {
         return CreatedTableRepository.findByWork(work);

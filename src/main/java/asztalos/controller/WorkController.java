@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.Client;
+import asztalos.model.CreatedTables;
 import asztalos.model.User;
 import asztalos.model.Work;
 import asztalos.service.ClientService;
+import asztalos.service.CreatedTablesService;
+import asztalos.service.TableOptimizationService;
 import asztalos.service.UserService;
 import asztalos.service.WorkService;
 
@@ -40,6 +44,11 @@ public class WorkController {
 
     @Autowired
     private ClientService clientService;
+
+    @Autowired
+    private TableOptimizationService tableOptimizationService;
+    @Autowired
+    private CreatedTablesService createdTablesService;
 
     // Loading only one or all work related for an user with token   
     // Considerating that if the user is an admin
@@ -71,16 +80,26 @@ public class WorkController {
        } else {
            // if the user want to get all the work
            // we must check if the user is admin or not
-           if (currentUser.get().getRole().equals("admin")) {
+           if (currentUser.get().getRole().equals("admin"))  {
                //if is admin then we must give them all the works
                List<Work> works = workService.findAll();
                return ResponseEntity.ok(works);
+           } else {
+           if (currentUser.get().getRole().equals("companyAdmin") || 
+               currentUser.get().getRole().equals("companyUser")) {
+              //  List<Work> works = workService.findAll();
+
+                List<Work> works = workService.findAll().stream()
+                .filter(w -> Boolean.TRUE.equals(w.getIsOrdered()))
+                .collect(Collectors.toList());
+
+                return ResponseEntity.ok(works);
            } else {
                // if is not admin then we must show them only their works
                List<Work> works = workService.findByUser(currentUser.get());
                return ResponseEntity.ok(works);
            }
-       }
+       }}
    }
 
    @GetMapping("/client/{clientId}")
@@ -103,7 +122,9 @@ public class WorkController {
 
         // Check if the client belongs to the current user
         if (!client.get().getUser().getUserId().equals(currentUser.get().getUserId())
-                && !currentUser.get().getRole().equals("admin")) {
+                && !currentUser.get().getRole().equals("admin")
+                    && !currentUser.get().getRole().equals("companyAdmin")
+                    && !currentUser.get().getRole().equals("companyUser")) {
             return ResponseEntity.status(403).build(); // Unauthorized
         }
 
@@ -136,7 +157,10 @@ public class WorkController {
 
             // Checking if the work belongs to the current user
             if (!existingwork.getUser().getUserId().equals(currentUser.get().getUserId())
-                    && !currentUser.get().getRole().equals("admin")) {
+                    && !currentUser.get().getRole().equals("admin")
+                    && !currentUser.get().getRole().equals("companyAdmin")
+                    && !currentUser.get().getRole().equals("companyUser")
+                    ) {   
                 return ResponseEntity.status(403).build(); // Unauthorized
             }
 
@@ -157,7 +181,16 @@ public class WorkController {
                     throw new RuntimeException("An error occurred while updating user details", e);
             }
 
-            return ResponseEntity.ok(workService.save(existingwork));
+            // 1) elmentjük a frissített Work-öt
+            Work saved = workService.save(existingwork);
+
+            // 2) generáljuk az új táblákat az adott munkához
+            List<CreatedTables> generated = tableOptimizationService.generateTables(saved);
+            // 3) és mentjük is őket
+            generated.forEach(createdTablesService::save);
+
+            // 4) visszatérünk a mentett (és már táblákkal kiegészített) munkával
+            return ResponseEntity.ok(saved);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -204,24 +237,23 @@ public ResponseEntity<?> createWork(@RequestBody Work work) {
     if (!currentClient.isPresent()) {
         return ResponseEntity.status(404).build();
     }
-
-    // checking if the user from the token is available
     if (!currentUser.isPresent()) {
         return ResponseEntity.status(403).build();
     }
 
-    // setting up the new work's user and client
+    // Felhasználó és kliens beállítása
     work.setUser(currentUser.get());
     work.setClient(currentClient.get());
 
-    // setting default values
-    work.setPrice(0);  // assuming price is of type Double
-    work.setPaid(0);   // assuming paid is of type Double
+    // Alapértelmezett értékek
+    work.setClientPrice(0d);
+    work.setClientPaid(0d);
+    work.setUserPaid(0d);         // ← ide kell hozzáadni
     work.setStatus("measured");
-    work.setLabel(0);    // assuming label is of type Integer
-        // Mérés dátumának beállítása a hívás dátumára
-        work.setMeasureDate(new Date());
-    // creating the new work object and filling it with the data
+    work.setLabel(0d);
+    work.setMeasureDate(new Date());
+
+
     Work createdWork = workService.save(work);
     return ResponseEntity.ok(createdWork);
 }

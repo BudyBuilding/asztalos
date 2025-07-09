@@ -18,6 +18,16 @@ public class RegisterDto {
 
     private String address;
 
+    private String role;
+
+    public String getRole() {
+        return role;
+    }                   
+
+    public void setRole(String role) {
+        this.role = role;
+    }           
+
     @NotEmpty(message = "Password is required")
     @Size(min = 6, message = "Minimum password length is 6 characters")
     private String password;

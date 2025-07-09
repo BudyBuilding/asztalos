@@ -1,12 +1,18 @@
 package asztalos.model;
 
+import java.util.Date;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "createdTables")
@@ -23,9 +29,22 @@ public class CreatedTables {
     
     private String size;
 
+  @Temporal(TemporalType.TIMESTAMP)
+    private Date lastUpdateDate;                
+
     @ManyToOne
     @JoinColumn(name = "color_id", nullable = false)
     private Color color;
+
+@PrePersist
+    protected void onCreate() {
+        lastUpdateDate = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdateDate = new Date();
+    }
 
     // Getters and Setters
     public Long getId() {
@@ -68,4 +87,13 @@ public class CreatedTables {
     public void setPrice(Double price) {
         this.price = price;
     }
+
+        public Date getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(Date lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
+    }
+
 }

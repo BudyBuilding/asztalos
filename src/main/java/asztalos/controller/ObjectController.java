@@ -186,36 +186,30 @@ public ResponseEntity<List<WorkObject>> getObjectsByWorkId(@PathVariable Long wo
         }
     }
 
-    @DeleteMapping("/{id}")
+@DeleteMapping("/{id}")
 public ResponseEntity<Void> deleteObject(@PathVariable Long id) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String username = authentication.getName();
-    Optional<User> user = userService.findByUsername(username);
 
-    // Check if the user from the token is available
-    if (!user.isPresent()) {
+    Optional<User> user = userService.findByUsername(username);
+    if (!user.isPresent())
         return ResponseEntity.status(403).build();
-    }
 
     Optional<WorkObject> workObject = objectService.findById(id);
+    if (workObject.isPresent()) {
+        WorkObject obj = workObject.get();
 
-    // Check if there is a work object record with that id
-    if (workObject.isPresent() && (workObject.get().getUser().getUserId().equals(user.get().getUserId()) || user.get().getRole().equals("admin"))) {
-        // If there is a work object, we must change its user attribute to the -1 user
-        Optional<User> deletedUser = userService.findById(-1L);
-        
-        if (!deletedUser.isPresent()) {
-            return ResponseEntity.status(500).build(); // Internal server error if -1 user is not found
+        boolean isOwner = obj.getUser().getUserId().equals(user.get().getUserId());
+        boolean isAdmin = "admin".equals(user.get().getRole());
+
+        if (isOwner || isAdmin) {
+            objectService.deleteById(obj.getObjectId());  // ← VÉGLEGES törlés
+            return ResponseEntity.noContent().build(); // 204 NO_CONTENT
         }
-
-        workObject.get().setUser(deletedUser.get());
-
-        // Save the updates
-        objectService.save(workObject.get());
-        return ResponseEntity.noContent().build();
-    } else {
-        return ResponseEntity.status(403).build();
     }
+
+    return ResponseEntity.status(403).build(); // vagy 404 is lehet, ha nincs ilyen object
 }
+
 
 }

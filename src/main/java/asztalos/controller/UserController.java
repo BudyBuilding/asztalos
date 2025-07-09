@@ -54,22 +54,26 @@ public class UserController {
 
             // if only one, so the user gave a userId we must check if the user is the same with the user in the token
             // so no one could check the others users
-            if (user.isPresent() && currentUser.get().getRole().equals("admin")) {
+            if (user.isPresent() && currentUser.get().getRole().equals("admin") || 
+                user.isPresent() && currentUser.get().getRole().equals("companyAdmin") ||
+                user.isPresent() && currentUser.get().getRole().equals("companyUser")) {
                 return ResponseEntity.ok(user.get());
             } else {
                 // if there is no user or the user cannot check that user 
-                return ResponseEntity.status(403).build();
+                return ResponseEntity.status(410).build();
             }
         } else {
             // if the user want to get all the user
             // we must check if the user is admin or not
-            if (currentUser.get().getRole().equals("admin")) {
+            if (currentUser.get().getRole().equals("admin") || 
+                currentUser.get().getRole().equals("companyAdmin") ||
+                currentUser.get().getRole().equals("companyUser")) {
                 //if is admin then we must give them all the users
                 List<User> users = userService.findAll();
                 return ResponseEntity.ok(users);
             } else {
                 // if is not admin then it must get an error
-                return ResponseEntity.status(403).build();
+                return ResponseEntity.status(410).build();
             }
         }
     }
