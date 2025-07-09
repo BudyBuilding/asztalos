@@ -17,7 +17,7 @@ import sorting from "../helpers/sort";
 import filtering from "../helpers/filter"; // Assuming this exists or needs to be implemented
 import clientApi from "../../data/api/clientApi";
 import workApi from "../../data/api/workApi";
-import { getClientById } from "../../data/getters";
+import { getClientById, getAllWorks } from "../../data/getters";
 import { selectWork } from "../../data/store/actions/workStoreFunctions";
 import ErrorModal from "../helpers/ErrorModal";
 
@@ -37,9 +37,8 @@ function ClientAnalyzer() {
   const [workSortConfig, setWorkSortConfig] = useState({ key: null, direction: 1 });
   const [workFilterOptions, setWorkFilterOptions] = useState([]);
   const [visibleStatus, setVisibleStatus] = useState(false);
-
-  const allWorks = useSelector((state) => state.works || []);
-  const clientWorks = allWorks.filter((work) => work.client.clientId == clientId);
+  const [allWorks, setAllWorks] = useState(useSelector((state) => state.works || [])); 
+  const [clientWorks, setClientsWorks] = useState(allWorks.filter((work) => work.client.clientId == clientId));        
 
   // Load client data
   useEffect(() => {
@@ -62,6 +61,11 @@ function ClientAnalyzer() {
     }
     load();
   }, [render, clientId, dispatch]);
+
+  useEffect(() => {
+    setClientsWorks(allWorks.filter((work) => work.client.clientId == clientId)); 
+    setRender(!render); 
+  }, [allWorks]);
 
   // Helper functions for filtering
   const getMin = (items, key) => {
@@ -167,7 +171,16 @@ function ClientAnalyzer() {
     try {
       await dispatch(workApi.createWorkApi(newWork));
       setShowNewWork(false);
-      rerender();
+      // 1) Újra lekérjük az összes work-ot
+      const freshWorks = await dispatch(getAllWorks());
+      // 2) Frissítjük a teljes listát
+      setAllWorks(freshWorks);
+      // 3) Kiszűrjük a kliens munkáit
+      const filtered = freshWorks.filter(w => String(w.client.clientId) === String(clientId));
+      setClientsWorks(filtered);
+      // 4) Frissítjük a látható workListet is
+      setWorkList(filtered);
+
     } catch (error) {
       setError("Failed to create new work");
       console.error("Error creating new work:", error);
@@ -201,7 +214,7 @@ function ClientAnalyzer() {
   const handleCloseErrorModal = () => setError("");
 
   const formatDate = (dateString) => {
-    return dateString ? new Date(dateString).toLocaleDateString("hu-HU") : "N/A";
+    return dateString ? new Date(dateString).toLocaleDateString("hu-HU") : "--";
   };
 
   const workSortOptions = [
@@ -269,10 +282,13 @@ function ClientAnalyzer() {
                       <p className="fs-5 text-start">All works: <span>{clientWorks.length}</span></p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Active works: <span>{clientWorks.filter((w) => w.status === "In Progress").length}</span></p>
+                      <p className="fs-5 text-start">Active works: <span>{clientWorks.filter((w) => w.status === "Active").length}</span></p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Still to pay: <span>{clientWorks.reduce((acc, w) => acc + (w.price - w.paid), 0)} RON</span></p>
+                      <p className="fs-5 text-start">Completed works: <span>{clientWorks.filter((w) => w.status === "Completed").length}</span></p>
+                    </div>
+                    <div className="col-md-6">
+                      <p className="fs-5 text-start">Still to pay: <span>{selectedClient?.clientSold} RON</span></p>
                     </div>
                   </div>
                 </div>
@@ -460,9 +476,9 @@ function ClientAnalyzer() {
                             style={{ cursor: "pointer", borderBottom: "thin solid #E9E7F1" }}
                           >
                             <td style={{ padding: "10px", textAlign: "left" }}>{work.name || "N/A"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.paid || "0"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.price || "0"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.label || "N/A"}</td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>{work.clientpaid || "0"}</td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>{work.clientPrice || "0"}</td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>{work.label || "0"}</td>
                             <td style={{ padding: "10px", textAlign: "left" }}>{work.status || "N/A"}</td>
                             <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.orderDate)}</td>
                             <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.finishDate)}</td>

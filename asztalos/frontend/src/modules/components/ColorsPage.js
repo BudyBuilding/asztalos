@@ -1,100 +1,130 @@
 // ColorsPage.js
 import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Button from "react-bootstrap/Button";
-import store from "../../data/store/store";
 import Loading from "../helpers/Loading";
-import { Nav, Table, Modal, Image } from "react-bootstrap";
+import { Table, Modal, Image } from "react-bootstrap";
 import {
-  getAllClients,
-  getAllUsers,
-  getAllWorks,
   getAllColors,
   getImageById,
 } from "../../data/getters";
-import "bootstrap-icons/font/bootstrap-icons.css";
 import AddColorModal from "../modals/AddColorModal";
 
 function ColorsPage() {
   const dispatch = useDispatch();
+  const role = useSelector((state) => state.auth.user?.role);
+
   const [loading, setLoading] = useState(true);
   const [colors, setColors] = useState([]);
   const [render, setRender] = useState(true);
+
+  // Szerkesztéshez
   const [showColorModal, setShowColorModal] = useState(false);
+  const [editingColor, setEditingColor] = useState(null);
+
   const [fullscreenImage, setFullscreenImage] = useState("");
 
   useEffect(() => {
-    function loadColors() {
+    const loadColors = async () => {
+      setLoading(true);
+      const cols = await getAllColors();
+      setColors(cols);
       setLoading(false);
-      return getAllColors();
-    }
-    setColors(loadColors());
+    };
+    loadColors();
   }, [render]);
-  const handleImageClick = (imageUrl) => {
-    setFullscreenImage(imageUrl);
+
+  const canModify = ["admin", "companyUser", "companyAdmin"].includes(role);
+
+  const handleRowClick = (color) => {
+    if (!canModify) return;
+    setEditingColor(color);
+    setShowColorModal(true);
   };
+
   return (
-    <div>
-      <h1>Colors Page</h1>
-      <div>
-        <p>Manage your colors here.</p>
-        <Button variant="primary" onClick={() => setShowColorModal(true)}>
-          Add Color
-        </Button>
-        <AddColorModal
-          show={showColorModal}
-          onHide={() => setShowColorModal(false)}
-        />
-        <div style={{ overflowY: "auto", height: "100%", marginTop: "1rem" }}>
-          {loading ? (
-            <Loading />
-          ) : (
-            <div className="table-responsive">
-              <Table bordered hover responsive className="table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Dimension</th>
-                    <th>Material type</th>
-                    <th>Active</th>
-                    <th>Rotable</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {colors.map((color) => {
-                    const imageId = color.imageId;
-                    const imageUrl = dispatch(getImageById(imageId));
-                    console.log(imageId, "data:image/jpeg;base64," + imageUrl);
-                    return (
-                      <tr key={color.colorId}>
-                        <td>{color.colorId}</td>
-                        <td>
-                          <Image
-                            src={"data:image/jpeg;base64," + imageUrl}
-                            alt={color.name}
-                            style={{
-                              maxWidth: "100px",
-                              maxHeight: "100px",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => handleImageClick(imageUrl)}
-                          />
-                        </td>
-                        <td>{color.name}</td>
-                        <td>{color.dimension}</td>
-                        <td>{color.materialType}</td>
-                        <td>{color.active ? "Active" : "Inactive"}</td>
-                        <td>{color.rotable ? "Rotable" : "Non rotable"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            </div>
+    <div className="pb-5 overflow-hidden">
+      <div className="container d-xl-block">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h1 className="mb-0">Colors Page</h1>
+          {canModify && (
+            <Button variant="primary" onClick={() => {
+              setEditingColor(null);
+              setShowColorModal(true);
+            }}>
+              Add Color
+            </Button>
           )}
         </div>
+
+        <AddColorModal
+          show={showColorModal}
+          colorToEdit={editingColor}
+          onHide={() => {
+            setShowColorModal(false);
+            setEditingColor(null);
+            setRender((r) => !r);
+          }}
+        />
+
+        {loading ? (
+          <Loading />
+        ) : (
+          <div className="table-responsive" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+            <Table bordered hover responsive className="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Image</th>
+                  <th>Name</th>
+                  <th>Dimension</th>
+                  <th>Material type</th>
+                  <th>Active</th>
+                  <th>Rotable</th>
+                </tr>
+              </thead>
+              <tbody>
+                {colors.map((color) => {
+                  const imageUrl = dispatch(getImageById(color.imageId));
+                  return (
+                    <tr
+                      key={color.colorId}
+                      onClick={() => handleRowClick(color)}
+                      style={{
+                        cursor: canModify ? "pointer" : "default",
+                        backgroundColor: canModify ? "#f9f9f9" : "transparent"
+                      }}
+                    >
+                      <td>{color.colorId}</td>
+                      <td>
+                        <Image
+                          src={"data:image/jpeg;base64," + imageUrl}
+                          alt={color.name}
+                          style={{
+                            width: 100,        // fixed width
+                            height: 100,       // fixed height
+                            objectFit: "cover",// crop to fill
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFullscreenImage(imageUrl);
+                          }}
+                        />
+                      </td>
+                      <td>{color.name}</td>
+                      <td>{color.dimension}</td>
+                      <td>{color.materialType}</td>
+                      <td>{color.active ? "Active" : "Inactive"}</td>
+                      <td>{color.rotable ? "Rotable" : "Non rotable"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+        )}
+
         {/* Fullscreen Image Modal */}
         <Modal show={!!fullscreenImage} onHide={() => setFullscreenImage("")}>
           <Modal.Body>

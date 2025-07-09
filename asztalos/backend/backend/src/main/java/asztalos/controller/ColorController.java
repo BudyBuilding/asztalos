@@ -42,7 +42,10 @@ public class ColorController {
     private String uploadPath;
 
     private boolean isAdminOrManager(User user) {
-        return user.getRole().equals("admin") || user.getRole().equals("manager");
+        return user.getRole().equals("admin") 
+            || user.getRole().equals("manager")
+            || user.getRole().equals("companyAdmin")
+            || user.getRole().equals("companyUser");
     }
 
     @PostMapping

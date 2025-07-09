@@ -30,6 +30,16 @@ export const addScriptItem = (sciptItem) => ({
   payload: sciptItem,
 });
 
+export const updateScriptItem = (modifiedScriptItem) => ({
+  type: "UPDATE_SCRIPT_ITEM",
+  payload: modifiedScriptItem,
+});
+
+export const deleteScriptItem = (itemId) => ({
+  type: "DELETE_SCRIPT_ITEM",
+  payload: itemId,
+});
+
 export const addMoreScriptItems = (sciptItems) => ({
   type: "ADD_MORE_SCRIPT_ITEMS",
   payload: sciptItems,
@@ -58,19 +68,23 @@ export const scriptReducer = (state = initialState.scripts, action) => {
         return [...state, action.payload];
       }
       return state;
-    case "ADD_MORE_SCRIPTS":
-      return [
-        ...state,
-        ...action.payload.filter(
-          (script) => !state.some((s) => s.scriptId === script.scriptId)
-        ),
-      ];
-    case "UPDATE_SCRIPT":
-      return state.map((script) =>
-        script.scriptId === action.payload.scriptId
-          ? { ...script, ...action.payload }
-          : script
-      );
+      case "ADD_MORE_SCRIPTS":
+        return [
+          ...state,
+          ...action.payload.filter(
+            (script) => !state.some(
+              (s) => s.script_Id === script.scriptId || s.scriptId === script.scriptId
+            )
+          ),
+        ];
+        case "UPDATE_SCRIPT":    
+          const updatedState = state.map((script) =>
+            script.scriptId == action.payload.script_id
+              ? { ...script, ...action.payload }
+              : script
+          );
+                
+          return updatedState;
     case "DELETE_SCRIPT":
       return state.filter((script) => script.scriptId !== action.payload);
     default:
@@ -87,24 +101,37 @@ export const selectedScriptReducer = (state = "0", action) => {
   }
 };
 
-export const selectedScriptItemsReducer = (state = [], action) => {
+export const scriptItemsReducer = (state = [], action) => {
   switch (action.type) {
     case "ADD_SCRIPT_ITEM":
-      return [
-        ...state,
-        ...action.payload.filter(
-          (scriptItem) => !state.some((s) => s.itemId === scriptItem.itemId)
-        ),
-      ];
+      // egyszerűen hozzáfűz egy új elemet a tömbhöz
+      return [...state, action.payload];
+
     case "ADD_MORE_SCRIPT_ITEMS":
+      // csak azokat az elemeket adjuk hozzá, amik még nincsenek benne
       return [
         ...state,
         ...action.payload.filter(
-          (scriptItem) => !state.some((s) => s.itemId === scriptItem.itemId)
+          (item) => !state.some((s) => s.itemId === item.itemId)
         ),
       ];
+
+    case "UPDATE_SCRIPT_ITEM":
+      // a meglévő elemeket cseréli ki, ahol az ID egyezik
+      return state.map((item) =>
+        item.itemId == action.payload.itemId
+          ? { ...item, ...action.payload }
+          : item
+      );
+
+      case "DELETE_SCRIPT_ITEM":  
+      // eltávolítja az adott ID-jű elemet    
+      return state.filter((item) => item.itemId !== action.payload);        
+
     case "CLEAR_SELECTED_SCRIPT_ITEMS":
+      // teljesen üríti a listát
       return [];
+
     default:
       return state;
   }

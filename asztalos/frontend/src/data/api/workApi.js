@@ -39,7 +39,7 @@ const deleteWorkApi = (workId) => {
 };
 ////////////////////
 // Updating section
-const updateWorkApi = (workId, updatedWorkData) => {
+export const updateWorkApi = (workId, updatedWorkData) => {
   return async (dispatch) => {
     try {
       await axiosInstance.put(`/works/${workId}`, updatedWorkData);

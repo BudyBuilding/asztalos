@@ -88,7 +88,10 @@ public class TablesController {
         }
 
         List<Tables> tables;
-        if (currentUser.getRole().equals("admin") || currentUser.getUserId().equals(work.getUser().getUserId())
+        if (currentUser.getRole().equals("admin") ||
+            currentUser.getRole().equals("companyAdmin") ||
+            currentUser.getRole().equals("companyUser") ||
+            currentUser.getUserId().equals(work.getUser().getUserId())
                 ) {
             tables = tableService.findByWork(work);
         } else {

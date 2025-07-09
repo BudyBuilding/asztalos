@@ -15,17 +15,17 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("userToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+axiosInstance.interceptors.request.use((config) => {
+  // Ha a kérés a bejelentkezésre vagy regisztrációra megy, NE adjuk hozzá az Authorization fejléceket
+  if (config.url?.endsWith("/account/login") || config.url?.endsWith("/account/register")) {
     return config;
-  },
-  (error) => {
-    return Promise.reject(error);
   }
-);
+  const token = localStorage.getItem("userToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 
 export default axiosInstance;

@@ -20,11 +20,12 @@ function TopNavigationBar() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-
+const [username, setUsername] = useState("");
   useEffect(() => {
     const fetchUser = async () => {
       const userData = await dispatch(getUser());
       setIsAdmin(userData.role === "admin");
+      setUsername(userData.username || "");
     };
     fetchUser();
   }, [dispatch]);
@@ -88,6 +89,9 @@ function TopNavigationBar() {
     <>
       <Navbar expand="lg" sticky="top" style={{ backgroundColor: "#E9E7F1" }} >
         <Container fluid>
+           <Navbar.Text className="me-3">
+            Üdv, <span style={{fontWeight: "bold"}}>{username}</span>
+          </Navbar.Text>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Container
@@ -152,7 +156,7 @@ function TopNavigationBar() {
             <div
             >
             <div className="d-flex">
-              <Button variant="outline-primary"
+           {/*   <Button variant="outline-primary"
                 style={{
                   padding: "0",
                   height: "2.5rem",
@@ -183,7 +187,7 @@ function TopNavigationBar() {
                   border: "none",
                 }}>
                 <i className="bi bi-moon"></i>
-              </Button>
+              </Button>*/}
 
               <Button variant="outline-danger"
                 style={{
@@ -192,7 +196,9 @@ function TopNavigationBar() {
                   width: "2.5rem",
                   fontSize: "1.5rem",
                   border: "none",
-                }}>
+                }}
+                onClick={() => setShowModal(true)} 
+                >
                 <i className="bi bi-box-arrow-right"></i>
               </Button>
             </div>

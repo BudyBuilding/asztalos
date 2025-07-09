@@ -1,439 +1,560 @@
 // EditWork.js
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Container, Nav } from "react-bootstrap";
+import GeneratedItemsList from "../helpers/GeneratedItemsList.js";
+import createdItemApi from "../../data/api/createdItemApi";
+import {
+  Button,
+  Nav,
+  NavDropdown,
+  Modal,
+  Card,
+  Row,
+  Col,
+  Image as RBImage,
+} from "react-bootstrap";
+import { IonIcon } from "@ionic/react";
+import { add, chevronBack, chevronForward } from "ionicons/icons";
 import ScriptCaller from "../../calculation/scriptCaller";
-import Item from "../helpers/item.js";
 import ModelViewer from "../../model/ModelViewer.js";
+import ObjectViewer from "../../model/ObjectViewer.js";
+import { useParams } from "react-router-dom";
 import {
   getAllObjects,
-  getObjectById,
   getCreatedItemsByObject,
+  getClientById,
+  getAllColors,
+  getImageById,
   getSettingById,
-  getClientById
 } from "../../data/getters";
 import {
   selectObject,
-  updateObject
+  updateObject,
 } from "../../data/store/actions/objectStoreFunctions";
 import { updateWork } from "../../data/store/actions/workStoreFunctions";
 import objectApi from "../../data/api/objectApi";
-import { Modal } from "react-bootstrap";
-import ObjectViewer from "../../model/ObjectViewer.js";
-import { useParams } from "react-router-dom";
 
 function EditWork() {
+    useEffect(() => {
+        const orig = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        const handleWheel = e => {
+          // ha a cél egy scrollable input / dropdown / canvas, akkor engedjük
+          const tag = e.target.tagName.toLowerCase();
+          const isInteractive = ["input", "textarea", "select", "canvas"].includes(tag);
+          if (!isInteractive) {
+            e.preventDefault(); // tiltjuk a scrollt
+          }
+        };
+
+        window.addEventListener("wheel", handleWheel, { passive: false });
+
+        return () => {
+          document.body.style.overflow = orig;
+          window.removeEventListener("wheel", handleWheel);
+        };
+      }, []);
+
   const dispatch = useDispatch();
   const works = useSelector(state => state.works);
   const { workId } = useParams();
+
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
   const [showModel, setShowModel] = useState(true);
+
   const [objects, setObjects] = useState([]);
-  const [itemDetails, setItemDetails] = useState([]);
-  const [settingDetails, setSettingDetails] = useState([]);
+  const [createdItems, setCreatedItems] = useState([]);
+  const [palette, setPalette] = useState([]);
+  const [collapsedColors, setCollapsedColors] = useState({});
   const [currentObject, setCurrentObject] = useState([]);
+  const [settingDetails, setSettingDetails] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [objectToDelete, setObjectToDelete] = useState(null);
   const [localWork, setLocalWork] = useState(null);
+  const [showPaletteModal, setShowPaletteModal] = useState(false);
+  const isOrdered = localWork?.isOrdered; // 
+  const colors = dispatch(useSelector(getAllColors)) || [];
 
-  let newObjKey = 999;
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+  const [panelWidth, setPanelWidth] = useState(30);
+  const [collapsed, setCollapsed] = useState(false);
 
-  // Görgetés letiltása a body-n
+  // load work and objects
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  // Lokális work létrehozása az oldal betöltésekor
-  useEffect(() => {
-    const createLocalWorkFromExisting = async () => {
-      const originalWork = works.find(work => work.workId === parseInt(workId, 10));
-      if (!originalWork) {
-        console.error("Work not found with ID:", workId);
-        setLoading(false);
-        return;
-      }
-
-      const clientData = await dispatch(getClientById(originalWork.ClientId));
+    const initWork = async () => {
+      const orig = works.find(w => w.workId === +workId);
+      if (!orig) { setLoading(false); return; }
+      await dispatch(getClientById(orig.ClientId));
       const today = new Date();
-      const year = today.getFullYear();
-      let month = today.getMonth() + 1;
-      month = month < 10 ? `0${month}` : month;
-      let day = today.getDate();
-      day = day < 10 ? `0${day}` : day;
-      const currentDate = `${year}-${month}-${day}`;
-
-      const newWork = {
-        ...originalWork,
-        Date: currentDate,
+      setLocalWork({
+        ...orig,
+        Date: today.toISOString().slice(0,10),
         Status: "Pending",
-        objects: originalWork.objects ? [...originalWork.objects] : [],
-      };
-
-      console.log("Created local work:", newWork);
-      setLocalWork(newWork);
+        objects: orig.objects || []
+      });
       setLoading(false);
     };
+    initWork();
+  }, [works, workId, dispatch]);
 
-    if (works.length > 0) {
-      createLocalWorkFromExisting();
-    }
-  }, [dispatch, workId, works]);
-
-  // Objectek betöltése
   useEffect(() => {
-    const fetchObjects = async () => {
-      const allObjects = await dispatch(getAllObjects());
-      setObjects(allObjects);
+    if (loading) return;
+    const loadObjects = async () => {
+      const all = await dispatch(getAllObjects());
+      setObjects(all.filter(o => o.work?.workId === +workId));
+    };
+    loadObjects();
+  }, [loading, workId, dispatch]);
+
+  // build createdItems from selectedTab
+  useEffect(() => {
+    const wid = +workId;
+    if (selectedTab === "newObject") {
+      setCreatedItems([]);
+      return;
+    }
+    let all = [];
+    if (selectedTab === "0") {
+      objects.forEach(o => {
+        all = all.concat(
+          dispatch(getCreatedItemsByObject(o.objectId))
+            .filter(it => it.work?.workId === wid)
+        );
+      });
+    } else {
+      const oid = +selectedTab;
+      all = dispatch(getCreatedItemsByObject(oid))
+        .filter(it => it.work?.workId === wid);
+    }
+    setCreatedItems(
+      all.map(it => ({ ...it, colorId: it.color?.colorId ?? null }))
+    );
+  }, [objects, selectedTab, workId, dispatch]);
+
+  // update palette on createdItems change
+  useEffect(() => {
+    const itemColorIds = Array.from(new Set(
+      createdItems.map(it => it.colorId).filter(cid => cid != null)
+    ));
+    setPalette(prev => {
+      const allIds = Array.from(new Set([...prev.map(c=>c.colorId), ...itemColorIds]));
+      return allIds
+        .map(id => colors.find(c => c.colorId === id))
+        .filter(Boolean);
+    });
+  }, [createdItems, colors]);
+
+  // handle external item changes
+  const handleCreatedItemChange = (index, fields) => {
+    setCreatedItems(prev => {
+      const arr = [...prev];
+      arr[index] = { ...arr[index], ...fields };
+      const updated = { ...arr[index], ...fields };
+         if (typeof updated.itemId === "number" && updated.itemId > 0) {
+             // a backend color-update-hez color objektumot vár
+             const payload = {
+               ...updated,
+               ...(fields.colorId !== undefined && {
+                 color: fields.colorId === null
+                   ? null
+                   : { colorId: fields.colorId }
+               })
+             };
+             // ne küldjük fölöslegesen a colorId mezőt is
+             delete payload.colorId;
+        
+             dispatch(
+               createdItemApi.updateCreatedItemApi(updated.itemId, payload)
+             ).catch(err => console.error("Error updating createdItem:", err));
+           }
+      return arr;
+    });
+  };
+    // ── Új item hozzáadása ───────────────────────────────────
+    const handleAddItem = () => {
+      if (isOrdered) return; 
+      // csak ha tényleg egy objektum van kijelölve (selectedTab !== "0" és !== "newObject")
+      if (selectedTab !== "0" && selectedTab !== "newObject") {
+        const defaultItem = {
+          size: "[1,1,18]",
+          qty: 1,
+          position: "[0,0,0]",
+          rotation: "[0,0,0]",
+          colorId: null,
+          name: "",
+          details: "",
+          material: "",      // anyag
+          rotable: true,
+          object: { objectId: +selectedTab },
+          work:    { workId: +workId },    // ← ide kell a munka
+          itemId: Date.now() * -1
+        };
+        setCreatedItems(old => [...old, defaultItem]);
+      }
     };
 
-    if (!loading) {
-      fetchObjects();
+  
+
+  // callback from ModelViewer
+  const handleModelViewerUpdate = (updatedItem, groupIdx) => {
+    const idx = createdItems.findIndex(it => it.itemId === updatedItem.itemId);
+    if (idx !== -1) {
+      handleCreatedItemChange(idx, {
+        colorId: updatedItem.colorId,
+        position: updatedItem.position,
+        rotation: updatedItem.rotation,
+      });
     }
-  }, [loading, dispatch]);
+  };
 
-  // Parse settings string into an object
-  function parseSetting(setting) {
-    if (!setting) {
-      return {};
+  const handleObjectViewerUpdate = (updatedItem, groupIdx) => {
+    const idx = createdItems.findIndex(it => it.itemId === updatedItem.itemId);
+    if (idx !== -1) {
+      handleCreatedItemChange(idx, {
+        colorId: updatedItem.colorId,
+        position: updatedItem.position,
+        rotation: updatedItem.rotation,
+      });
     }
+  };
 
-    const parsedSettings = {};
-    const pairs = setting.split(",");
+  const handleSelectTab = key => {
+    setSelectedTab(key);
+    dispatch(selectObject(key));
+  };
 
-    pairs.forEach((pair) => {
-      const [key, value] = pair.split(":");
-      if (key && value) {
-        parsedSettings[key.trim()] = parseInt(value.trim(), 10);
-      }
-    });
-
-    return parsedSettings;
-  }
-
-  // Handle tab change
-  useEffect(() => {
-    setShowModel(false);
-
-    if (selectedTab === "0") {
-      setCurrentObject(objects);
-    } else {
-      const choosenObject = objects.find(
-        (object) => object.objectId === selectedTab
-      );
-      setCurrentObject([choosenObject]);
-    }
-    if (selectedTab !== "newObject") {
-      setTimeout(() => {
-        setShowModel(true);
-      }, 0);
-    }
-  }, [selectedTab, objects]);
-
-  // Handle item detailing visibility
-  function itemDetailing(objectId) {
-    let newDetails = [...itemDetails];
-    if (newDetails.includes(objectId)) {
-      newDetails = newDetails.filter((id) => id !== objectId);
-    } else {
-      if (selectedTab !== "newObject") {
-        newDetails.push(objectId);
-      } else {
-        newDetails = [];
-      }
-    }
-    setItemDetails(newDetails);
-  }
-
-  // Handle setting detailing visibility
-  function settingDetailing(objectId) {
-    let newDetails = [...settingDetails];
-    if (newDetails.includes(objectId)) {
-      newDetails = newDetails.filter((id) => id !== objectId);
-    } else {
-      if (selectedTab !== "newObject") {
-        newDetails.push(objectId);
-      } else {
-        newDetails = [];
-      }
-    }
-    setSettingDetails(newDetails);
-  }
-
-  // Handle tab selection
-  function handleSelectedTab(key) {
-    if (key !== selectedTab) {
-      setSelectedTab(key);
-      dispatch(selectObject(key));
-    }
-  }
-
-  // Save modifications to an object and update the local work
-  const saveModify = useCallback((object) => {
-    const updatedObjects = objects.map((obj) => (obj.objectId === object.objectId ? object : obj));
-    setObjects(updatedObjects);
-    dispatch(updateObject(object));
-
-    if (localWork) {
-      const updatedWork = {
-        ...localWork,
-        objects: updatedObjects.filter(obj => obj.workId === localWork.workId),
+const handleSaveWork = async () => {
+  if (!localWork) return;
+  setLoading(true);
+  try {
+    // 1) Mentjük az újonnan hozzáadott tételeket (amiknek nincs még érvényes itemId-jük)
+    const unsaved = createdItems.filter(it => it.itemId < 0);
+    await Promise.all(unsaved.map(it => {
+      const payload = {
+        ...it,
+        object: { objectId: it.object.objectId },
+        work:   { workId: +workId },  
+        color: it.colorId != null ? { colorId: it.colorId } : null,
+        material: it.material ?? "",      
+        // töröld ki a colorId mezőt, ha szükséges
       };
-      console.log("Updating local work with objects:", updatedWork);
-      setLocalWork(updatedWork);
-    }
-  }, [objects, localWork, dispatch]);
+      return dispatch(createdItemApi.createCreatedItemApi(payload));
+    }));
 
-  // Handle modified item
-  function handleModifiedItem(modifiedItem, objectId) {
-    const object = objects.find((obj) => obj.objectId === objectId);
-    if (object) {
-      let modifiedItems = dispatch(getCreatedItemsByObject(objectId)).map((item) =>
-        item.itemId === modifiedItem.itemId ? modifiedItem : item
-      );
-      const updatedObject = {
-        ...object,
-        items: modifiedItems
-      };
-      saveModify(updatedObject);
-    }
+    // 2) Frissítjük a Work-öt
+    await dispatch(updateWork(localWork));
+
+    // 3) Újra lekérjük a backendről a tényleges createdItems-eket
+    const refreshed = await Promise.all(
+      objects.map(o => dispatch(getCreatedItemsByObject(o.objectId)))
+    );
+    setCreatedItems([].concat(...refreshed));
+
+    // 4) Visszalépünk
+    window.history.back();
+  } catch (err) {
+    console.error("Error saving work and items:", err);
+  } finally {
+    setLoading(false);
   }
+};
 
-  // Handle item change
-  const handleItemChange = (modifiedItem, objectId) => {
-    handleModifiedItem(modifiedItem, objectId);
-  };
+  const parseSetting = str =>
+    (str || "")
+      .split(",")
+      .reduce((acc, p) => {
+        const [k, v] = p.split(":");
+        if (k && v) acc[k.trim()] = +v;
+        return acc;
+      }, {});
 
-  // Initialize state after creating a new object
-  const init = () => {
-    setShowForm(false);
-    setShowModel(true);
-    setObjects(dispatch(getAllObjects()));
-    setSelectedTab("0");
-  };
-
-  // Handle saving the work to the store and closing the page
-  const handleSaveWork = () => {
-    if (localWork) {
-      console.log("Saving work to store:", localWork);
-      dispatch(updateWork(localWork));
-      window.history.back();
-    }
-  };
-
-  // Handle delete object
-  const handleDeleteObject = (objectId) => {
-    setObjectToDelete(objectId);
+  const handleDeleteObject = id => {
+    if (isOrdered) return; 
+    setObjectToDelete(id);
     setShowDeleteModal(true);
   };
-
-  // Confirm delete object
   const confirmDeleteObject = async () => {
-    if (objectToDelete !== null) {
+    if (objectToDelete != null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
-      const newObjectList = await dispatch(getAllObjects());
-      setObjects(newObjectList);
-      handleSelectedTab("0");
+      const all = await dispatch(getAllObjects());
+      setObjects(all.filter(o => o.work?.workId === +workId));
+      setSelectedTab("0");
       setShowDeleteModal(false);
       setObjectToDelete(null);
-      setCurrentObject(newObjectList);
-
-      if (localWork) {
-        const updatedWork = {
-          ...localWork,
-          objects: newObjectList.filter(obj => obj.workId === localWork.workId),
-        };
-        setLocalWork(updatedWork);
-      }
+      setLocalWork(w => ({
+        ...w,
+        objects: all.filter(o => o.work?.workId === w.workId)
+      }));
     }
+  };
+  // 1) Hozzáadjuk a törléskezelőt:
+const handleDeleteItem = (index) => {
+  const item = createdItems[index];
+  if (item.itemId && item.itemId > 0) {
+    // törlés API-n keresztül
+    dispatch(createdItemApi.deleteCreatedItemApi(item.itemId))
+      .then(() => {
+        setCreatedItems(prev => prev.filter((_, i) => i !== index));
+      })
+      .catch(err => console.error("Error deleting createdItem:", err));
+  } else {
+    // csak lokális, még nem mentett tétel
+    setCreatedItems(prev => prev.filter((_, i) => i !== index));
+  }
+};
+
+
+  // UI helpers for palette modal
+  const openPalette = () => setShowPaletteModal(true);
+  const closePalette = () => setShowPaletteModal(false);
+  const selectColor = c => {
+    setPalette(p => p.length < 5 && !p.some(x => x.colorId === c.colorId) ? [...p, c] : p);
+    closePalette();
+  };
+  const removeColor = cid => setPalette(p => p.filter(x => x.colorId !== cid));
+
+  // layout panel resizing
+  const onMouseDown = e => {
+    startXRef.current = e.clientX;
+    startWidthRef.current = panelWidth;
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+  const onMouseMove = e => {
+    const dx = e.clientX - startXRef.current;
+    const newW = Math.min(40, Math.max(15, startWidthRef.current - dx / window.innerWidth * 100));
+    setPanelWidth(newW);
+  };
+  const onMouseUp = () => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
   };
 
   return (
-    <div className="mt-0" style={{ height: "100%", overflow: "hidden" }}>
+      
+    <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+      {/* Palette Modal */}
+      <Modal show={showPaletteModal} onHide={closePalette} size="lg">
+        <Modal.Header closeButton><Modal.Title>Válassz egy színt</Modal.Title></Modal.Header>
+        <Modal.Body>
+          <Row xs={2} md={3} lg={4} className="g-3">
+            {colors.map(c => (
+              <Col key={c.colorId}>
+                <Card onClick={() => selectColor(c)} style={{ cursor: "pointer" }}>
+                  <RBImage
+                    src={`data:image/jpeg;base64,${dispatch(getImageById(c.imageId))}`}
+                    height={100}
+                    style={{ objectFit: "cover" }}
+                  />
+                  <Card.Body className="p-2 text-center">
+                    <Card.Text className="mb-0">{c.name}</Card.Text>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Modal.Body>
+      </Modal>
+
+      {/* Delete Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Confirm Deletion</Modal.Title></Modal.Header>
         <Modal.Body>Are you sure you want to delete this object?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDeleteObject}>
-            Delete
-          </Button>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+          <Button variant="danger" onClick={confirmDeleteObject}>Delete</Button>
         </Modal.Footer>
       </Modal>
 
-      <Nav
-        key="nav"
-        variant="tabs"
-        defaultActiveKey="0"
-        onSelect={(selectedKey) => {
-          handleSelectedTab(selectedKey);
-        }}
-      >
-        <Nav.Item key={"-1"}>
-          <Nav.Link
-            eventKey="newObject"
-            onClick={() => {
-              setShowModel(false);
-              setCurrentObject([]);
-              setShowForm(true);
-            }}
-          >
+      {/* Navigation Tabs */}
+      <Nav variant="tabs" activeKey={selectedTab} onSelect={handleSelectTab} className="mb-2">
+        {!isOrdered && (     
+        <Nav.Item>
+          <Nav.Link eventKey="newObject" onClick={() => { setShowForm(true); setShowModel(false); }}>
             New Object
           </Nav.Link>
         </Nav.Item>
-        <Nav.Item key={"0"}>
-          <Nav.Link
-            eventKey="0"
-            onClick={() => {
-              if (showForm) {
-                setShowForm(false);
-              }
-            }}
-          >
+        )}  
+        <Nav.Item>
+          <Nav.Link eventKey="0" onClick={() => setShowForm(false)}>
             Full model
           </Nav.Link>
         </Nav.Item>
-        {objects &&
-          objects.map((obj) => {
-            return (
-              <Nav.Item key={obj.objectId}>
-                <Nav.Link
-                  eventKey={obj.objectId}
-                  onClick={() => {
-                    if (showForm) {
-                      setShowForm(false);
-                    }
-                  }}
-                  style={{ cursor: "pointer" }}
-                >
-                  {obj.objectId}
-                  <Button
-                    variant="light"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteObject(obj.objectId);
-                    }}
-                  >
-                    x
-                  </Button>
-                </Nav.Link>
-              </Nav.Item>
-            );
-          })}
-        <Button onClick={handleSaveWork}>Save Work</Button>
-      </Nav>
-      <Container
-        fluid
-        className="d-flex justify-content-between p-0 m-0 w-100"
-        style={{
-          height: "85vh",
-          overflowY: "auto"
-        }}
-      >
-        <Container
-          fluid
-          className="w-25 border m-0 p-0"
-          style={{ overflowY: "auto" }}
-          key="leftNewWorkBox"
-        >
-          <h3 className="fw-bold">Settings</h3>
-          {currentObject &&
-            currentObject.map((object) => {
-              if (object) {
-                return (
-                  <div key={object.objectId}>
-                    <h3
-                      onClick={() => settingDetailing(object.objectId)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {object.name}
-                    </h3>
-                    {settingDetails.includes(object.objectId) && (
-                      <div>
-                        {Object.entries(parseSetting(object.setting)).map(
-                          ([key, value]) => (
-                            <div key={key}>
-                              <p>
-                                {dispatch(getSettingById(key))
-                                  ? dispatch(getSettingById(key)).name
-                                  : ""}
-                                :{value}
-                              </p>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-            })}
-        </Container>
-        <Container
-          className="w-60 border m-0 p-0"
-          style={{ overflowY: "auto" }}
-          key="middleNewWorkBox"
-        >
-          {showModel &&
-            (selectedTab === "0" ? (
-              <ModelViewer workId={workId} /> // Eredeti workId-t adjuk át
-            ) : (
-              <ObjectViewer objectId={selectedTab} />
-            ))}
-
-          {!showModel && showForm && (
-            <ScriptCaller newObjectKey={newObjKey} onSave={init} />
+        <NavDropdown style={{width: "100px"}} title={selectedTab === "0" ? "Objects" : (objects.find(o => o.objectId.toString() === selectedTab)?.name || "Object")} id="objects-dropdown">
+          {!isOrdered && (     
+          <NavDropdown.Item eventKey="newObject" onClick={() => { setShowForm(true); setShowModel(false); }} >New Object</NavDropdown.Item> )}
+          <NavDropdown.Divider />
+          {objects.map(o => (
+            <NavDropdown.Item key={o.objectId} eventKey={o.objectId.toString()}>
+              {o.objectId} | {o.name}
+            {!isOrdered && (     
+                <Button variant="light" size="sm" onClick={e => { e.stopPropagation(); handleDeleteObject(o.objectId); }} style={{ marginLeft: 8, padding: "2px 6px" }}>
+                x
+              </Button>)}
+            </NavDropdown.Item>
+          ))}
+        </NavDropdown>
+        <div className="d-flex align-items-center ms-auto">
+          {palette.map(c => (
+            <div key={c.colorId} className="position-relative me-1" style={{ width: 40, height: 40 }}>
+              <RBImage
+                src={`data:image/jpeg;base64,${dispatch(getImageById(c.imageId))}`}
+                thumbnail
+                style={{ width: "100%", height: "100%" }}
+              />
+              <span
+                onClick={() => removeColor(c.colorId)}
+                style={{
+                  position: "absolute", top: 0, right: 0,
+                  color: "red", cursor: "pointer", background: "white",
+                  borderRadius: "50%", width: "1rem", height: "1rem",
+                  textAlign: "center", lineHeight: "1rem"
+                }}
+              >–</span>
+            </div>
+          ))}
+          {palette.length < 5 && (
+            <div onClick={openPalette} className="border bg-light d-flex align-items-center justify-content-center" style={{ width: 40, height: 40, cursor: "pointer" }}>
+              <IonIcon icon={add} />
+            </div>
           )}
-        </Container>
-        <Container
-          fluid
-          className="w-25 border m-0 p-0"
-          style={{ overflowY: "auto" }}
-          key="rightNewWorkBox"
-        >
-          <h3 className="fw-bold">Required Pieces</h3>
-          {currentObject &&
-            currentObject.map((object) => {
-              if (object) {
-                return (
-                  <div key={object.objectId}>
-                    <h3
-                      onClick={() => itemDetailing(object.objectId)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {object.name}
-                    </h3>
-                    {itemDetails.includes(object.objectId) && (
-                      <div>
-                        {dispatch(getCreatedItemsByObject(object.objectId)).map(
-                          (item) => (
-                            <div key={item.itemId}>
-                              <Item
-                                objectID={object.objectId}
-                                key={item.itemId}
-                                Item={item}
-                                onItemChange={handleItemChange}
-                              />
-                            </div>
-                          )
-                        )}
-                      </div>
-                    )}
+        </div>
+        <Button onClick={handleSaveWork} className="ms-2">Save Work</Button>
+      </Nav>
+
+      {/* Main Content */}
+        
+      <div className="d-flex" style={{ height: "85vh", overflow: "hidden" }}>
+        {/* Left Panel */}
+        <div style={{ flex: 1, overflowY: "hidden" }}>
+          { (selectedTab === "0" || selectedTab === "newObject") && showModel && (
+            <ModelViewer
+              objects={objects}
+              createdItems={createdItems}
+              usedColors={palette}
+              onItemUpdate={handleModelViewerUpdate}
+            />
+          )}
+          { selectedTab === "newObject" && showForm && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+            <ScriptCaller
+              newObjectKey="new"
+              onSave={async () => {
+                setShowForm(false);
+                setShowModel(true);
+                const all = await dispatch(getAllObjects());
+                setObjects(all.filter(o => o.work?.workId === +workId));
+                setSelectedTab("0");
+              }}
+              palette={palette}
+              onColorSelect={selectColor}
+              onColorRemove={removeColor}
+              showPaletteModal={showPaletteModal}
+              openPaletteModal={openPalette}
+              closePaletteModal={closePalette}
+              style={{ flex: 1}}
+            />
+            </div>
+          )}
+          { selectedTab !== "0" && selectedTab !== "newObject" && (
+            <ObjectViewer
+              object={objects.find(o => o.objectId === +selectedTab)}
+              createdItems={createdItems.filter(it => it.object.objectId === +selectedTab)}
+              usedColors={palette}
+              onItemUpdate={handleObjectViewerUpdate}
+            />
+          )}
+        </div>
+
+        {/* Splitter + Right Panel */}
+        {!showForm && selectedTab !== "newObject" && (
+          <>
+            <div
+              onMouseDown={onMouseDown}
+              style={{ width: "5px", cursor: "col-resize", backgroundColor: "#ccc" }}
+            />
+            <div style={{
+              width: collapsed ? 0 : `${panelWidth}vw`,
+              minWidth: collapsed ? 0 : "15vw",
+              maxWidth: "40vw",
+              overflowY: "hidden",
+              padding: collapsed ? 0 : "1rem",
+              backgroundColor: "#f9f9f9",
+              transition: "width 0.2s ease"
+            }}>
+              {!collapsed && (
+                <>
+                  {selectedTab !== "0" && (
+                    <>
+                      <h3>Settings</h3>
+                      {currentObject.map(o => (
+                        <div key={o.objectId}>
+                          <h4 onClick={() => setSettingDetails(sd =>
+                            sd.includes(o.objectId)
+                              ? sd.filter(id => id !== o.objectId)
+                              : [...sd, o.objectId]
+                          )} style={{ cursor: "pointer" }}>
+                            {o.name}
+                          </h4>
+                          {settingDetails.includes(o.objectId) &&
+                            Object.entries(parseSetting(o.setting)).map(([k,v]) => (
+                              <p key={k}>
+                                {dispatch(getSettingById(k))?.name}: {v}
+                              </p>
+                            ))
+                          }
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  <h3 className="mt-4 d-flex align-items-center">
+                   Items
+                   {selectedTab !== "0" && selectedTab !== "newObject" && !isOrdered &&  (
+                     <Button
+                       size="sm"
+                       variant="outline-primary"
+                       className="ms-2"
+                       onClick={handleAddItem}
+                     >
+                        Add Item
+                     </Button>
+                   )}
+                 </h3>
+                 <div style={{maxHeight: "60vh"}}>
+                  <GeneratedItemsList
+                    generatedItems={createdItems}
+                    palette={palette}
+                    collapsedColors={collapsedColors}
+                    toggleColor={cid => setCollapsedColors(cc => ({
+                      ...cc, [cid]: !cc[cid]
+                    }))}
+                    readOnly={isOrdered}
+                    handleItemChange={handleCreatedItemChange}
+                    handleItemColorChange={(idx, color) =>
+                      handleCreatedItemChange(idx, { colorId: color.colorId })
+                    }
+                    onDragEnd={result => {
+                      const { destination, draggableId } = result;
+                      if (!destination) return;
+                      const idx = +draggableId;
+                      const newCid = destination.droppableId === "no-color"
+                        ? null
+                        : +destination.droppableId;
+                      handleCreatedItemChange(idx, { colorId: newCid });
+                    }}
+                    onDelete={handleDeleteItem}
+                  />
                   </div>
-                );
-              }
-            })}
-        </Container>
-      </Container>
+                </>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

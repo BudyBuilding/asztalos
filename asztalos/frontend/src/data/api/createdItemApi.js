@@ -6,7 +6,7 @@ import {
   addMoreCreatedItems,
   deleteCreatedItem,
   deleteMoreCreatedItems,
-  //updateCreatedItem,
+  updateCreatedItem,
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
 
@@ -95,14 +95,12 @@ const deleteMultipleCreatedItemsApi = (createdItemList) => {
     }
   };
 };
-/*
-////////////////////
-// Updating section
+
 const updateCreatedItemApi = (createdItemId, updatedCreatedItemData) => {
   return async (dispatch) => {
     try {
       await axiosInstance.put(
-        `/createdItems/${createdItemId}`,
+        `/created-items/${createdItemId}`,
         updatedCreatedItemData
       );
       dispatch(updateCreatedItem(updatedCreatedItemData));
@@ -111,7 +109,7 @@ const updateCreatedItemApi = (createdItemId, updatedCreatedItemData) => {
       throw error;
     }
   };
-};*/
+};
 
 const createCreatedItemApi = (createdItemData) => {
   return async (dispatch) => {
@@ -178,7 +176,7 @@ export default {
   getAllCreatedItemsForWorkApi,
   deleteCreatedItemApi,
   deleteMultipleCreatedItemsApi,
-  //  updateCreatedItemApi,
+  updateCreatedItemApi,
   createCreatedItemApi,
   getCreatedItemOfUserAdminApi,
 };

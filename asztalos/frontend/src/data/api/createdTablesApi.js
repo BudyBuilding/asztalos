@@ -47,7 +47,7 @@ const getAllCreatedTablesForObjectApi = async (objectId) => {
 
 const getAllCreatedTablesForWorkApi = async (workId) => {
   try {
-    const response = await axiosInstance.get(`/createdtables/work/${workId}`);
+    const response = await axiosInstance.get(`/createdTables/work/${workId}`);
     console.log(
       "Loading createdTables for work: ",
       workId,
@@ -60,6 +60,25 @@ const getAllCreatedTablesForWorkApi = async (workId) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching createdTables:", error);
+    throw error;
+  }
+};
+
+const generateTablesApi = async (workId) => {
+  try {
+    const response = await axiosInstance.post(`/createdTables/generate-tables/${workId}`);
+    console.log(
+      "Generating tables for work: ",
+      workId,
+      " from server response: ",
+      response
+    );
+    if (response.status === 200) {
+      store.dispatch(addMoreCreatedTables(response.data));
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error generating tables:", error);
     throw error;
   }
 };
@@ -179,6 +198,7 @@ export default {
   deleteCreatedTablesApi,
   deleteMultipleCreatedTablesApi,
   //  updateCreatedTablesApi,
+  generateTablesApi,
   createCreatedTablesApi,
   getCreatedTablesOfUserAdminApi,
 };

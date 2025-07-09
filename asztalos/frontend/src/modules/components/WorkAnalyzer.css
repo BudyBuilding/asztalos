@@ -1,0 +1,42 @@
+/* Eltávolítjuk az Accordion jobb oldalán megjelenő chevron ikont */
+.no-chevron .accordion-button::after {
+  display: none;
+}
+
+/* Az Accordion.Header és a Card.Header háttérszínét egységesítjük (Bootstrap alapértelmezett, de itt biztosra vesszük) */
+.work-details-card .card-header,
+.no-border-body {
+  background-color: #f8f9fa; /* Bootstrap Card alap háttérszín (light) – ha mást használsz, állítsd át ide */
+}
+
+/* Az Accordion.Body-ból eltávolítjuk a szegélyt */
+.no-border-body {
+  border: none !important;
+  /* Háttere megegyezik a Card háttérrel: */
+  background-color: #f8f9fa !important;
+}
+
+/* A Card körül maradó default border-t megtartjuk, de ha szükséges, testre szabhatod:
+.work-details-card {
+  border: 1px solid rgba(0, 0, 0, 0.125);  /!* Bootstrap alapcard-border*!/
+}
+*/
+
+/* „Több adat / Kevesebb adat” felirat */
+.work-details-card .card-footer {
+  background-color: #f8f9fa; /* egyezik a Card.Header-rel */
+  border-top: 1px solid rgba(0, 0, 0, 0.125); /* kis elválasztóvonal */
+  font-weight: 500;
+}
+
+/* Az Accordion HEADER–BODY határok vastagságának eltávolítása */
+.no-chevron .accordion-button {
+  border: none;
+  background-color: #f8f9fa; /* egyezik a Card háttérrel */
+}
+
+/* Ha az Accordion nyitott (expanded), ne jelenjen meg árnyék az Accordion.Header alatt */
+.no-chevron .accordion-button:not(.collapsed) {
+  background-color: #f8f9fa;
+  box-shadow: none;
+}

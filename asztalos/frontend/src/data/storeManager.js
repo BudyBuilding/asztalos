@@ -53,6 +53,11 @@ export const fetchScriptItemsForScript = (selectedScript) => {
   scriptItemApi.getAllScriptItemsForScriptApi(selectedScript);
 };
 
+// script Items
+export const fetchScriptItems = () => {
+  scriptItemApi.getAllScriptItemsApi();
+};
+
 // objects
 export const fetchObjects = () => {
   objectApi.getAllObjectsApi();
@@ -76,6 +81,11 @@ export const fetchCreatedTablesForObject = (objectId) => {
 // created Tables for work
 export const fetchCreatedTablesForWork = (workId) => {
   createdTablesApi.getAllCreatedTablesForWorkApi(workId);
+};
+
+// created Tables
+export const fetchCreatedTables = () => {
+  createdTablesApi.getAllCreatedTablesApi();
 };
 
 // objects for work
@@ -111,7 +121,9 @@ export const fetchAll = async () => {
     await fetchClients();
     await fetchWorks();
     await fetchScripts();
+    await fetchScriptItems();
     await fetchSettings();
+    await fetchCreatedTables();
   } catch (error) {
     console.error("Error fetching data:", error);
   }

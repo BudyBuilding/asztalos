@@ -10,4 +10,5 @@ import asztalos.model.ScriptItem;
 @Repository
 public interface ScriptItemRepository extends JpaRepository<ScriptItem, Long> {
     public List<ScriptItem> findByScriptScriptId(Long scriptId);
+    public List<ScriptItem> findAll();
 }

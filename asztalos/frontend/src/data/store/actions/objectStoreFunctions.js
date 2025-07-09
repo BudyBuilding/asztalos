@@ -46,6 +46,11 @@ export const addCreatedItem = (createdItem) => ({
   payload: createdItem,
 });
 
+export const updateCreatedItem = (modifiedCreatedItem) => ({
+  type: "UPDATE_CREATED_ITEM",
+  payload: modifiedCreatedItem,
+});
+
 export const addMoreCreatedItems = (createdItems) => ({
   type: "ADD_MORE_CREATED_ITEMS",
   payload: createdItems,
@@ -157,8 +162,10 @@ export const createdItemsReducer = (
         return [...state, action.payload];
       }
       return state;
-    case "UPDATE_ITEMS":
-      return [ action.payload];
+    case "UPDATE_CREATED_ITEM":
+      return state.map(item =>
+        item.itemId === action.payload.itemId ? action.payload : item
+      ); // Csak a megadott item frissítése
     case "ADD_MORE_CREATED_ITEMS":
       return [
         ...state,

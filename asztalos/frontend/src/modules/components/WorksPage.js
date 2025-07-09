@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Table, Button } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
 import { filter, options, trash, radioButtonOn, radioButtonOffOutline, star } from "ionicons/icons";
@@ -29,6 +29,26 @@ function WorksPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const works = useSelector((state) => state.works || []);
+
+  const tableContainerRef = useRef(null);
+      useEffect(() => {
+          const orig = document.body.style.overflow;
+          document.body.style.overflow = "hidden";
+  
+          const handleWheel = e => {
+           if (tableContainerRef.current && !tableContainerRef.current.contains(e.target)) {
+             e.preventDefault();
+           }
+          };
+  
+          window.addEventListener("wheel", handleWheel, { passive: false });
+  
+          return () => {
+            document.body.style.overflow = orig;
+            window.removeEventListener("wheel", handleWheel);
+          };
+        }, []);
+
 
   // Segédfüggvények
   const getMin = (items, key) => {
@@ -183,7 +203,7 @@ function WorksPage() {
       <div className="container d-xl-block">
         {/* Cím és gombok konténere */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <p className="fs-1 fw-bold text-start mb-0">Works Page</p>
+          <h1>Works Page</h1>
           <div style={{ position: "relative", display: "inline-block" }}>
             <Button
               variant="link"
@@ -385,11 +405,12 @@ function WorksPage() {
         ) : (
           <div
             style={{
-              height: "80vh",
+              maxHeight: "80vh",
               overflowY: "auto",
               border: "thin solid #dee2e6",
               borderRadius: "0.25rem",
             }}
+            ref={tableContainerRef}
           >
             <Table striped hover responsive style={{ width: "100%", margin: 0 }}>
               <thead
@@ -402,6 +423,7 @@ function WorksPage() {
                 }}
               >
                 <tr>
+                  <th style={{ padding: "10px", textAlign: "left" }}>Work Id</th>
                   <th style={{ padding: "10px", textAlign: "left" }}>Client</th>
                   <th style={{ padding: "10px", textAlign: "left" }}>Name</th>
                   <th style={{ padding: "10px", textAlign: "left" }}>Paid</th>
@@ -428,6 +450,7 @@ function WorksPage() {
                       onClick={() => handleRowClick(work.workId)}
                       style={{ cursor: "pointer", borderBottom: "thin solid #E9E7F1" }}
                     >
+                      <td style={{ padding: "10px", textAlign: "left" }}>{work.workId || "N/A"}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>{work.client?.name || "N/A"}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>{work.name || "N/A"}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>{work.paid || "0"}</td>
@@ -438,12 +461,12 @@ function WorksPage() {
                       <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.orderDate)}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.finishDate)}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>
-                        <Button
+                      {!work.isOrdered && (  <Button
                           style={{ color: "red", border: "none", background: "none", cursor: "pointer" }}
                           onClick={(e) => handleDeleteWork(e, work.workId)}
                         >
                           <IonIcon icon={trash} style={{ fontSize: "20px" }} />
-                        </Button>
+                        </Button>)}
                       </td>
                     </tr>
                   ))

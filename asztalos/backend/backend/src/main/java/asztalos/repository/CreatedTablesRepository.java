@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import asztalos.model.Color;
 import asztalos.model.CreatedTables;
 import asztalos.model.Work;
 
@@ -12,4 +13,6 @@ import asztalos.model.Work;
 public interface CreatedTablesRepository extends JpaRepository<CreatedTables, Long> {
 
     List<CreatedTables> findByWork(Work workId);
+     List<CreatedTables> findByWorkAndColor(Work work, Color color);
+
 }

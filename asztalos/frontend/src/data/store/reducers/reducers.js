@@ -21,7 +21,7 @@ import { imageReducer } from "../actions/imageStoreFunctions";
 import {
   scriptReducer,
   selectedScriptReducer,
-  selectedScriptItemsReducer,
+  scriptItemsReducer,
 } from "../actions/scriptStoreFunctions";
 import { tablesReducer } from "../actions/tableStoreFunctions";
 import { settingReducer } from "../actions/settingStoreFunctions";
@@ -43,14 +43,6 @@ const initialState = {
   createdTables: [],
 };
 
-const settingsReducer = (state = initialState.settings, action) => {
-  switch (action.type) {
-    case "UPDATE_SETTINGS":
-      return action.payload;
-    default:
-      return state;
-  }
-};
 
 const itemsReducer = (state = initialState.items, action) => {
   switch (action.type) {
@@ -65,7 +57,7 @@ const reducers = combineReducers({
   selectedClient: selectedClientReducer,
   selectedWork: selectedWorkReducer,
   selectedScript: selectedScriptReducer,
-  selectedScriptItems: selectedScriptItemsReducer,
+  scriptItems: scriptItemsReducer,
   clients: clientsReducer,
   works: worksReducer,
   auth: authReducer,
@@ -73,14 +65,13 @@ const reducers = combineReducers({
   images: imageReducer,
   scripts: scriptReducer,
   selectedObject: selectedObjectReducer,
-  settings: settingsReducer,
+  settings: settingReducer,
   items: itemsReducer,
   objects: objectReducer,
   objectLoading: objectLoadingReducer,
   createdItems: createdItemsReducer,
   createdTables: createdTablesReducer,
   tables: tablesReducer,
-  settings: settingReducer,
 });
 
 export default reducers;

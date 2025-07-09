@@ -1,5 +1,8 @@
 package asztalos.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,7 +29,19 @@ public class CreatedItem {
 
     private String position;
 
+  @Column(name = "group_id")
+private String groupId;
+
+public String getGroupId() {
+    return groupId;
+}
+
+public void setGroupId(String groupId) {
+    this.groupId = groupId;
+}
+
     private String rotation;
+    private String details;
 
     @ManyToOne
     @JoinColumn(name = "color")
@@ -40,13 +55,34 @@ public class CreatedItem {
         return CreatedTables;
     }
 
-    public void settable(CreatedTables table) {
+    private String kant;
+    public void setTable(CreatedTables table) {
         this.CreatedTables = table;
     }
+  
 
+    @Column(name = "table_rotation", columnDefinition = "TEXT")
     private String tableRotation;
+    
+    @Column(name = "table_position", columnDefinition = "TEXT")
     private String tablePosition;
 
+    public String getKant() { 
+        return kant; 
+    }
+    
+    public void setKant(String kant) { 
+        this.kant = kant; 
+    }
+
+    public String getDetails() { 
+        return details; 
+    }
+    
+    public void setDetails(String details) { 
+        this.details = details; 
+    }
+    
     public String getTablePosition() {
         return tablePosition;
     }
@@ -139,7 +175,7 @@ public class CreatedItem {
         this.color = color;
     }
 
-    public Boolean getRotable() {
+    public Boolean isRotable() {
         return rotable;
     }
 

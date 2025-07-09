@@ -6,10 +6,26 @@ export const getUser = () => {
   };
 };
 
+export const getUserByWorkId = (workId) => {
+  return (dispatch) => {
+    const users = store.getState().auth.allUsers;
+    console.log("users: ", users);
+    const user = users.find((user) => user.work.workId == workId);
+    return user;
+  };
+};
+
 export const getAllUsers = () => {
   return (dispatch) => {
     const users = store.getState().auth.allUsers;
     return users;
+  };
+};
+export const getUserById = (userId) => {
+  return (dispatch) => {
+    const users = store.getState().auth.allUsers;
+    const user = users.find((user) => user.userId == userId);
+    return user;
   };
 };
 
@@ -22,6 +38,8 @@ export const getClientById = (clientId) => {
     return client;
   };
 };
+
+
 
 export const getAllClients = () => {
   return (dispatch) => {
@@ -102,7 +120,7 @@ export const getSelectedScript = () => {
 
 export const getAllScriptItems = () => {
   return (dispatch) => {
-    const scriptItems = store.getState().selectedScriptItems;
+    const scriptItems = store.getState().scriptItems;
     return scriptItems;
   };
 };
@@ -111,7 +129,7 @@ export const getScriptItemsByWork = (workId) => {
   return (dispatch) => {
     const scriptItems = store
       .getState()
-      .scriptItems.filter((item) => item.work.workId === workId);
+      .scriptItems.filter((item) => item.work.workId == workId);
     return scriptItems;
   };
 };
@@ -120,7 +138,7 @@ export const getScriptItemsByScript = (scriptId) => {
   return (dispatch) => {
     const scriptItems = store
       .getState()
-      .scriptItems.filter((item) => item.object.scriptId === scriptId);
+      .scriptItems.filter((item) => item.scriptId == scriptId);
     return scriptItems || [];
   };
 };
@@ -178,7 +196,7 @@ export const getCreatedItemsByWork = (workId) => {
   return (dispatch) => {
     const createdItems = store
       .getState()
-      .createdItems.filter((item) => item.work.workId === workId);
+      .createdItems.filter((item) => item.work.workId == workId);
     return createdItems;
   };
 };
@@ -187,7 +205,7 @@ export const getCreatedItemsByObject = (objectId) => {
   return (dispatch) => {
     const createdItems = store
       .getState()
-      .createdItems.filter((item) => item.object.objectId === objectId);
+      .createdItems.filter((item) => item.object.objectId == objectId);
     return createdItems || [];
   };
 };
@@ -203,7 +221,7 @@ export const getCreatedTablesByWork = (workId) => {
   return (dispatch) => {
     const createdTables = store
       .getState()
-      .createdTables.filter((item) => item.work.workId === workId);
+      .createdTables.filter((item) => item.work.workId == workId);
     return createdTables;
   };
 };
@@ -274,15 +292,12 @@ export const getImageById = (imageId) => {
     }
 
     const foundImage = images.find((image) => {
-      console.log(`Comparing imageId: ${image.image.imageId} == ${imageId}`);
       return image.image.imageId == imageId;
     }); // Keresés az imageId alapján
 
     if (foundImage) {
-      console.log("Found image:", foundImage); // Logoljuk a megtalált képet
       return foundImage.data; // Visszaadjuk a megtalált kép adatait
     } else {
-      console.log("Image with specified id not found:", imageId); // Logoljuk, ha nem találjuk meg a képet
       return null; // Ha nem találtunk képet, null-t adunk vissza
     }
   };

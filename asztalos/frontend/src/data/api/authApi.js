@@ -6,7 +6,8 @@ import {
   loginFailure,
   logoutSuccess,
   logoutFailure,
-  addAllUsers
+  addAllUsers,
+  addUser
 } from "../store/actions/authStoreFunctions";
 // Login
 // Login
@@ -54,6 +55,14 @@ const loginApi = async (username, password, beRemembered) => {
   }
 };
 
+const resetPasswordApi = async ({ token, newPassword }) => {
+  const response = await axiosInstance.post(
+    "/account/resetPassword",
+    { token, newPassword },
+    { withCredentials: true }
+  );
+  return response;  // <— visszaadjuk a teljes response-t
+};
 // Get All Users
 const getAllUsersApi = async () => {
   try {
@@ -68,6 +77,10 @@ const getAllUsersApi = async () => {
     throw error;
   }
 };
+
+const deleteUserApi = async () => {
+  return;
+}
 
 // Check a token
 const checkTokenApi = async (token) => {
@@ -91,6 +104,29 @@ const checkTokenApi = async (token) => {
   }
 };
 
+const registerApi = async (registerData) => {
+  const response = await axiosInstance.post("/account/register", registerData, { withCredentials: true });
+ 
+  if (response.status === 200 && response.data.success) {
+    const newUser = response.data.user;
+    store.dispatch(addUser(newUser));
+  }
+ 
+  return response;  
+};
+
+
+const forgotPasswordApi = async (email) => {
+  try {
+    const response = await axiosInstance.post("/account/forgotPassword", { email });
+    return response.data; // szerver mindig generikus üzenetet küld
+  } catch (error) {
+    console.error("Error during forgot password:", error.message);
+    throw error;
+  }
+};
+
+
 // Logout
 const logoutApi = () => {
   try {
@@ -105,4 +141,4 @@ const logoutApi = () => {
 };
 
 // eslint-disable-next-line import/no-anonymous-default-export
-export default { loginApi, checkTokenApi, logoutApi, getAllUsersApi };
+export default { loginApi, checkTokenApi, logoutApi, getAllUsersApi, registerApi, forgotPasswordApi, resetPasswordApi, deleteUserApi };      

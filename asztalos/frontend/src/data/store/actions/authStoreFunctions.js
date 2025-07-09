@@ -15,6 +15,11 @@ export const loginFailure = (error) => ({
   payload: error,
 });
 
+export const addUser = (user) => ({
+  type: "auth/addUser",
+  payload: user,
+});
+
 export const logoutFailure = (error) => ({
   type: "auth/loginFailure",
   payload: error,
@@ -57,6 +62,11 @@ const authReducer = (
         ...state,
         allUsers: action.payload,
         error: null,
+      };
+    case "auth/addUser":
+      return {
+        ...state,
+        allUsers: [...state.allUsers, action.payload],
       };
     case "auth/loginFailure":
       return {

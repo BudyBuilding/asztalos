@@ -18,8 +18,8 @@ const getAllScriptItemsApi = async () => {
     }
     return response.data;
   } catch (error) {
-    console.error("Error fetching scriptItems:", error);
-    throw error;
+    console.error("ScriptItems load failed:", error.response?.status, error.message);
+    throw error;  // komponens eldönti, mit mutat a felhasználónak
   }
 };
 
@@ -41,15 +41,15 @@ const getAllScriptItemsForScriptApi = async (scriptId) => {
     throw error;
   }
 };
-/*
+
 // Delete a scriptItem
 const deleteScriptItemApi = (scriptItemId) => {
   return async (dispatch) => {
     try {
       console.log(scriptItemId);
-      await axiosInstance.delete(`/scriptItems/${scriptItemId}`);
+      await axiosInstance.delete(`/script-item/${scriptItemId}`);
       console.log("ScriptItem deleted successfully.");
-      dispatch(deleteScriptItem(scriptItemId));
+   //   dispatch(deleteScriptItem(scriptItemId));
     } catch (error) {
       console.error("Error while deleting scriptItem:", error);
       throw error;
@@ -58,26 +58,29 @@ const deleteScriptItemApi = (scriptItemId) => {
 };
 ////////////////////
 // Updating section
-const updateScriptItemApi = (scriptItemId, updatedScriptItemData) => {
+const updateScriptItemApi = (scriptItem, updatedScriptItemData) => {
+  console.log("updatedScriptItemData: ",updatedScriptItemData );
+  console.log("scriptItem: ",scriptItem );
+  
   return async (dispatch) => {
     try {
       await axiosInstance.put(
-        `/scriptItems/${scriptItemId}`,
-        updatedScriptItemData
+        `/script-item/${scriptItem.itemId}`,
+        scriptItem
       );
-      dispatch(updateScriptItem(updatedScriptItemData));
+  //    dispatch(updateScriptItem(updatedScriptItemData));
     } catch (error) {
       console.error("Error while updating scriptItem:", error);
       throw error;
     }
   };
-};*/
+};
 
 const createScriptItemApi = (scriptItemData) => {
   return async (dispatch) => {
     try {
-      console.log("creating new scriptItem");
-      const response = await axiosInstance.post(`/scriptItems`, scriptItemData);
+      console.log("creating new scriptItem: ", scriptItemData);
+      const response = await axiosInstance.post(`/script-item`, scriptItemData);
       console.log("ScriptItem added successfully:", response);
 
       dispatch(addScriptItem(response.data));
@@ -93,7 +96,7 @@ const getScriptItemOfUserAdminApi = (scriptItemId) => {
   return async (dispatch) => {
     // A függvény visszatérési értéke egy aszinkron függvény
     try {
-      const response = await axiosInstance.get(`/scriptItems/${scriptItemId}`);
+      const response = await axiosInstance.get(`/script-item/${scriptItemId}`);
       //   dispatch(getScriptItemSuccess(response.data)); // API válasz feldolgozása és diszpácselése a store-ba
       return response.data;
     } catch (error) {
@@ -106,8 +109,8 @@ const getScriptItemOfUserAdminApi = (scriptItemId) => {
 export default {
   getAllScriptItemsApi,
   getAllScriptItemsForScriptApi,
-  //  deleteScriptItemApi,
-  //  updateScriptItemApi,
+  deleteScriptItemApi,
+  updateScriptItemApi,
   createScriptItemApi,
   getScriptItemOfUserAdminApi,
 };

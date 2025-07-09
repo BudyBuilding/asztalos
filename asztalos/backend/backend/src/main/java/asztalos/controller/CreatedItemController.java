@@ -22,11 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import asztalos.model.CreatedItem;
+import asztalos.model.CreatedTables;
 import asztalos.model.User;
 import asztalos.model.Work;
 import asztalos.model.WorkObject;
 import asztalos.service.CreatedItemService;
+import asztalos.service.CreatedTablesService;
 import asztalos.service.ObjectService;
+import asztalos.service.TableOptimizationService;
 import asztalos.service.UserService;
 import asztalos.service.WorkService;
 
@@ -46,6 +49,11 @@ public class CreatedItemController {
 
     @Autowired
     private WorkService workService;
+
+    @Autowired
+    private TableOptimizationService tableOptimizationService;
+    @Autowired
+    private CreatedTablesService createdTablesService;
 @PostMapping
 public ResponseEntity<?> createCreatedItem(@RequestBody CreatedItem createdItem) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -67,8 +75,11 @@ public ResponseEntity<?> createCreatedItem(@RequestBody CreatedItem createdItem)
         }
     }
 
-    CreatedItem savedItem = createdItemService.save(createdItem);
-    return ResponseEntity.ok(savedItem);
+        CreatedItem savedItem = createdItemService.save(createdItem);
+        //  generáljuk és mentsük a kapcsolódó táblákat
+        List<CreatedTables> tables = tableOptimizationService.generateTables(savedItem.getObject().getWork());
+        tables.forEach(createdTablesService::save);
+        return ResponseEntity.ok(savedItem);
 }
 
 
@@ -105,8 +116,9 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
                         }
                     }
                     // Save each created item
-                    createdItemService.save(createdItem);
-                    // Optionally, you can modify or log the savedItem here
+                    CreatedItem saved = createdItemService.save(createdItem);
+                    List<CreatedTables> tables = tableOptimizationService.generateTables(saved.getObject().getWork());
+                    tables.forEach(createdTablesService::save);
                 }
         // Return 200 OK with the saved items
         return ResponseEntity.ok(createdItemList);
@@ -165,32 +177,39 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
         return ResponseEntity.ok(items);
     }
 
-    @GetMapping("work/{workId}")
-    public ResponseEntity<?> getCreatedItemByWork(@PathVariable Long workId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User currentUser = userService.findByUsername(username).get();
-        Work work = workService.findById(workId).get();
-
-        if (currentUser == null) {
-            return ResponseEntity.status(403).build();
-        }
-
-        if (work == null) {
-            return ResponseEntity.status(404).build();
-        }
-
-        List<CreatedItem> items;
-        if (currentUser.getRole().equals("admin") || currentUser.getUserId().equals(work.getUser().getUserId())
-                ) {
-            items = createdItemService.findByWork(work);
-        } else {
-                 return ResponseEntity.status(403).build();
-       
-        }
-
-        return ResponseEntity.ok(items);
+@GetMapping("work/{workId}")
+public ResponseEntity<?> getCreatedItemByWork(@PathVariable Long workId) {
+    User currentUser = userService.findByUsername(
+         SecurityContextHolder.getContext().getAuthentication().getName()
+    ).orElse(null);
+    if (currentUser == null) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
+    Work work = workService.findById(workId).orElse(null);
+    if (work == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    String role = currentUser.getRole();
+    boolean isAdmin    = "admin".equals(role);
+    boolean isCompany  = "companyAdmin".equals(role) || "companyUser".equals(role);
+    boolean isOwner    = currentUser.getUserId().equals(work.getUser().getUserId());
+
+    // company-szerepkör csak akkor, ha isOrdered == true
+    if (isCompany && !Boolean.TRUE.equals(work.getIsOrdered())) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    // végleges jogosultságellenőrzés: admin, owner, vagy company
+    if (!(isAdmin || isOwner || isCompany)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    List<CreatedItem> items = createdItemService.findByWork(work);
+    return ResponseEntity.ok(items);
+}
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCreatedItem(@PathVariable Long id) {
@@ -211,8 +230,12 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
         if (!currentUser.getRole().equals("admin") && !item.getObject().getUser().getUsername().equals(username)) {
             return ResponseEntity.status(403).build();
         }
-
+        CreatedItem toDelete = createdItemService.findById(id).get();
+        Work work = toDelete.getObject().getWork();
         createdItemService.delete(id);
+        // törlés után is újrageneráljuk a táblákat
+        List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+        tables.forEach(createdTablesService::save);
         return ResponseEntity.noContent().build();
     }
 
@@ -226,20 +249,19 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         return ResponseEntity.status(403).build();
     }
 
+    Work work = null;
     for (Long id : ids) {
-        CreatedItem item = createdItemService.findById(id).orElse(null);
-
-        if (item == null) {
-            return ResponseEntity.status(404).build();
+        CreatedItem item = createdItemService.findById(id).get();
+        if (work == null) {
+            work = item.getObject().getWork();
         }
-
-        if (!currentUser.getRole().equals("admin") && !item.getObject().getUser().getUsername().equals(username)) {
-            return ResponseEntity.status(403).build();
-        }
-
         createdItemService.delete(id);
     }
-
+    // egyszer regáljuk újra a táblákat a teljes törlés után
+    if (work != null) {
+        List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+        tables.forEach(createdTablesService::save);
+    }
     return ResponseEntity.noContent().build();
 }
 
@@ -250,9 +272,6 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         String username = authentication.getName();
         User currentUser = userService.findByUsername(username).orElse(null);
 
-        if (currentUser == null || !currentUser.getRole().equals("admin")) {
-            return ResponseEntity.status(403).build();
-        }
 
         Optional<CreatedItem> existingItemopt = createdItemService.findById(id);
         if (!existingItemopt.isPresent()) {
@@ -274,6 +293,10 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         }
 
         CreatedItem savedItem = createdItemService.save(existingItem);
+        // módosítás után is újrageneráljuk a táblákat
+        Work work = savedItem.getObject().getWork();
+        List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+        tables.forEach(createdTablesService::save);
         return ResponseEntity.ok(savedItem);
     }
 

@@ -45,11 +45,6 @@ const NewWorkModal = ({ show, handleClose, onSubmit }) => {
   };
 
   return (
-    <Modal show={show} onHide={handleClose}>
-      <Modal.Header closeButton>
-        <Modal.Title>Create New Work</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="formWorkName">
             <Form.Label>Name</Form.Label>
@@ -67,8 +62,6 @@ const NewWorkModal = ({ show, handleClose, onSubmit }) => {
             Create new work
           </Button>
         </Form>
-      </Modal.Body>
-    </Modal>
   );
 };
 

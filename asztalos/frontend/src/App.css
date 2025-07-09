@@ -76,3 +76,12 @@
 .content-area.no-nav {
   margin-left: 3%;
 }
+
+.no-blur-backdrop {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: none !important;
+}
+
+.custom-modal-content {
+  background-color: #fff;
+}

@@ -7,12 +7,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity
 @Table(name = "work")
@@ -29,31 +34,95 @@ public class Work {
     @ManyToOne
     @JoinColumn(name = "client")
     private Client client;
-
     private String name;
-
-    @Column(nullable = false)
     private String status;
+  
 
-    @Column(nullable = false)
-    private int price;
+    private Double clientPrice = 0d;
+    private Double clientPaid  = 0d;
+    private Double label       = 0d;
+    private Double woodPrice   = 0d;
 
-    
-    @Column(nullable = false)
-    private double label;
+    // Logikai mező false-ként induljon
+    private Boolean isOrdered;
 
-    @Column(nullable = false)
-    private int paid;
+    // Céges oldalon kalkulálandó mezők is 0-dal indulnak
+    private Double companyWoodPrice = 0d;
+    private Double companyPrice     = 0d;
+    private Double companyLabel     = 0d;
+    private Double userPaid         = 0d;
 
+  @Temporal(TemporalType.TIMESTAMP)
+    private Date lastUpdateDate ;
     private Date measureDate;
     private Date orderDate;
     private Date finishDate;
+    private Date companyFinishDate;
+    private Date cancelDate;
+    private String companyStatus;
+
+@PrePersist
+    protected void onCreate() {
+        lastUpdateDate = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastUpdateDate = new Date();
+    }
+
+    public Boolean getIsOrdered() {
+        return isOrdered;
+    }
+
+    public void setIsOrdered(Boolean isOrdered) {
+        this.isOrdered = isOrdered;
+    }
+
+    public Double getCompanyWoodPrice() {
+        return companyWoodPrice;
+    }
+
+    public void setCompanyWoodPrice(Double companyWoodPrice) {
+        this.companyWoodPrice = companyWoodPrice;
+    }    
+    
+    public Double getCompanyPrice() {
+        return companyPrice;
+    }
+
+    public void setCompanyPrice(Double companyPrice) {
+        this.companyPrice = companyPrice;
+    }   
+    
+    public Double getCompanyLabel() {
+        return companyLabel;
+    }
+
+    public void setCompanyLabel(Double companyLabel) {
+        this.companyLabel = companyLabel;
+    }    
+    public Double getUserPaid() {
+        return userPaid;
+    }
+
+    public void setUserPaid(Double userPaid) {
+        this.userPaid = userPaid;
+    }
+
+    public String getCompanyStatus() {
+        return companyStatus;
+    }
+
+    public void setCompanyStatus(String companyStatus) {
+        this.companyStatus = companyStatus;
+    }
 
     // Getters és setters
-  @JsonCreator
-  public Work(@JsonProperty("workId") Long workId) {
-      this.workId = workId;
-  }
+    @JsonCreator
+    public Work(@JsonProperty("workId") Long workId) {
+        this.workId = workId;
+    }
      
     public Work(){}
 
@@ -97,28 +166,44 @@ public class Work {
         this.status = status;
     }
 
-    public int getPrice() {
-        return price;
+    public Double getClientPrice() {
+        return clientPrice;
     }
 
-    public void setPrice(int price) {
-        this.price = price;
+    public void setClientPrice(Double clientPrice) {
+        this.clientPrice = clientPrice;
     }
 
-        public double getLabel() {
+    public Double getLabel() {
         return label;
     }
 
-    public void setLabel(double label) {
+    public void setLabel(Double label) {
         this.label = label;
     }
 
-    public int getPaid() {
-        return paid;
+    public Double getWoodPrice() {
+        return woodPrice;
     }
 
-    public void setPaid(int paid) {
-        this.paid = paid;
+    public void setWoodPrice(Double woodPrice) {
+        this.woodPrice = woodPrice;
+    }
+
+    public Double getClientPaid() {
+        return clientPaid;
+    }
+
+    public void setClientPaid(Double clientPaid) {
+        this.clientPaid = clientPaid;
+    }
+
+    public Date getLastUpdateDate() {
+        return lastUpdateDate;
+    }
+
+    public void setLastUpdateDate(Date lastUpdateDate) {
+        this.lastUpdateDate = lastUpdateDate;
     }
 
     public Date getMeasureDate() {
@@ -143,6 +228,21 @@ public class Work {
 
     public void setFinishDate(Date finishDate) {
         this.finishDate = finishDate;
+    }
+
+    public Date getCompanyFinishDate() {
+        return companyFinishDate;
+    }
+
+    public void setCompanyFinishDate(Date companyFinishDate) {
+        this.companyFinishDate = companyFinishDate;
+    }
+    public Date getCancelDate() {
+        return cancelDate;
+    }
+
+    public void setCancelDate(Date cancelDate) {
+        this.cancelDate = cancelDate;
     }
 }
 

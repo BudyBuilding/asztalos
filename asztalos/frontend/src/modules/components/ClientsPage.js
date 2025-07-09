@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Loading from "../helpers/Loading";
 import { Button, Table, Modal, Form } from "react-bootstrap";
 import { getAllClients } from "../../data/getters";
@@ -9,7 +9,7 @@ import clientApi from "../../data/api/clientApi";
 import NewClientModal from "../modals/NewClientModal";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
 import { useNavigate } from "react-router-dom";
-import { selectClient } from "../../data/store/actions/clientStoreFunctions"; // Ellenőrizd az elérési utat
+import { loadClients, selectClient } from "../../data/store/actions/clientStoreFunctions"; // Ellenőrizd az elérési utat
 // Helper function for filtering (assumed to be similar to sorting)
 const filtering = (data, filterConfig) => {
   if (!filterConfig || !filterConfig.value) return data;
@@ -35,10 +35,30 @@ function ClientsPage() {
   const [filterConfig, setFilterConfig] = useState({ key: "name", value: "" });
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]); // Tegyük fel, hogy itt tárolod az ügyfeleket
-  // Toggle render state to refresh data
+  
   function rendering() {
     setRender(!render);
   }
+  
+  const tableContainerRef = useRef(null);
+      useEffect(() => {
+          const orig = document.body.style.overflow;
+          document.body.style.overflow = "hidden";
+  
+          const handleWheel = e => {
+           if (tableContainerRef.current && !tableContainerRef.current.contains(e.target)) {
+             e.preventDefault();
+           }
+          };
+  
+          window.addEventListener("wheel", handleWheel, { passive: false });
+  
+          return () => {
+            document.body.style.overflow = orig;
+            window.removeEventListener("wheel", handleWheel);
+          };
+        }, []);
+  
 
 
   const handleRowClick = async (clientId) => {
@@ -81,8 +101,11 @@ function ClientsPage() {
   }, [sortConfig]);
 
   const handleNewClientClick = () => setShowNewClient(true);
-  const handleNewClientClose = () => setShowNewClient(false);
-
+  const handleNewClientClose = () => {
+    setClients(loadClients());
+    setShowNewClient(false);
+    rendering();  
+  }
   const handleModifyClient = (event, clientId) => {
     event.preventDefault();
     event.stopPropagation();
@@ -146,13 +169,13 @@ function ClientsPage() {
   };
 
   return (
-    <div className="h-100">
+      <div className="container d-xl-block h-50">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h1>Clients Page</h1>
         <div>
-          <Button variant="light" className="me-2" onClick={handleReloadClients}>
+          {/*<Button variant="light" className="me-2" onClick={handleReloadClients}>
             <i className="bi bi-arrow-clockwise"></i>
-          </Button>
+          </Button>*/}
           <Button variant="secondary" className="me-2" onClick={handleNewClientClick}>
             New Client
           </Button>
@@ -168,12 +191,14 @@ function ClientsPage() {
             <option value="clientSold">Sold</option>
             <option value="address">Address</option>
           </Form.Select>
+          </Form.Group>
+          <Form.Group>
+          <Form.Label>Filter value</Form.Label>
           <Form.Control
             type="text"
             placeholder="Enter filter value"
             value={filterConfig.value}
             onChange={handleFilterChange}
-            className="mt-2"
           />
         </Form.Group>
         <Form.Group>
@@ -195,11 +220,25 @@ function ClientsPage() {
           border: "thin solid lightgrey",
           borderRadius: "0.5rem",
         }}
+        ref={tableContainerRef}
       >
         {loading ? (
           <Loading />
-        ) : (
-          <Table striped bordered hover>
+        ) : clients.length === 0 ? (
+                <div
+                  style={{
+                    padding: "1rem",
+                    textAlign: "center",
+                    color: "#666",
+                    fontStyle: "italic",
+                  }}
+                >
+                  Nincs még kliens, kérlek hozz létre egyet.
+                </div>
+              ) 
+        :
+        (<div style={{ maxHeight: "70vh", }} >
+          <Table striped bordered hover responsive>
             <thead
               style={{
                 position: "sticky",
@@ -255,6 +294,7 @@ function ClientsPage() {
               ))}
             </tbody>
           </Table>
+          </div>
         )}
       </div>
 

@@ -7,7 +7,7 @@ import {
 } from "../../data/getters";
 import { useNavigate } from "react-router-dom";
 
-function SideNavigation() {
+function SideNavigation({ onToggle }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const userRole = dispatch(getUser()).role;
@@ -24,6 +24,7 @@ function SideNavigation() {
 
   const toggleNav = () => {
     setShowNav(!showNav);
+    onToggle();
   };
 
   const navLinkStyle = (tab) => {
@@ -63,19 +64,8 @@ function SideNavigation() {
           )}
           {showNav ? "Dashboard" : ""}
         </Nav.Link>
-        {userRole === "admin" ? (
-          <Nav.Link
-            onClick={() => handleSelectTab("users")}
-            style={navLinkStyle("users")}
-          >
-            {selectedTab === "users" ? (
-              <i className="bi-person-fill me-2"></i>
-            ) : (
-              <i className="bi bi-person me-2"></i>
-            )}
-            {showNav ? "Users" : ""}
-          </Nav.Link>
-        ) : null}
+        {userRole == "admin" || userRole == "user" ?
+
         <Nav.Link
           onClick={() => handleSelectTab("clients")}
           style={navLinkStyle("clients")}
@@ -88,6 +78,40 @@ function SideNavigation() {
 
           {showNav ? "Clients" : ""}
         </Nav.Link>
+        : <></>  
+      }
+        {userRole == "companyAdmin"  ?  
+
+        <Nav.Link
+          onClick={() => handleSelectTab("employee")}
+          style={navLinkStyle("employee")}
+        >
+          {selectedTab === "employee" ? (
+            <i className="bi bi-people-fill me-2"></i>
+          ) : (
+            <i className="bi bi-people me-2"></i>
+          )}
+
+          {showNav ? "Employee" : ""}
+        </Nav.Link>
+        : <></>  
+      }
+        {userRole == "companyAdmin" || userRole == "companyUser" ?
+
+        <Nav.Link
+          onClick={() => handleSelectTab("users")}
+          style={navLinkStyle("users")}
+        >
+          {selectedTab === "users" ? (
+            <i className="bi bi-people-fill me-2"></i>
+          ) : (
+            <i className="bi bi-people me-2"></i>
+          )}
+
+          {showNav ? "Users" : ""}
+        </Nav.Link>
+        : <></>  
+      }
         <Nav.Link
           onClick={() => handleSelectTab("works")}
           style={navLinkStyle("works")}
@@ -99,6 +123,7 @@ function SideNavigation() {
           )}
           {showNav ? "Works" : ""}
         </Nav.Link>
+        {userRole == "admin" || userRole == "user" ?
         <Nav.Link
           onClick={() => handleSelectTab("scripts")}
           style={navLinkStyle("scripts")}
@@ -110,6 +135,8 @@ function SideNavigation() {
           )}
           {showNav ? "Scripts" : ""}
         </Nav.Link>
+                : <></>  
+      }
         <Nav.Link
           onClick={() => handleSelectTab("colors")}
           style={navLinkStyle("colors")}
