@@ -21,8 +21,8 @@ import {
 } from "../store/actions/storeFunctions"; // Frissítsd az elérési utat, ha szükséges
 
 const amazonDNS = "ec2-3-92-4-65.compute-1.amazonaws.com";
-
-const BASE_URL = `http://${amazonDNS}:9001`; // Az API alapértelmezett URL-je
+const BASE_URL = "https://asztalos-backend-d09e9ace256e.herokuapp.com/";
+const BASE_URL1 = `http://${amazonDNS}:9001`; // Az API alapértelmezett URL-je
 
 // Helper function to get the token from localStorage
 const getToken = () => localStorage.getItem("userToken");

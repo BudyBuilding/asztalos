@@ -1,1 +1,1 @@
-web: mvn spring-boot:run -DskipTests
+web: java $JAVA_OPTS -jar target/asztalos-backend-0.0.1-SNAPSHOT.jar

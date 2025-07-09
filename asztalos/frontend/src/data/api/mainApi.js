@@ -4,7 +4,8 @@ import axios from "axios";
 //const aws = "ec2-3-92-4-65.compute-1.amazonaws.com";
 
 const aws = "localhost";
-const BASE_URL = `http://${aws}:9001`; // Az API alapértelmezett URL-je
+const BASE_URL = "https://asztalos-backend-d09e9ace256e.herokuapp.com/"; // Az API alapértelmezett URL-je   
+const BASE_URL1 = `http://${aws}:9001`; // Az API alapértelmezett URL-je
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
