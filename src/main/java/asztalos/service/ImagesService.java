@@ -34,7 +34,6 @@ public class ImagesService {
 
     @Value("${upload.path}")
     private String uploadPath;
-
     @PostConstruct
     public void init() throws IOException {
         Path uploadDir = Paths.get(uploadPath);
