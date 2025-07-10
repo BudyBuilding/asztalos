@@ -117,7 +117,7 @@ export const fetchAll = async () => {
       await fetchUsers();
     }
     await fetchColors();
-    await fetchImages();
+// await fetchImages();
     await fetchClients();
     await fetchWorks();
     await fetchScripts();

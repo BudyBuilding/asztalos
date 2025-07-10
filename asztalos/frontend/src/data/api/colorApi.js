@@ -38,9 +38,10 @@ const deleteColorApi = (colorId) => {
     }
   };
 };
-
+/*
 // Update a color by its ID with new data
 const updateColorApi = (colorId, updatedColorData) => {
+  console.log("Updating color with ID:", colorId, "and data:", updatedColorData);                
   return async (dispatch) => {
     try {
       const response = await axiosInstance.put(
@@ -55,8 +56,44 @@ const updateColorApi = (colorId, updatedColorData) => {
       throw error;
     }
   };
-};
+};*/
+// Update a color by its ID with new data and optional image
+const updateColorApi = (colorId, updatedColorData, imageData) => {
+  console.log(
+    "Updating color with ID:", 
+    colorId, 
+    "data:", 
+    updatedColorData, 
+    "hasImage?", 
+    Boolean(imageData)
+  );
+  return async (dispatch) => {
+    try {
+      // Ha van imageData, akkor építsük be a payload-ba
+      const payload = {
+        ...updatedColorData,
+        ...(imageData
+          ? {
+              // previewImage felől érkező "data:image/xxx;base64,AAAA..." string
+              imageContentType: imageData.split(";")[0].split(":")[1],
+              imageData: imageData.split(",")[1],
+            }
+          : {}),
+      };
 
+      const response = await axiosInstance.put(
+        `/colors/${colorId}`,
+        payload
+      );
+      dispatch(updateColor(response.data));
+      console.log("Color updated successfully.");
+      return response.data;
+    } catch (error) {
+      console.error("Error while updating color:", error);
+      throw error;
+    }
+  };
+};
 // Create a new color
 const createColorApi = (colorData, imageData) => {
   return async (dispatch) => {

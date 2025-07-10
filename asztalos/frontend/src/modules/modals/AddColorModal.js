@@ -38,7 +38,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setColorDimension(colorToEdit.dimension);
       setSelectedFile(null);
 
-      // fetch existing image by id
+  /*    // fetch existing image by id
       if (colorToEdit.imageId) {
         (async () => {
           try {
@@ -51,7 +51,14 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
         })();
       } else {
         setPreviewImage(null);
+      }*/
+
+            if (colorToEdit.imageData) {
+        setPreviewImage("data:image/jpeg;base64," +  colorToEdit.imageData);
+      } else {
+        setPreviewImage(null);
       }
+
     } else {
       // reset fields for add
       setColorName("");

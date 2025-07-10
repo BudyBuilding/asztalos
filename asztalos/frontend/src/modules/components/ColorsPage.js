@@ -85,7 +85,9 @@ function ColorsPage() {
               </thead>
               <tbody>
                 {colors.map((color) => {
-                  const imageUrl = dispatch(getImageById(color.imageId));
+//                  const imageUrl = dispatch(getImageById(color.imageId));
+                  const imageUrl = color.imageData;
+                  const imageType = color.imageContentType || "image/jpeg"; 
                   return (
                     <tr
                       key={color.colorId}
@@ -98,7 +100,8 @@ function ColorsPage() {
                       <td>{color.colorId}</td>
                       <td>
                         <Image
-                          src={"data:image/jpeg;base64," + imageUrl}
+//                          src={"data:image/jpeg;base64," + imageUrl}
+                          src={`data:${imageType || "image/jpeg"};base64,${imageUrl}`}
                           alt={color.name}
                           style={{
                             width: 100,        // fixed width
