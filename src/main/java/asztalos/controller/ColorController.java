@@ -67,26 +67,24 @@ public class ColorController {
         return ResponseEntity.ok(createdColor);
     }*/
 
-@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-public ResponseEntity<Color> createColorWithImage(
-        @RequestPart("metadata") Color color,
-        @RequestPart(value = "image", required = false) MultipartFile image
-) throws IOException {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    Optional<User> currentUser = userService.findByUsername(auth.getName());
-    if (!currentUser.isPresent() || !isAdminOrManager(currentUser.get())) {
-        return ResponseEntity.status(403).build();
-    }
-    // ha kell: color.setUser(currentUser.get());
-    if (image != null && !image.isEmpty()) {
-        String filename = StringUtils.cleanPath(image.getOriginalFilename());
-        color.setImageId(filename);
-        color.setImageContentType(image.getContentType());
-        color.setImageData(image.getBytes());
-    }
-    Color saved = colorService.saveColor(color);
-    return ResponseEntity.ok(saved);
-}
+       /**
+        * Create color with JSON payload (base64-ben ágyazott kép).
+        */
+       @PostMapping
+       public ResponseEntity<Color> createColorJson(@RequestBody Color colorDetails) {
+           Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+           Optional<User> currentUser = userService.findByUsername(auth.getName());
+           if (!currentUser.isPresent() || !isAdminOrManager(currentUser.get())) {
+               return ResponseEntity.status(403).build();
+           }
+           // itt a colorDetails.imageData és imageContentType már benne lehet
+           Color saved = colorService.saveColor(colorDetails);
+           return ResponseEntity.ok(saved);
+       }
+   
+
+
+
 
     // Képfájl letöltése a Color objektumból
     @GetMapping("/download/{colorId}")
