@@ -24,6 +24,27 @@ function ColorsPage() {
 
   const [fullscreenImage, setFullscreenImage] = useState("");
 
+    useEffect(() => {
+        const orig = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        const handleWheel = e => {
+          // ha a görgetés a .table-responsive konténeren belül van, engedjük,
+          // különben blokkoljuk.
+          const tableContainer = e.target.closest(".table-responsive");
+          if (!tableContainer) {
+            e.preventDefault();
+          }
+          // ha a tableContainer belsejében vagyunk, hagyjuk, hogy az overflowY: auto kezelje
+        };
+
+        window.addEventListener("wheel", handleWheel, { passive: false });
+
+        return () => {
+          document.body.style.overflow = orig;
+          window.removeEventListener("wheel", handleWheel);
+        };
+      }, []);
+
   useEffect(() => {
     const loadColors = async () => {
       setLoading(true);
@@ -44,6 +65,7 @@ function ColorsPage() {
 
   return (
     <div className="pb-5 overflow-hidden">
+      
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h1 className="mb-0">Colors Page</h1>
@@ -70,7 +92,7 @@ function ColorsPage() {
         {loading ? (
           <Loading />
         ) : (
-          <div className="table-responsive" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div className="table-responsive" style={{ maxHeight: "80vh", overflowY: "auto" }}>
             <Table bordered hover responsive className="table">
               <thead>
                 <tr>

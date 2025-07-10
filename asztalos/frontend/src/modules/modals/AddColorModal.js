@@ -37,6 +37,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setColorPrice(colorToEdit.price);
       setColorDimension(colorToEdit.dimension);
       setSelectedFile(null);
+      
 
   /*    // fetch existing image by id
       if (colorToEdit.imageId) {
@@ -91,6 +92,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
     }
 
     const colorData = {
+      imageId : 0,
       active: colorActive,
       dimension: colorDimension,
       materialType: colorType,
