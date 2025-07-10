@@ -53,7 +53,7 @@ public class ColorController {
             || user.getRole().equals("companyUser");
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+ /*   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Color> createColor(@RequestBody Color color) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -65,7 +65,7 @@ public class ColorController {
 
         Color createdColor = colorService.saveColor(color);
         return ResponseEntity.ok(createdColor);
-    }
+    }*/
 
 @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 public ResponseEntity<Color> createColorWithImage(
