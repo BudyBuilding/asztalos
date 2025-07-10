@@ -83,35 +83,31 @@ const updateColorApi = (colorId, updatedColorData, imageData) => {
   };
 };
 
-const createColorApi = (colorData, imageData) => {
-  console.log(
-    "Creating color with data:", 
-    colorData, 
-    "hasImage?", 
-    Boolean(imageData)
-  );
-  return async (dispatch) => {
-    try {
-      const formData = new FormData();
-      formData.append(
-        "metadata",
-        new Blob([JSON.stringify(colorData)], { type: "application/json" })
-      );
-      if (imageData) {
-        formData.append("image", imageData);
-      }
-      const response = await axiosInstance.post("/colors", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      dispatch(addColor(response.data));
-      console.log("Color created successfully:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error while creating color:", error);
-      throw error;
-    }
-  };
-};
+   const createColorApi = (colorData, imageData) => {
+     console.log("Creating color with data:", colorData, "hasImage?", Boolean(imageData));
+     return async (dispatch) => {
+       try {
+         // ugyanaz a JSON-payload, mint az update esetén
+         const payload = {
+           ...colorData,
+           ...(imageData
+             ? {
+                 imageContentType: imageData.split(";")[0].split(":")[1],
+                 imageData:         imageData.split(",")[1],
+               }
+             : {}),
+         };
+       
+         const response = await axiosInstance.post("/colors", payload);
+         dispatch(addColor(response.data));
+         console.log("Color created successfully:", response.data);
+         return response.data;
+       } catch (error) {
+         console.error("Error while creating color:", error);
+         throw error;
+       }
+     };
+   };
 
 /*
 // Create a new color
