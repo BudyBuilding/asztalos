@@ -6,11 +6,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.io.IOException;
+import org.springframework.util.StringUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +25,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import asztalos.model.Color;
 import asztalos.model.User;
@@ -48,7 +53,7 @@ public class ColorController {
             || user.getRole().equals("companyUser");
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Color> createColor(@RequestBody Color color) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
@@ -61,6 +66,27 @@ public class ColorController {
         Color createdColor = colorService.saveColor(color);
         return ResponseEntity.ok(createdColor);
     }
+
+@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Color> createColorWithImage(
+        @RequestPart("metadata") Color color,
+        @RequestPart(value = "image", required = false) MultipartFile image
+) throws IOException {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    Optional<User> currentUser = userService.findByUsername(auth.getName());
+    if (!currentUser.isPresent() || !isAdminOrManager(currentUser.get())) {
+        return ResponseEntity.status(403).build();
+    }
+    // ha kell: color.setUser(currentUser.get());
+    if (image != null && !image.isEmpty()) {
+        String filename = StringUtils.cleanPath(image.getOriginalFilename());
+        color.setImageId(filename);
+        color.setImageContentType(image.getContentType());
+        color.setImageData(image.getBytes());
+    }
+    Color saved = colorService.saveColor(color);
+    return ResponseEntity.ok(saved);
+}
 
     // Képfájl letöltése a Color objektumból
     @GetMapping("/download/{colorId}")
@@ -85,6 +111,115 @@ public class ColorController {
         }
     }
 
+
+
+@PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Color> updateColorWithImage(
+        @PathVariable Long id,
+        @RequestPart("metadata") Color colorDetails,
+        @RequestPart(value = "image", required = false) MultipartFile image
+) throws IOException {
+    // … jogosultság- és létezés-ellenőrzés …
+
+    Color existingColor = colorService.findById(id);
+    if (existingColor == null) {
+        return ResponseEntity.notFound().build();
+    }
+
+    // reflection: mezők másolása (kivéve imageData, imageContentType)
+    try {
+        for (Field f : Color.class.getDeclaredFields()) {
+            f.setAccessible(true);
+            if ("imageData".equals(f.getName()) || "imageContentType".equals(f.getName())) continue;
+            Object newVal = f.get(colorDetails);
+            if (newVal != null) {
+                f.set(existingColor, newVal);
+            }
+        }
+    } catch (IllegalAccessException e) {
+        throw new RuntimeException("Hiba a mezők másolásakor", e);
+    }
+
+    // kép frissítése
+    if (image != null && !image.isEmpty()) {
+        String filename = StringUtils.cleanPath(image.getOriginalFilename());
+        existingColor.setImageId(filename);
+        existingColor.setImageContentType(image.getContentType());
+        existingColor.setImageData(image.getBytes());
+    }
+
+    Color saved = colorService.saveColor(existingColor);
+    return ResponseEntity.ok(saved);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /*
+    @GetMapping("/download/{colorId}")
+public ResponseEntity<byte[]> downloadImage(@PathVariable Long colorId) {
+    Color color = colorService.findById(colorId);
+    if (color == null || color.getImageData() == null) {
+        return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity
+            .ok()
+            .contentType(MediaType.parseMediaType(color.getImageContentType()))
+            .body(color.getImageData());
+}
+
+@PutMapping(path = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public ResponseEntity<Color> updateColorWithImage(
+        @PathVariable Long id,
+        @RequestPart("metadata") Color colorDetails,
+        @RequestPart(value = "image", required = false) MultipartFile image
+) throws IOException {
+    // --- ide jön a jogosultság-ellenőrzés és létezés-ellenőrzés ---
+    Color existingColor = colorService.findById(id);
+if (existingColor == null) {
+  return ResponseEntity.notFound().build();
+}
+    // reflection alapú mezőmásolás (kivéve imageData/imageContentType)
+    for (Field f : Color.class.getDeclaredFields()) {
+        f.setAccessible(true);
+        if ("imageData".equals(f.getName()) || "imageContentType".equals(f.getName())) continue;
+        Object newVal = f.get(colorDetails);
+        if (newVal != null) {
+            f.set(existingColor, newVal);
+        }
+    }
+
+    if (image != null && !image.isEmpty()) {
+        String filename = StringUtils.cleanPath(image.getOriginalFilename());
+        existingColor.setImageId(filename);
+        existingColor.setImageContentType(image.getContentType());
+        existingColor.setImageData(image.getBytes());
+    }
+
+    Color saved = colorService.saveColor(existingColor);
+    return ResponseEntity.ok(saved);
+}
+*/
     @GetMapping("/{id}")
     public ResponseEntity<Color> getColorById(@PathVariable Long id) {
         Color color = colorService.findById(id);
