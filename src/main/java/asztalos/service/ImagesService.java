@@ -45,10 +45,11 @@ public class ImagesService {
     public Images storeImage(MultipartFile image) throws IOException {
         String imageName = StringUtils.cleanPath(image.getOriginalFilename());
         Path imagePath = Paths.get(uploadPath).resolve(imageName);
+        String filename = StringUtils.cleanPath(image.getOriginalFilename());
         Path target = Paths.get(uploadPath).resolve(imageName);
         Images images = Images.builder()
                 .name(imageName.substring(0, imageName.indexOf('.')))
-                .path(target.toString())// Csak az elérési út mentése
+                .path(filename)// Csak az elérési út mentése
                 .type(image.getContentType())
                 .build();
 
