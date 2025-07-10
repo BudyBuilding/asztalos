@@ -59,26 +59,14 @@ const updateColorApi = (colorId, updatedColorData) => {
 };*/
 // Update a color by its ID with new data and optional image
 const updateColorApi = (colorId, updatedColorData, imageData) => {
-  console.log(
-    "Updating color with ID:", 
-    colorId, 
-    "data:", 
-    updatedColorData, 
-    "hasImage?", 
-    Boolean(imageData)
-  );
+  console.log("Updating color with ID:", colorId, "data:", updatedColorData, "hasImage?", Boolean(imageData));
   return async (dispatch) => {
     try {
-      // Ha van imageData, akkor építsük be a payload-ba
       const payload = {
         ...updatedColorData,
         ...(imageData
-          ? {
-              // previewImage felől érkező "data:image/xxx;base64,AAAA..." string
-              imageContentType: imageData.split(";")[0].split(":")[1],
-              imageData: imageData.split(",")[1],
-            }
-          : {}),
+          ? {imageContentType: imageData.split(";")[0].split(":")[1],
+              imageData: imageData.split(",")[1],}: {}),
       };
 
       const response = await axiosInstance.put(
@@ -94,6 +82,37 @@ const updateColorApi = (colorId, updatedColorData, imageData) => {
     }
   };
 };
+
+const createColorApi = (colorData, imageData) => {
+  console.log(
+    "Creating color with data:", 
+    colorData, 
+    "hasImage?", 
+    Boolean(imageData)
+  );
+  return async (dispatch) => {
+    try {
+      const formData = new FormData();
+      formData.append(
+        "metadata",
+        new Blob([JSON.stringify(colorData)], { type: "application/json" })
+      );
+      if (imageData) {
+        formData.append("image", imageData);
+      }
+      const response = await axiosInstance.post("/colors", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      dispatch(addColor(response.data));
+      console.log("Color created successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error while creating color:", error);
+      throw error;
+    }
+  };
+};
+
 /*
 // Create a new color
 const createColorApi = (colorData, imageData) => {
@@ -124,35 +143,7 @@ const createColorApi = (colorData, imageData) => {
     }
   };
 };*/
-const createColorApi = (colorData, imageFile) => {
-  return async (dispatch) => {
-    try {
-      // 1. FormData összeállítása
-      const formData = new FormData();
-      // metadata rész: JSON blob
-      formData.append(
-        "metadata",
-        new Blob([JSON.stringify(colorData)], { type: "application/json" })
-      );
-      // image rész: ha van fájl
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
 
-      // 2. POST multipart/form-data
-      const response = await axiosInstance.post("/colors", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      dispatch(addColor(response.data));
-      console.log("Color created successfully:", response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error while creating color:", error);
-      throw error;
-    }
-  };
-};
 
 export default {
   getAllColorsApi,
