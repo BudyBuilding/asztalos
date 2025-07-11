@@ -1,9 +1,0 @@
-[build]
-  base    = "asztalos/frontend"
-  publish = "asztalos/frontend/build"
-  command = "npm run build"
-
-[[redirects]]
-  from = "/*"
-  to   = "/index.html"
-  status = 200
