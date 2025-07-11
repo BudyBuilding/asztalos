@@ -13,7 +13,8 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                 "http://localhost:3000",
                 "https://asztalos-frontend.netlify.app",
-                "https://asztalosoft.com"
+                "https://asztalosoft.com",
+                "https://www.asztalosoft.hu"
             )
                 .allowedHeaders("*")  
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
