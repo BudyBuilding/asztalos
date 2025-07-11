@@ -10,9 +10,12 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000")  // Dinamikusan megadott origin
-                .allowedHeaders("https://asztalos-frontend.netlify.app")
-                .allowedHeaders("https://asztalosoft.com")  
+                .allowedOrigins(
+                "http://localhost:3000",
+                "https://asztalos-frontend.netlify.app",
+                "https://asztalosoft.com"
+            )
+                .allowedHeaders("*")  
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)
                 .maxAge(3600);
