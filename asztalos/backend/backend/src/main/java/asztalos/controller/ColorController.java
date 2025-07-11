@@ -33,7 +33,6 @@ import asztalos.model.Color;
 import asztalos.model.User;
 import asztalos.service.ColorService;
 import asztalos.service.UserService;
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/colors")
 public class ColorController {

@@ -47,7 +47,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/account")
 public class AccountController {
