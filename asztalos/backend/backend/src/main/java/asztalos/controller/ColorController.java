@@ -80,7 +80,6 @@ public class ColorController {
            if (!currentUser.isPresent() || !isAdminOrManager(currentUser.get())) {
                return ResponseEntity.status(403).build();
            }
-           // itt a colorDetails.imageData és imageContentType már benne lehet
            Color saved = colorService.saveColor(colorDetails);
            return ResponseEntity.ok(saved);
        }
@@ -127,11 +126,11 @@ public ResponseEntity<Color> updateColorWithImage(
         return ResponseEntity.notFound().build();
     }
 
-    // reflection: mezők másolása (kivéve imageData, imageContentType)
     try {
         for (Field f : Color.class.getDeclaredFields()) {
             f.setAccessible(true);
             if ("imageData".equals(f.getName()) || "imageContentType".equals(f.getName())) continue;
+            if ("imageDataReduced".equals(f.getName()) || "imageContentType".equals(f.getName())) continue;
             Object newVal = f.get(colorDetails);
             if (newVal != null) {
                 f.set(existingColor, newVal);
@@ -147,33 +146,12 @@ public ResponseEntity<Color> updateColorWithImage(
         existingColor.setImageId(filename);
         existingColor.setImageContentType(image.getContentType());
         existingColor.setImageData(image.getBytes());
+        existingColor.setImageDataReduced(image.getBytes());
     }
 
     Color saved = colorService.saveColor(existingColor);
     return ResponseEntity.ok(saved);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     /*

@@ -111,6 +111,7 @@ function ColorsPage() {
                 {colors.map((color) => {
                   //                  const imageUrl = dispatch(getImageById(color.imageId));
                   const imageUrl = color.imageData;
+                  const imageDataReduced = color.imageDataReduced;
                   const imageType = color.imageContentType || "image/jpeg";
                   return (
                     <tr
@@ -125,8 +126,10 @@ function ColorsPage() {
                       <td>
                         <Image
                           //                          src={"data:image/jpeg;base64," + imageUrl}
-                          src={`/colors/${color.colorId}`}
-                          //                          src={`data:${imageType || "image/jpeg"};base64,${imageUrl}`}
+                          src={`data:${
+                            imageType || "image/jpeg"
+                          };base64,${imageDataReduced}`}
+                          loading="lazy"
                           alt={color.name}
                           style={{
                             width: 100, // fixed width
@@ -136,8 +139,7 @@ function ColorsPage() {
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setFullscreenImage(`/colors/${color.colorId}`);
-                            //                            setFullscreenImage(imageUrl);
+                            setFullscreenImage(imageUrl);
                           }}
                         />
                       </td>

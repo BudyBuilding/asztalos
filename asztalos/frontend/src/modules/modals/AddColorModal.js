@@ -6,7 +6,7 @@ import {
   Col,
   Row,
   Image,
-  FloatingLabel,
+  FloatingLabel
 } from "react-bootstrap";
 import colorApi from "../../data/api/colorApi";
 import { useDispatch } from "react-redux";
@@ -37,9 +37,8 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setColorPrice(colorToEdit.price);
       setColorDimension(colorToEdit.dimension);
       setSelectedFile(null);
-      
 
-  /*    // fetch existing image by id
+      /*    // fetch existing image by id
       if (colorToEdit.imageId) {
         (async () => {
           try {
@@ -54,12 +53,11 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
         setPreviewImage(null);
       }*/
 
-            if (colorToEdit.imageData) {
-        setPreviewImage("data:image/jpeg;base64," +  colorToEdit.imageData);
+      if (colorToEdit.imageData) {
+        setPreviewImage("data:image/jpeg;base64," + colorToEdit.imageData);
       } else {
         setPreviewImage(null);
       }
-
     } else {
       // reset fields for add
       setColorName("");
@@ -84,7 +82,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
     }
   };
 
-  const handleSubmit = async (event) => {
+  /*const handleSubmit = async (event) => {
     event.preventDefault();
     if (!previewImage) {
       alert("Please select or keep an image.");
@@ -108,6 +106,68 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       } else {
         await dispatch(colorApi.createColorApi(colorData, previewImage));
       }
+      onHide();
+    } catch (error) {
+      console.error("Error saving color:", error);
+    }
+  };*/
+  const resizeBase64Image = (base64Str, maxWidth = 100, maxHeight = 100) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.7); // 0.7 minőség
+        resolve(resizedDataUrl);
+      };
+    });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!previewImage) {
+      alert("Please select or keep an image.");
+      return;
+    }
+
+    const colorData = {
+      imageId: 0,
+      active: colorActive,
+      dimension: colorDimension,
+      materialType: colorType,
+      name: colorName,
+      rotable: colorRotable,
+      price: colorPrice
+    };
+
+    try {
+      // Generate reduced-size version
+      const reduced = await resizeBase64Image(previewImage);
+      const imageContentType = previewImage.split(";")[0].split(":")[1];
+      const imageBase64 = previewImage.split(",")[1];
+      const reducedBase64 = reduced.split(",")[1];
+
+      // Merge image data into payload
+      const payload = {
+        ...colorData,
+        imageContentType,
+        imageData: imageBase64,
+        imageDataReduced: reducedBase64
+      };
+
+      if (isEdit) {
+        await dispatch(
+          colorApi.updateColorApi(colorToEdit.colorId, payload, null) // imageData külön nem kell
+        );
+      } else {
+        await dispatch(colorApi.createColorApi(payload, null));
+      }
+
       onHide();
     } catch (error) {
       console.error("Error saving color:", error);
@@ -147,9 +207,8 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                           const v = e.target.value;
                           setColorType(v);
                           if (v === "MDF") setColorDimension("NaN");
-                          else if (v === "Gizir") setColorDimension(
-                            "2780 * 1200 * 18"
-                          );
+                          else if (v === "Gizir")
+                            setColorDimension("2780 * 1200 * 18");
                           else setColorDimension("2780 * 2050 * 18");
                         }}
                       >
@@ -240,8 +299,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                       border: "1px solid #ddd",
                       borderRadius: 4,
                       overflow: "hidden",
-                      cursor: "pointer",
-
+                      cursor: "pointer"
                     }}
                     onClick={() => setFullScreenImage(previewImage)}
                   />

@@ -35,6 +35,9 @@ public class Color {
     @Column(name = "image_data", columnDefinition = "bytea")
     private byte[] imageData;
 
+    @Column(name = "image_data_reduced", columnDefinition = "bytea")
+    private byte[] imageDataReduced;
+
     private String imageContentType;
 
     public byte[] getImageData() {
@@ -44,6 +47,14 @@ public class Color {
     public void setImageData(byte[] imageData) {
         this.imageData = imageData;
     }       
+
+    public byte[] getImageDataReduced() {
+        return imageDataReduced;
+    }
+
+    public void setImageDataReduced(byte[] imageDataReduced) {
+        this.imageDataReduced = imageDataReduced;
+    }  
 
     public String getImageContentType() {
         return imageContentType;
