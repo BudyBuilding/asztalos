@@ -39,8 +39,6 @@ export const getClientById = (clientId) => {
   };
 };
 
-
-
 export const getAllClients = () => {
   return (dispatch) => {
     const clients = store.getState().clients;
@@ -278,6 +276,14 @@ export const getAllImageId = () => {
       imageId.push(image.image.imageId);
     });
     return imageId;
+  };
+};
+
+export const getColorById = (colorId) => {
+  return (dispatch) => {
+    const colors = store.getState().colors;
+    const color = colors.find((color) => color.colorId == colorId);
+    return color;
   };
 };
 

@@ -7,7 +7,7 @@ import {
   Button,
   Modal,
   Card,
-  Image as RBImage,
+  Image as RBImage
 } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { IonIcon } from "@ionic/react";
@@ -28,6 +28,7 @@ import {
   getAllSettings,
   getAllColors,
   getImageById,
+  getColorById
 } from "../data/getters";
 import {
   Engine,
@@ -38,17 +39,17 @@ import {
   HemisphericLight,
   StandardMaterial,
   Color3,
-  Color4,
+  Color4
 } from "@babylonjs/core";
 export default function ScriptCaller({
-    onSave,
-    palette,
-    onColorSelect,
-    onColorRemove,
-    showPaletteModal,
-    openPaletteModal,
-    closePaletteModal,
-  }) {
+  onSave,
+  palette,
+  onColorSelect,
+  onColorRemove,
+  showPaletteModal,
+  openPaletteModal,
+  closePaletteModal
+}) {
   const dispatch = useDispatch();
 
   // selectors via dispatch(useSelector)
@@ -78,7 +79,7 @@ export default function ScriptCaller({
 
   const [collapsedColors, setCollapsedColors] = useState({});
   const toggleColor = (cid) =>
-    setCollapsedColors(prev => ({ ...prev, [cid]: !prev[cid] }));
+    setCollapsedColors((prev) => ({ ...prev, [cid]: !prev[cid] }));
 
   // refs for width/height/depth inputs
   const heightRef = useRef(null);
@@ -88,9 +89,7 @@ export default function ScriptCaller({
   // available rooms (excluding "All")
   const rooms = useMemo(() => {
     return Array.from(
-      new Set(
-        scripts.map((s) => s.room).filter((r) => r && r !== "All")
-      )
+      new Set(scripts.map((s) => s.room).filter((r) => r && r !== "All"))
     );
   }, [scripts]);
 
@@ -108,11 +107,13 @@ export default function ScriptCaller({
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
-  
+
     const idx = parseInt(draggableId, 10);
     const newColorId =
-      destination.droppableId === "no-color" ? null : Number(destination.droppableId);
-  
+      destination.droppableId === "no-color"
+        ? null
+        : Number(destination.droppableId);
+
     setGeneratedItems((old) => {
       const copy = [...old];
       copy[idx] = { ...copy[idx], colorId: newColorId };
@@ -122,7 +123,7 @@ export default function ScriptCaller({
 
   // most két paramétert várunk: az updated item-et és annak indexét
   const handleItemUpdate = (updated, idx) => {
-    setGeneratedItems(old => {
+    setGeneratedItems((old) => {
       const copy = [...old];
       copy[idx] = updated;
       return copy;
@@ -139,7 +140,7 @@ export default function ScriptCaller({
       rotable: true,
       details: "",
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, 0, 0]
     };
     setGeneratedItems((old) => [...old, defaultItem]);
   };
@@ -170,55 +171,57 @@ export default function ScriptCaller({
   }
 
   // generate items via processScript
-// generate items via processScript
-function handleGenerate() {
-  if (!selectedScript) return;
-  const height = Number(heightRef.current.value);
-  const width = Number(widthRef.current.value);
-  const depth = Number(depthRef.current.value);
-  const updatedConfig = { ...config, height, width, depth };
-  setConfig(updatedConfig);
+  // generate items via processScript
+  function handleGenerate() {
+    if (!selectedScript) return;
+    const height = Number(heightRef.current.value);
+    const width = Number(widthRef.current.value);
+    const depth = Number(depthRef.current.value);
+    const updatedConfig = { ...config, height, width, depth };
+    setConfig(updatedConfig);
 
-  // feldolgozzuk a scriptet
-  const items = processScript(
-    updatedConfig,
-    { height, width, depth },
-    selectedScript.scriptId
-  );
-  setGeneratedItems(items);
+    // feldolgozzuk a scriptet
+    const items = processScript(
+      updatedConfig,
+      { height, width, depth },
+      selectedScript.scriptId
+    );
+    setGeneratedItems(items);
 
-  // dummy tételek készítése refScriptId alapján
-  const realItems = items.filter(i => !i.refScriptId);
-  const refItems  = items.filter(i => !!i.refScriptId);
+    // dummy tételek készítése refScriptId alapján
+    const realItems = items.filter((i) => !i.refScriptId);
+    const refItems = items.filter((i) => !!i.refScriptId);
 
-  setDummyScriptItems([]); // töröljük az előzőeket
-  refItems.forEach(ref => {
-    dispatch(fetchScriptItemsForScript(ref.refScriptId))
-      .then(() => {
-        const nested = processScript(
-          updatedConfig,
-          { height, width, depth },
-          ref.refScriptId
+    setDummyScriptItems([]); // töröljük az előzőeket
+    refItems.forEach((ref) => {
+      dispatch(fetchScriptItemsForScript(ref.refScriptId))
+        .then(() => {
+          const nested = processScript(
+            updatedConfig,
+            { height, width, depth },
+            ref.refScriptId
+          );
+          // dummy attribútumok beállítása:
+          const dummies = nested.map((it) => ({
+            ...it,
+            isDummy: true,
+            qty: 1,
+            rotable: false,
+            kant: "[-,0,0]",
+            parentRef: ref.scriptItemId
+          }));
+          setDummyScriptItems((prev) => [...prev, ...dummies]);
+        })
+        .catch((err) =>
+          console.error("Error fetching nested script items:", err)
         );
-        // dummy attribútumok beállítása:
-        const dummies = nested.map(it => ({
-          ...it,
-          isDummy: true,
-          qty: 1,
-          rotable: false,
-          kant: "[-,0,0]",
-          parentRef: ref.scriptItemId
-        }));
-        setDummyScriptItems(prev => [...prev, ...dummies]);
-      })
-      .catch(err => console.error("Error fetching nested script items:", err));
-  });
-}
+    });
+  }
 
   // save object  created items
   async function handleSave() {
     if (!generatedItems.length) return;
-  
+
     try {
       // 1) Objektum létrehozása és a válasz adatainak kicsomagolása
       const objectPayload = await dispatch(
@@ -227,20 +230,20 @@ function handleGenerate() {
           usedScript: { scriptId: selectedScript.scriptId },
           work: { workId: selectedWork },
           client: { clientId: selectedClient },
-          usedColors: palette.map(c => c.colorId),
+          usedColors: palette.map((c) => c.colorId),
           setting: JSON.stringify(config),
           size: "[0,0,0]",
           position: "[0,0,0]",
-          rotation: "[0,0,0]",
+          rotation: "[0,0,0]"
         })
       );
-  
+
       const newObjectId = objectPayload.objectId;
       setObjectToView(newObjectId);
       setObjectToViewData(objectPayload);
-  
+
       // 2) CreatedItems payload összeállítása
-      const itemsToSave = generatedItems.map(item => ({
+      const itemsToSave = generatedItems.map((item) => ({
         size: item.size,
         qty: item.qty,
         name: item.name ? item.name : "name",
@@ -252,43 +255,43 @@ function handleGenerate() {
         rotable: item.rotable,
         scriptItem: { scriptItemId: item.scriptItemId },
         ...(item.colorId != null && { color: { colorId: item.colorId } }),
-        object: { objectId: newObjectId, work: { workId: selectedWork.workId } },
+        object: {
+          objectId: newObjectId,
+          work: { workId: selectedWork.workId }
+        },
         work: { workId: selectedWork },
-        groupId: item.groupId || null,
+        groupId: item.groupId || null
       }));
-      console.log("GeneratedItems:", generatedItems); 
+      console.log("GeneratedItems:", generatedItems);
       console.log("CreatedItems payload:", itemsToSave);
-  
+
       // 3) CreatedItems mentése
       const createdItemsResponse = await dispatch(
         createdItemApi.createMultipleCreatedItemsApi(itemsToSave)
       );
       console.log("CreatedItems response:", createdItemsResponse);
-  
+
       // 4) Visszahívjuk a onSave callback-et
       onSave();
     } catch (err) {
       console.error("Hiba mentéskor:", err);
     }
   }
-  
-  
-
 
   // assign a color to a generated item
   const handleItemColorChange = (index, color) => {
-    setGeneratedItems(prev => {
+    setGeneratedItems((prev) => {
       const arr = [...prev];
       // ← store on the exact same key your viewer expects:
       arr[index] = { ...arr[index], colorId: color.colorId };
       return arr;
     });
   };
-  
+
   // általános item változtatás pl. mennyiség vagy size
   const handleItemChange = (index, updatedFields) => {
     const updated = { ...generatedItems[index], ...updatedFields };
-    console.log("Item módosítva:", updated);    // <— ide is kiírhatod
+    console.log("Item módosítva:", updated); // <— ide is kiírhatod
     setGeneratedItems((prev) => {
       const arr = [...prev];
       arr[index] = updated;
@@ -312,13 +315,13 @@ function handleGenerate() {
   useEffect(() => {
     // ha már az ObjectViewer-t nézzük, ne inicializáljuk újra a canvas-t
     if (objectToView) return;
-  
+
     if (!canvasRef.current) return;
     const engine = new Engine(canvasRef.current, true);
     const scene = new Scene(engine);
     scene.clearColor = new Color4(1, 1, 1, 1);
     sceneRef.current = scene;
-  
+
     const camera = new ArcRotateCamera(
       "camera",
       Math.PI / 2,
@@ -330,11 +333,10 @@ function handleGenerate() {
     camera.attachControl(canvasRef.current, true);
     camera.wheelPrecision = 50;
     new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-  
+
     engine.runRenderLoop(() => scene.render());
     return () => engine.dispose();
   }, [objectToView]);
-  
 
   useEffect(() => {
     const scene = sceneRef.current;
@@ -368,9 +370,9 @@ function handleGenerate() {
       );
       box.position = new Vector3(x + sw / 2, y + sh / 2, z + sd / 2);
       box.rotation = new Vector3(
-        rx * Math.PI / 2,
-        ry * Math.PI / 2,
-        rz * Math.PI / 2
+        (rx * Math.PI) / 2,
+        (ry * Math.PI) / 2,
+        (rz * Math.PI) / 2
       );
       const mat = new StandardMaterial(`mat_${idx}`, scene);
       mat.diffuseColor = new Color3(0.3, 0.3, 0.3);
@@ -389,10 +391,13 @@ function handleGenerate() {
           <Modal.Body>
             <Row xs={2} md={3} lg={4} className="g-3">
               {allColors.map((color) => {
-                const imageUrl = dispatch(getImageById(color.imageId));
+                const imageUrl = color.imageData;
                 return (
                   <Col key={color.colorId}>
-                    <Card onClick={() => onColorSelect(color)} style={{ cursor: "pointer" }}>
+                    <Card
+                      onClick={() => onColorSelect(color)}
+                      style={{ cursor: "pointer" }}
+                    >
                       <RBImage
                         src={`data:image/jpeg;base64,${imageUrl}`}
                         style={{ height: 100, objectFit: "cover" }}
@@ -409,27 +414,20 @@ function handleGenerate() {
         </Modal>
         <Row className="align-items-center">
           <Col xs="auto">
-            <h3>
-              {selectedScript ? selectedScript.name : "Script Selector"}
-            </h3>
+            <h3>{selectedScript ? selectedScript.name : "Script Selector"}</h3>
           </Col>
           {selectedScript && (
             <>
               {/* Dimensions inputs */}
               <Col className="d-flex justify-content-center">
                 {["width", "height", "depth"].map((dim) => (
-                  <Form.Group
-                    key={dim}
-                    className="mx-2"
-                    style={{ width: 120 }}
-                  >
+                  <Form.Group key={dim} className="mx-2" style={{ width: 120 }}>
                     <Form.Label className="mb-1 text-capitalize">
                       {dim}
                     </Form.Label>
                     <Form.Control
                       type="number"
                       size="sm"
-                      
                       ref={
                         dim === "width"
                           ? widthRef
@@ -469,13 +467,15 @@ function handleGenerate() {
     );
   }
 
-
-    return (
+  return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Header />
       {!selectedScript ? (
-        <Container className="mt-4" fluid style={{ flex: 1, overflowY: "auto" }}>
-
+        <Container
+          className="mt-4"
+          fluid
+          style={{ flex: 1, overflowY: "auto" }}
+        >
           <Form.Group className="mb-3" style={{ maxWidth: "25vw" }}>
             <Form.Label>Válassz szobát</Form.Label>
             <Form.Select
@@ -495,51 +495,52 @@ function handleGenerate() {
               {scripts
                 .filter((s) => s.room === selectedRoom || s.room === "All")
                 .map((s) => (
-                <div
-                  key={s.scriptId}
-                  className="me-3 p-2 border"
-                  style={{
-                    cursor: "pointer",
-                    width: 150,          // fix szélesség
-                    height: 150,         // opcionálisan fix magasság is
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden"   // kilógó levágása
-                  }}
-                  onClick={() => selectScript(s)}
-                >
-
-                 {s.imageData && (
-                   <img
-                     src={`data:image/jpeg;base64,${s.imageData}`}
-                     alt={s.name}
-                     style={{
-                       width: "100%",
-                       height: "100px",
-                       objectFit: "cover",
-                       marginBottom: "0.5rem",
-                       
-                     }}
-                   />
-                 )}
-                             <p
-           className="mb-0"
-           style={{
-             overflow: "hidden",
-             whiteSpace: "nowrap",
-             textOverflow: "ellipsis",
-           }}
-         >
-           {s.name}
-         </p>
+                  <div
+                    key={s.scriptId}
+                    className="me-3 p-2 border"
+                    style={{
+                      cursor: "pointer",
+                      width: 150, // fix szélesség
+                      height: 150, // opcionálisan fix magasság is
+                      display: "flex",
+                      flexDirection: "column",
+                      overflow: "hidden" // kilógó levágása
+                    }}
+                    onClick={() => selectScript(s)}
+                  >
+                    {s.imageData && (
+                      <img
+                        src={`data:image/jpeg;base64,${s.imageData}`}
+                        alt={s.name}
+                        style={{
+                          width: "100%",
+                          height: "100px",
+                          objectFit: "cover",
+                          marginBottom: "0.5rem"
+                        }}
+                      />
+                    )}
+                    <p
+                      className="mb-0"
+                      style={{
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis"
+                      }}
+                    >
+                      {s.name}
+                    </p>
                   </div>
                 ))}
             </div>
           )}
         </Container>
       ) : (
-        <Container fluid style={{ flex: 1, overflowY: "auto", marginTop: "1rem" }}> 
-          <Row style={{ height: "100%" }}>  
+        <Container
+          fluid
+          style={{ flex: 1, overflowY: "auto", marginTop: "1rem" }}
+        >
+          <Row style={{ height: "100%" }}>
             <Col md={3} className="border-end">
               <h5>Settings</h5>
               <Form>
@@ -551,9 +552,7 @@ function handleGenerate() {
                     const isLast = index === array.length - 1;
                     return (
                       <Form.Group key={key} className="mb-3">
-                        <Form.Label>
-                          {settingNameById[key] || key}
-                        </Form.Label>
+                        <Form.Label>{settingNameById[key] || key}</Form.Label>
                         <Form.Control
                           type="text"
                           inputMode="numeric"
@@ -572,17 +571,20 @@ function handleGenerate() {
             <Col md={6} className="text-center">
               {generatedItems.length > 0 ? (
                 <ObjectViewer
-                  object={objectToViewData || {objectId:0,position:"[0,0,0]",rotation:"[0,0,0]"}}
+                  object={
+                    objectToViewData || {
+                      objectId: 0,
+                      position: "[0,0,0]",
+                      rotation: "[0,0,0]"
+                    }
+                  }
                   //createdItems={generatedItems}
                   createdItems={[...generatedItems, ...dummyScriptItems]}
                   usedColors={palette}
                   onItemUpdate={handleItemUpdate}
-              />
-              ) : (
-                <canvas
-                  ref={canvasRef}
-                  style={{ width: "100%",  }}
                 />
+              ) : (
+                <canvas ref={canvasRef} style={{ width: "100%" }} />
               )}
             </Col>
 
@@ -590,7 +592,7 @@ function handleGenerate() {
               <h5>Selected Colors</h5>
               <div className="d-flex mb-3">
                 {palette.map((color) => {
-                  const imageUrl = dispatch(getImageById(color.imageId));
+                  const imageUrl = color.imageDataReduced;
                   return (
                     <div
                       key={color.colorId}
@@ -615,7 +617,7 @@ function handleGenerate() {
                           width: "1rem",
                           height: "1rem",
                           textAlign: "center",
-                          lineHeight: "1rem",
+                          lineHeight: "1rem"
                         }}
                       >
                         –
@@ -633,27 +635,27 @@ function handleGenerate() {
                   </div>
                 )}
               </div>
-            
+
               <div style={{ flex: 1, overflowY: "auto" }}>
-              <h5 className="d-flex align-items-center justify-content-between">
-                Generated Items
-                <Button size="sm" variant="secondary" onClick={handleAddNew}>
-                  New Item
-                </Button>
-              </h5>
-              <GeneratedItemsList
-                generatedItems={generatedItems}
-                palette={palette}
-                collapsedColors={collapsedColors}
-                toggleColor={toggleColor}
-                handleItemChange={handleItemChange}
-                handleItemColorChange={handleItemColorChange}
-                onDragEnd={onDragEnd}
-                onDelete={(idx) =>
-                  setGeneratedItems((old) => old.filter((_, i) => i !== idx))
-                }
-              />
-            </div>
+                <h5 className="d-flex align-items-center justify-content-between">
+                  Generated Items
+                  <Button size="sm" variant="secondary" onClick={handleAddNew}>
+                    New Item
+                  </Button>
+                </h5>
+                <GeneratedItemsList
+                  generatedItems={generatedItems}
+                  palette={palette}
+                  collapsedColors={collapsedColors}
+                  toggleColor={toggleColor}
+                  handleItemChange={handleItemChange}
+                  handleItemColorChange={handleItemColorChange}
+                  onDragEnd={onDragEnd}
+                  onDelete={(idx) =>
+                    setGeneratedItems((old) => old.filter((_, i) => i !== idx))
+                  }
+                />
+              </div>
             </Col>
           </Row>
         </Container>

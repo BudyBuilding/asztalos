@@ -11,7 +11,7 @@ import {
   Card,
   Row,
   Col,
-  Image as RBImage,
+  Image as RBImage
 } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
 import { add, chevronBack, chevronForward } from "ionicons/icons";
@@ -24,40 +24,38 @@ import {
   getCreatedItemsByObject,
   getClientById,
   getAllColors,
-  getImageById,
-  getSettingById,
+  getSettingById
 } from "../../data/getters";
-import {
-  selectObject,
-  updateObject,
-} from "../../data/store/actions/objectStoreFunctions";
+import { selectObject } from "../../data/store/actions/objectStoreFunctions";
 import { updateWork } from "../../data/store/actions/workStoreFunctions";
 import objectApi from "../../data/api/objectApi";
 
 function EditWork() {
-    useEffect(() => {
-        const orig = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
+  useEffect(() => {
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
-        const handleWheel = e => {
-          // ha a cél egy scrollable input / dropdown / canvas, akkor engedjük
-          const tag = e.target.tagName.toLowerCase();
-          const isInteractive = ["input", "textarea", "select", "canvas"].includes(tag);
-          if (!isInteractive) {
-            e.preventDefault(); // tiltjuk a scrollt
-          }
-        };
+    const handleWheel = (e) => {
+      // ha a cél egy scrollable input / dropdown / canvas, akkor engedjük
+      const tag = e.target.tagName.toLowerCase();
+      const isInteractive = ["input", "textarea", "select", "canvas"].includes(
+        tag
+      );
+      if (!isInteractive) {
+        e.preventDefault(); // tiltjuk a scrollt
+      }
+    };
 
-        window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", handleWheel, { passive: false });
 
-        return () => {
-          document.body.style.overflow = orig;
-          window.removeEventListener("wheel", handleWheel);
-        };
-      }, []);
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   const dispatch = useDispatch();
-  const works = useSelector(state => state.works);
+  const works = useSelector((state) => state.works);
   const { workId } = useParams();
 
   const [loading, setLoading] = useState(true);
@@ -75,7 +73,7 @@ function EditWork() {
   const [objectToDelete, setObjectToDelete] = useState(null);
   const [localWork, setLocalWork] = useState(null);
   const [showPaletteModal, setShowPaletteModal] = useState(false);
-  const isOrdered = localWork?.isOrdered; // 
+  const isOrdered = localWork?.isOrdered; //
   const colors = dispatch(useSelector(getAllColors)) || [];
 
   const startXRef = useRef(0);
@@ -86,13 +84,16 @@ function EditWork() {
   // load work and objects
   useEffect(() => {
     const initWork = async () => {
-      const orig = works.find(w => w.workId === +workId);
-      if (!orig) { setLoading(false); return; }
+      const orig = works.find((w) => w.workId === +workId);
+      if (!orig) {
+        setLoading(false);
+        return;
+      }
       await dispatch(getClientById(orig.ClientId));
       const today = new Date();
       setLocalWork({
         ...orig,
-        Date: today.toISOString().slice(0,10),
+        Date: today.toISOString().slice(0, 10),
         Status: "Pending",
         objects: orig.objects || []
       });
@@ -105,7 +106,7 @@ function EditWork() {
     if (loading) return;
     const loadObjects = async () => {
       const all = await dispatch(getAllObjects());
-      setObjects(all.filter(o => o.work?.workId === +workId));
+      setObjects(all.filter((o) => o.work?.workId === +workId));
     };
     loadObjects();
   }, [loading, workId, dispatch]);
@@ -119,161 +120,165 @@ function EditWork() {
     }
     let all = [];
     if (selectedTab === "0") {
-      objects.forEach(o => {
+      objects.forEach((o) => {
         all = all.concat(
-          dispatch(getCreatedItemsByObject(o.objectId))
-            .filter(it => it.work?.workId === wid)
+          dispatch(getCreatedItemsByObject(o.objectId)).filter(
+            (it) => it.work?.workId === wid
+          )
         );
       });
     } else {
       const oid = +selectedTab;
-      all = dispatch(getCreatedItemsByObject(oid))
-        .filter(it => it.work?.workId === wid);
+      all = dispatch(getCreatedItemsByObject(oid)).filter(
+        (it) => it.work?.workId === wid
+      );
     }
     setCreatedItems(
-      all.map(it => ({ ...it, colorId: it.color?.colorId ?? null }))
+      all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
     );
   }, [objects, selectedTab, workId, dispatch]);
 
   // update palette on createdItems change
   useEffect(() => {
-    const itemColorIds = Array.from(new Set(
-      createdItems.map(it => it.colorId).filter(cid => cid != null)
-    ));
-    setPalette(prev => {
-      const allIds = Array.from(new Set([...prev.map(c=>c.colorId), ...itemColorIds]));
+    const itemColorIds = Array.from(
+      new Set(createdItems.map((it) => it.colorId).filter((cid) => cid != null))
+    );
+    setPalette((prev) => {
+      const allIds = Array.from(
+        new Set([...prev.map((c) => c.colorId), ...itemColorIds])
+      );
       return allIds
-        .map(id => colors.find(c => c.colorId === id))
+        .map((id) => colors.find((c) => c.colorId === id))
         .filter(Boolean);
     });
   }, [createdItems, colors]);
 
   // handle external item changes
   const handleCreatedItemChange = (index, fields) => {
-    setCreatedItems(prev => {
+    setCreatedItems((prev) => {
       const arr = [...prev];
       arr[index] = { ...arr[index], ...fields };
       const updated = { ...arr[index], ...fields };
-         if (typeof updated.itemId === "number" && updated.itemId > 0) {
-             // a backend color-update-hez color objektumot vár
-             const payload = {
-               ...updated,
-               ...(fields.colorId !== undefined && {
-                 color: fields.colorId === null
-                   ? null
-                   : { colorId: fields.colorId }
-               })
-             };
-             // ne küldjük fölöslegesen a colorId mezőt is
-             delete payload.colorId;
-        
-             dispatch(
-               createdItemApi.updateCreatedItemApi(updated.itemId, payload)
-             ).catch(err => console.error("Error updating createdItem:", err));
-           }
+      if (typeof updated.itemId === "number" && updated.itemId > 0) {
+        // a backend color-update-hez color objektumot vár
+        const payload = {
+          ...updated,
+          ...(fields.colorId !== undefined && {
+            color: fields.colorId === null ? null : { colorId: fields.colorId }
+          })
+        };
+        // ne küldjük fölöslegesen a colorId mezőt is
+        delete payload.colorId;
+
+        dispatch(
+          createdItemApi.updateCreatedItemApi(updated.itemId, payload)
+        ).catch((err) => console.error("Error updating createdItem:", err));
+      }
       return arr;
     });
   };
-    // ── Új item hozzáadása ───────────────────────────────────
-    const handleAddItem = () => {
-      if (isOrdered) return; 
-      // csak ha tényleg egy objektum van kijelölve (selectedTab !== "0" és !== "newObject")
-      if (selectedTab !== "0" && selectedTab !== "newObject") {
-        const defaultItem = {
-          size: "[1,1,18]",
-          qty: 1,
-          position: "[0,0,0]",
-          rotation: "[0,0,0]",
-          colorId: null,
-          name: "",
-          details: "",
-          material: "",      // anyag
-          rotable: true,
-          object: { objectId: +selectedTab },
-          work:    { workId: +workId },    // ← ide kell a munka
-          itemId: Date.now() * -1
-        };
-        setCreatedItems(old => [...old, defaultItem]);
-      }
-    };
-
-  
+  // ── Új item hozzáadása ───────────────────────────────────
+  const handleAddItem = () => {
+    if (isOrdered) return;
+    // csak ha tényleg egy objektum van kijelölve (selectedTab !== "0" és !== "newObject")
+    if (selectedTab !== "0" && selectedTab !== "newObject") {
+      const defaultItem = {
+        size: "[1,1,18]",
+        qty: 1,
+        position: "[0,0,0]",
+        rotation: "[0,0,0]",
+        colorId: null,
+        name: "",
+        details: "",
+        material: "", // anyag
+        rotable: true,
+        object: { objectId: +selectedTab },
+        work: { workId: +workId }, // ← ide kell a munka
+        itemId: Date.now() * -1
+      };
+      setCreatedItems((old) => [...old, defaultItem]);
+    }
+  };
 
   // callback from ModelViewer
   const handleModelViewerUpdate = (updatedItem, groupIdx) => {
-    const idx = createdItems.findIndex(it => it.itemId === updatedItem.itemId);
+    const idx = createdItems.findIndex(
+      (it) => it.itemId === updatedItem.itemId
+    );
     if (idx !== -1) {
       handleCreatedItemChange(idx, {
         colorId: updatedItem.colorId,
         position: updatedItem.position,
-        rotation: updatedItem.rotation,
+        rotation: updatedItem.rotation
       });
     }
   };
 
   const handleObjectViewerUpdate = (updatedItem, groupIdx) => {
-    const idx = createdItems.findIndex(it => it.itemId === updatedItem.itemId);
+    const idx = createdItems.findIndex(
+      (it) => it.itemId === updatedItem.itemId
+    );
     if (idx !== -1) {
       handleCreatedItemChange(idx, {
         colorId: updatedItem.colorId,
         position: updatedItem.position,
-        rotation: updatedItem.rotation,
+        rotation: updatedItem.rotation
       });
     }
   };
 
-  const handleSelectTab = key => {
+  const handleSelectTab = (key) => {
     setSelectedTab(key);
     dispatch(selectObject(key));
   };
 
-const handleSaveWork = async () => {
-  if (!localWork) return;
-  setLoading(true);
-  try {
-    // 1) Mentjük az újonnan hozzáadott tételeket (amiknek nincs még érvényes itemId-jük)
-    const unsaved = createdItems.filter(it => it.itemId < 0);
-    await Promise.all(unsaved.map(it => {
-      const payload = {
-        ...it,
-        object: { objectId: it.object.objectId },
-        work:   { workId: +workId },  
-        color: it.colorId != null ? { colorId: it.colorId } : null,
-        material: it.material ?? "",      
-        // töröld ki a colorId mezőt, ha szükséges
-      };
-      return dispatch(createdItemApi.createCreatedItemApi(payload));
-    }));
+  const handleSaveWork = async () => {
+    if (!localWork) return;
+    setLoading(true);
+    try {
+      // 1) Mentjük az újonnan hozzáadott tételeket (amiknek nincs még érvényes itemId-jük)
+      const unsaved = createdItems.filter((it) => it.itemId < 0);
+      await Promise.all(
+        unsaved.map((it) => {
+          const payload = {
+            ...it,
+            object: { objectId: it.object.objectId },
+            work: { workId: +workId },
+            color: it.colorId != null ? { colorId: it.colorId } : null,
+            material: it.material ?? ""
+            // töröld ki a colorId mezőt, ha szükséges
+          };
+          return dispatch(createdItemApi.createCreatedItemApi(payload));
+        })
+      );
 
-    // 2) Frissítjük a Work-öt
-    await dispatch(updateWork(localWork));
+      // 2) Frissítjük a Work-öt
+      await dispatch(updateWork(localWork));
 
-    // 3) Újra lekérjük a backendről a tényleges createdItems-eket
-    const refreshed = await Promise.all(
-      objects.map(o => dispatch(getCreatedItemsByObject(o.objectId)))
-    );
-    setCreatedItems([].concat(...refreshed));
+      // 3) Újra lekérjük a backendről a tényleges createdItems-eket
+      const refreshed = await Promise.all(
+        objects.map((o) => dispatch(getCreatedItemsByObject(o.objectId)))
+      );
+      setCreatedItems([].concat(...refreshed));
 
-    // 4) Visszalépünk
-    window.history.back();
-  } catch (err) {
-    console.error("Error saving work and items:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+      // 4) Visszalépünk
+      window.history.back();
+    } catch (err) {
+      console.error("Error saving work and items:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const parseSetting = str =>
-    (str || "")
-      .split(",")
-      .reduce((acc, p) => {
-        const [k, v] = p.split(":");
-        if (k && v) acc[k.trim()] = +v;
-        return acc;
-      }, {});
+  const parseSetting = (str) =>
+    (str || "").split(",").reduce((acc, p) => {
+      const [k, v] = p.split(":");
+      if (k && v) acc[k.trim()] = +v;
+      return acc;
+    }, {});
 
-  const handleDeleteObject = id => {
-    if (isOrdered) return; 
+  const handleDeleteObject = (id) => {
+    if (isOrdered) return;
     setObjectToDelete(id);
     setShowDeleteModal(true);
   };
@@ -281,52 +286,57 @@ const handleSaveWork = async () => {
     if (objectToDelete != null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
       const all = await dispatch(getAllObjects());
-      setObjects(all.filter(o => o.work?.workId === +workId));
+      setObjects(all.filter((o) => o.work?.workId === +workId));
       setSelectedTab("0");
       setShowDeleteModal(false);
       setObjectToDelete(null);
-      setLocalWork(w => ({
+      setLocalWork((w) => ({
         ...w,
-        objects: all.filter(o => o.work?.workId === w.workId)
+        objects: all.filter((o) => o.work?.workId === w.workId)
       }));
     }
   };
   // 1) Hozzáadjuk a törléskezelőt:
-const handleDeleteItem = (index) => {
-  const item = createdItems[index];
-  if (item.itemId && item.itemId > 0) {
-    // törlés API-n keresztül
-    dispatch(createdItemApi.deleteCreatedItemApi(item.itemId))
-      .then(() => {
-        setCreatedItems(prev => prev.filter((_, i) => i !== index));
-      })
-      .catch(err => console.error("Error deleting createdItem:", err));
-  } else {
-    // csak lokális, még nem mentett tétel
-    setCreatedItems(prev => prev.filter((_, i) => i !== index));
-  }
-};
-
+  const handleDeleteItem = (index) => {
+    const item = createdItems[index];
+    if (item.itemId && item.itemId > 0) {
+      // törlés API-n keresztül
+      dispatch(createdItemApi.deleteCreatedItemApi(item.itemId))
+        .then(() => {
+          setCreatedItems((prev) => prev.filter((_, i) => i !== index));
+        })
+        .catch((err) => console.error("Error deleting createdItem:", err));
+    } else {
+      // csak lokális, még nem mentett tétel
+      setCreatedItems((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
 
   // UI helpers for palette modal
   const openPalette = () => setShowPaletteModal(true);
   const closePalette = () => setShowPaletteModal(false);
-  const selectColor = c => {
-    setPalette(p => p.length < 5 && !p.some(x => x.colorId === c.colorId) ? [...p, c] : p);
+  const selectColor = (c) => {
+    setPalette((p) =>
+      p.length < 5 && !p.some((x) => x.colorId === c.colorId) ? [...p, c] : p
+    );
     closePalette();
   };
-  const removeColor = cid => setPalette(p => p.filter(x => x.colorId !== cid));
+  const removeColor = (cid) =>
+    setPalette((p) => p.filter((x) => x.colorId !== cid));
 
   // layout panel resizing
-  const onMouseDown = e => {
+  const onMouseDown = (e) => {
     startXRef.current = e.clientX;
     startWidthRef.current = panelWidth;
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
-  const onMouseMove = e => {
+  const onMouseMove = (e) => {
     const dx = e.clientX - startXRef.current;
-    const newW = Math.min(40, Math.max(15, startWidthRef.current - dx / window.innerWidth * 100));
+    const newW = Math.min(
+      40,
+      Math.max(15, startWidthRef.current - (dx / window.innerWidth) * 100)
+    );
     setPanelWidth(newW);
   };
   const onMouseUp = () => {
@@ -335,18 +345,22 @@ const handleDeleteItem = (index) => {
   };
 
   return (
-      
     <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
       {/* Palette Modal */}
       <Modal show={showPaletteModal} onHide={closePalette} size="lg">
-        <Modal.Header closeButton><Modal.Title>Válassz egy színt</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title>Válassz egy színt</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           <Row xs={2} md={3} lg={4} className="g-3">
-            {colors.map(c => (
+            {colors.map((c) => (
               <Col key={c.colorId}>
-                <Card onClick={() => selectColor(c)} style={{ cursor: "pointer" }}>
+                <Card
+                  onClick={() => selectColor(c)}
+                  style={{ cursor: "pointer" }}
+                >
                   <RBImage
-                    src={`data:image/jpeg;base64,${dispatch(getImageById(c.imageId))}`}
+                    src={`data:image/jpeg;base64,${c.imageDataReduced}`}
                     height={100}
                     style={{ objectFit: "cover" }}
                   />
@@ -362,108 +376,182 @@ const handleDeleteItem = (index) => {
 
       {/* Delete Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton><Modal.Title>Confirm Deletion</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
         <Modal.Body>Are you sure you want to delete this object?</Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
-          <Button variant="danger" onClick={confirmDeleteObject}>Delete</Button>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDeleteObject}>
+            Delete
+          </Button>
         </Modal.Footer>
       </Modal>
 
       {/* Navigation Tabs */}
-      <Nav variant="tabs" activeKey={selectedTab} onSelect={handleSelectTab} className="mb-2">
-        {!isOrdered && (     
-        <Nav.Item>
-          <Nav.Link eventKey="newObject" onClick={() => { setShowForm(true); setShowModel(false); }}>
-            New Object
-          </Nav.Link>
-        </Nav.Item>
-        )}  
+      <Nav
+        variant="tabs"
+        activeKey={selectedTab}
+        onSelect={handleSelectTab}
+        className="mb-2"
+      >
+        {!isOrdered && (
+          <Nav.Item>
+            <Nav.Link
+              eventKey="newObject"
+              onClick={() => {
+                setShowForm(true);
+                setShowModel(false);
+              }}
+            >
+              New Object
+            </Nav.Link>
+          </Nav.Item>
+        )}
         <Nav.Item>
           <Nav.Link eventKey="0" onClick={() => setShowForm(false)}>
             Full model
           </Nav.Link>
         </Nav.Item>
-        <NavDropdown style={{width: "100px"}} title={selectedTab === "0" ? "Objects" : (objects.find(o => o.objectId.toString() === selectedTab)?.name || "Object")} id="objects-dropdown">
-          {!isOrdered && (     
-          <NavDropdown.Item eventKey="newObject" onClick={() => { setShowForm(true); setShowModel(false); }} >New Object</NavDropdown.Item> )}
+        <NavDropdown
+          style={{ width: "100px" }}
+          title={
+            selectedTab === "0"
+              ? "Objects"
+              : objects.find((o) => o.objectId.toString() === selectedTab)
+                  ?.name || "Object"
+          }
+          id="objects-dropdown"
+        >
+          {!isOrdered && (
+            <NavDropdown.Item
+              eventKey="newObject"
+              onClick={() => {
+                setShowForm(true);
+                setShowModel(false);
+              }}
+            >
+              New Object
+            </NavDropdown.Item>
+          )}
           <NavDropdown.Divider />
-          {objects.map(o => (
+          {objects.map((o) => (
             <NavDropdown.Item key={o.objectId} eventKey={o.objectId.toString()}>
               {o.objectId} | {o.name}
-            {!isOrdered && (     
-                <Button variant="light" size="sm" onClick={e => { e.stopPropagation(); handleDeleteObject(o.objectId); }} style={{ marginLeft: 8, padding: "2px 6px" }}>
-                x
-              </Button>)}
+              {!isOrdered && (
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteObject(o.objectId);
+                  }}
+                  style={{ marginLeft: 8, padding: "2px 6px" }}
+                >
+                  x
+                </Button>
+              )}
             </NavDropdown.Item>
           ))}
         </NavDropdown>
         <div className="d-flex align-items-center ms-auto">
-          {palette.map(c => (
-            <div key={c.colorId} className="position-relative me-1" style={{ width: 40, height: 40 }}>
+          {palette.map((c) => (
+            <div
+              key={c.colorId}
+              className="position-relative me-1"
+              style={{ width: 40, height: 40 }}
+            >
               <RBImage
-                src={`data:image/jpeg;base64,${dispatch(getImageById(c.imageId))}`}
+                src={`data:image/jpeg;base64,${c.imageDataReduced}`}
                 thumbnail
                 style={{ width: "100%", height: "100%" }}
               />
               <span
                 onClick={() => removeColor(c.colorId)}
                 style={{
-                  position: "absolute", top: 0, right: 0,
-                  color: "red", cursor: "pointer", background: "white",
-                  borderRadius: "50%", width: "1rem", height: "1rem",
-                  textAlign: "center", lineHeight: "1rem"
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  color: "red",
+                  cursor: "pointer",
+                  background: "white",
+                  borderRadius: "50%",
+                  width: "1rem",
+                  height: "1rem",
+                  textAlign: "center",
+                  lineHeight: "1rem"
                 }}
-              >–</span>
+              >
+                –
+              </span>
             </div>
           ))}
           {palette.length < 5 && (
-            <div onClick={openPalette} className="border bg-light d-flex align-items-center justify-content-center" style={{ width: 40, height: 40, cursor: "pointer" }}>
+            <div
+              onClick={openPalette}
+              className="border bg-light d-flex align-items-center justify-content-center"
+              style={{ width: 40, height: 40, cursor: "pointer" }}
+            >
               <IonIcon icon={add} />
             </div>
           )}
         </div>
-        <Button onClick={handleSaveWork} className="ms-2">Save Work</Button>
+        <Button onClick={handleSaveWork} className="ms-2">
+          Save Work
+        </Button>
       </Nav>
 
       {/* Main Content */}
-        
+
       <div className="d-flex" style={{ height: "85vh", overflow: "hidden" }}>
         {/* Left Panel */}
         <div style={{ flex: 1, overflowY: "hidden" }}>
-          { (selectedTab === "0" || selectedTab === "newObject") && showModel && (
-            <ModelViewer
-              objects={objects}
-              createdItems={createdItems}
-              usedColors={palette}
-              onItemUpdate={handleModelViewerUpdate}
-            />
-          )}
-          { selectedTab === "newObject" && showForm && (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-            <ScriptCaller
-              newObjectKey="new"
-              onSave={async () => {
-                setShowForm(false);
-                setShowModel(true);
-                const all = await dispatch(getAllObjects());
-                setObjects(all.filter(o => o.work?.workId === +workId));
-                setSelectedTab("0");
+          {(selectedTab === "0" || selectedTab === "newObject") &&
+            showModel && (
+              <ModelViewer
+                objects={objects}
+                createdItems={createdItems}
+                usedColors={palette}
+                onItemUpdate={handleModelViewerUpdate}
+              />
+            )}
+          {selectedTab === "newObject" && showForm && (
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                height: "100%",
+                overflow: "hidden"
               }}
-              palette={palette}
-              onColorSelect={selectColor}
-              onColorRemove={removeColor}
-              showPaletteModal={showPaletteModal}
-              openPaletteModal={openPalette}
-              closePaletteModal={closePalette}
-              style={{ flex: 1}}
-            />
+            >
+              <ScriptCaller
+                newObjectKey="new"
+                onSave={async () => {
+                  setShowForm(false);
+                  setShowModel(true);
+                  const all = await dispatch(getAllObjects());
+                  setObjects(all.filter((o) => o.work?.workId === +workId));
+                  setSelectedTab("0");
+                }}
+                palette={palette}
+                onColorSelect={selectColor}
+                onColorRemove={removeColor}
+                showPaletteModal={showPaletteModal}
+                openPaletteModal={openPalette}
+                closePaletteModal={closePalette}
+                style={{ flex: 1 }}
+              />
             </div>
           )}
-          { selectedTab !== "0" && selectedTab !== "newObject" && (
+          {selectedTab !== "0" && selectedTab !== "newObject" && (
             <ObjectViewer
-              object={objects.find(o => o.objectId === +selectedTab)}
-              createdItems={createdItems.filter(it => it.object.objectId === +selectedTab)}
+              object={objects.find((o) => o.objectId === +selectedTab)}
+              createdItems={createdItems.filter(
+                (it) => it.object.objectId === +selectedTab
+              )}
               usedColors={palette}
               onItemUpdate={handleObjectViewerUpdate}
             />
@@ -475,79 +563,97 @@ const handleDeleteItem = (index) => {
           <>
             <div
               onMouseDown={onMouseDown}
-              style={{ width: "5px", cursor: "col-resize", backgroundColor: "#ccc" }}
+              style={{
+                width: "5px",
+                cursor: "col-resize",
+                backgroundColor: "#ccc"
+              }}
             />
-            <div style={{
-              width: collapsed ? 0 : `${panelWidth}vw`,
-              minWidth: collapsed ? 0 : "15vw",
-              maxWidth: "40vw",
-              overflowY: "hidden",
-              padding: collapsed ? 0 : "1rem",
-              backgroundColor: "#f9f9f9",
-              transition: "width 0.2s ease"
-            }}>
+            <div
+              style={{
+                width: collapsed ? 0 : `${panelWidth}vw`,
+                minWidth: collapsed ? 0 : "15vw",
+                maxWidth: "40vw",
+                overflowY: "hidden",
+                padding: collapsed ? 0 : "1rem",
+                backgroundColor: "#f9f9f9",
+                transition: "width 0.2s ease"
+              }}
+            >
               {!collapsed && (
                 <>
                   {selectedTab !== "0" && (
                     <>
                       <h3>Settings</h3>
-                      {currentObject.map(o => (
+                      {currentObject.map((o) => (
                         <div key={o.objectId}>
-                          <h4 onClick={() => setSettingDetails(sd =>
-                            sd.includes(o.objectId)
-                              ? sd.filter(id => id !== o.objectId)
-                              : [...sd, o.objectId]
-                          )} style={{ cursor: "pointer" }}>
+                          <h4
+                            onClick={() =>
+                              setSettingDetails((sd) =>
+                                sd.includes(o.objectId)
+                                  ? sd.filter((id) => id !== o.objectId)
+                                  : [...sd, o.objectId]
+                              )
+                            }
+                            style={{ cursor: "pointer" }}
+                          >
                             {o.name}
                           </h4>
                           {settingDetails.includes(o.objectId) &&
-                            Object.entries(parseSetting(o.setting)).map(([k,v]) => (
-                              <p key={k}>
-                                {dispatch(getSettingById(k))?.name}: {v}
-                              </p>
-                            ))
-                          }
+                            Object.entries(parseSetting(o.setting)).map(
+                              ([k, v]) => (
+                                <p key={k}>
+                                  {dispatch(getSettingById(k))?.name}: {v}
+                                </p>
+                              )
+                            )}
                         </div>
                       ))}
                     </>
                   )}
                   <h3 className="mt-4 d-flex align-items-center">
-                   Items
-                   {selectedTab !== "0" && selectedTab !== "newObject" && !isOrdered &&  (
-                     <Button
-                       size="sm"
-                       variant="outline-primary"
-                       className="ms-2"
-                       onClick={handleAddItem}
-                     >
-                        Add Item
-                     </Button>
-                   )}
-                 </h3>
-                 <div style={{maxHeight: "60vh"}}>
-                  <GeneratedItemsList
-                    generatedItems={createdItems}
-                    palette={palette}
-                    collapsedColors={collapsedColors}
-                    toggleColor={cid => setCollapsedColors(cc => ({
-                      ...cc, [cid]: !cc[cid]
-                    }))}
-                    readOnly={isOrdered}
-                    handleItemChange={handleCreatedItemChange}
-                    handleItemColorChange={(idx, color) =>
-                      handleCreatedItemChange(idx, { colorId: color.colorId })
-                    }
-                    onDragEnd={result => {
-                      const { destination, draggableId } = result;
-                      if (!destination) return;
-                      const idx = +draggableId;
-                      const newCid = destination.droppableId === "no-color"
-                        ? null
-                        : +destination.droppableId;
-                      handleCreatedItemChange(idx, { colorId: newCid });
-                    }}
-                    onDelete={handleDeleteItem}
-                  />
+                    Items
+                    {selectedTab !== "0" &&
+                      selectedTab !== "newObject" &&
+                      !isOrdered && (
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          className="ms-2"
+                          onClick={handleAddItem}
+                        >
+                          Add Item
+                        </Button>
+                      )}
+                  </h3>
+                  <div style={{ maxHeight: "60vh" }}>
+                    <GeneratedItemsList
+                      generatedItems={createdItems}
+                      palette={palette}
+                      collapsedColors={collapsedColors}
+                      toggleColor={(cid) =>
+                        setCollapsedColors((cc) => ({
+                          ...cc,
+                          [cid]: !cc[cid]
+                        }))
+                      }
+                      readOnly={isOrdered}
+                      handleItemChange={handleCreatedItemChange}
+                      handleItemColorChange={(idx, color) =>
+                        handleCreatedItemChange(idx, { colorId: color.colorId })
+                      }
+                      onDragEnd={(result) => {
+                        const { destination, draggableId } = result;
+                        if (!destination) return;
+                        const idx = +draggableId;
+                        const newCid =
+                          destination.droppableId === "no-color"
+                            ? null
+                            : +destination.droppableId;
+                        handleCreatedItemChange(idx, { colorId: newCid });
+                      }}
+                      onDelete={handleDeleteItem}
+                    />
                   </div>
                 </>
               )}
