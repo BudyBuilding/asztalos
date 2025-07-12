@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Optional;
 import java.io.IOException;
 import org.springframework.util.StringUtils;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -226,12 +230,23 @@ if (existingColor == null) {
             return ResponseEntity.notFound().build();
         }
     }
-
+/*
     @GetMapping
     public ResponseEntity<List<Color>> getAllColors() {
         List<Color> colors = colorService.getAllColors();
         return ResponseEntity.ok(colors);
-    }
+    }*/
+
+@GetMapping
+public ResponseEntity<Page<Color>> getColorsPaged(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+) {
+    Pageable pageable = PageRequest.of(page, size);
+    Page<Color> colorPage = colorService.getAllColors(pageable);
+    return ResponseEntity.ok(colorPage);
+}
+    
 
     @PutMapping("/{id}")
     public ResponseEntity<Color> updateColor(@PathVariable Long id, @RequestBody Color colorDetails) {
