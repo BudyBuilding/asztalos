@@ -113,7 +113,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
   };*/
   const resizeBase64Image = (base64Str, maxWidth = 100, maxHeight = 100) => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image(); // ← a fontos különbség itt
       img.src = base64Str;
       img.onload = () => {
         const canvas = document.createElement("canvas");
@@ -122,7 +122,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
         canvas.height = img.height * ratio;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.7); // 0.7 minőség
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
         resolve(resizedDataUrl);
       };
     });
