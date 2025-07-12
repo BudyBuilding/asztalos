@@ -108,7 +108,7 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
 
                 // Check if object's User is null
                 if (object.getUser() == null) {
-                    return ResponseEntity.status(552).body("User is null " + object);
+                    return ResponseEntity.status(552).body("User is null yes" + object);
                 }
                     if (currentUser.getRole().equals("user")) {
                         // Check if the current user has permission to create the item
