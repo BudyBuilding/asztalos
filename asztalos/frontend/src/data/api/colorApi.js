@@ -37,6 +37,8 @@ const getAllColorsApi = async () => {
         params: { page, size }
       });
 
+      console.log("Loading colors from server response: ", response);
+
       const colorList = response.data.content;
       colorList.forEach((color) => store.dispatch(addColor(color)));
 
