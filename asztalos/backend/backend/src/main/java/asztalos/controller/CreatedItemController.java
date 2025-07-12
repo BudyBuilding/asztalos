@@ -89,7 +89,7 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String username = authentication.getName();
     User currentUser = userService.findByUsername(username).orElse(null);
-    System.out.println("createdItemList: " + createdItemList);                      
+  logger.info("Received payload for createMultipleCreatedItems: {}", createdItemList);                   
     if (currentUser == null) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }

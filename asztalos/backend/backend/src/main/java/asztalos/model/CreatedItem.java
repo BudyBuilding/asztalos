@@ -60,7 +60,15 @@ public void setGroupId(String groupId) {
         this.CreatedTables = table;
     }
   
-
+@Override
+public String toString() {
+    return "CreatedItem{" +
+           "name='" + name + '\'' +
+           ", object=" + (object != null ? object.getObjectId() : "null") +
+           ", work=" + (work != null ? work.getWorkId() : "null") +
+           ", qty=" + qty +
+           '}';
+}
     @Column(name = "table_rotation", columnDefinition = "TEXT")
     private String tableRotation;
     
