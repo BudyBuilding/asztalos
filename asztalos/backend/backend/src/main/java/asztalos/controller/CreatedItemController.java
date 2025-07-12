@@ -118,7 +118,7 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
                     }
                     // Save each created item
                     CreatedItem saved = createdItemService.save(createdItem);
-                    List<CreatedTables> tables = tableOptimizationService.generateTables(saved.getObject().getWork());
+                    List<CreatedTables> tables = tableOptimizationService.generateTables(saved.getWork());
                     tables.forEach(createdTablesService::save);
                 }
         // Return 200 OK with the saved items
