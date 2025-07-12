@@ -4,10 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Button from "react-bootstrap/Button";
 import Loading from "../helpers/Loading";
 import { Table, Modal, Image } from "react-bootstrap";
-import {
-  getAllColors,
-  getImageById,
-} from "../../data/getters";
+import { getAllColors, getImageById } from "../../data/getters";
 import AddColorModal from "../modals/AddColorModal";
 
 function ColorsPage() {
@@ -24,26 +21,26 @@ function ColorsPage() {
 
   const [fullscreenImage, setFullscreenImage] = useState("");
 
-    useEffect(() => {
-        const orig = document.body.style.overflow;
-        document.body.style.overflow = "hidden";
-        const handleWheel = e => {
-          // ha a görgetés a .table-responsive konténeren belül van, engedjük,
-          // különben blokkoljuk.
-          const tableContainer = e.target.closest(".table-responsive");
-          if (!tableContainer) {
-            e.preventDefault();
-          }
-          // ha a tableContainer belsejében vagyunk, hagyjuk, hogy az overflowY: auto kezelje
-        };
+  useEffect(() => {
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleWheel = (e) => {
+      // ha a görgetés a .table-responsive konténeren belül van, engedjük,
+      // különben blokkoljuk.
+      const tableContainer = e.target.closest(".table-responsive");
+      if (!tableContainer) {
+        e.preventDefault();
+      }
+      // ha a tableContainer belsejében vagyunk, hagyjuk, hogy az overflowY: auto kezelje
+    };
 
-        window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("wheel", handleWheel, { passive: false });
 
-        return () => {
-          document.body.style.overflow = orig;
-          window.removeEventListener("wheel", handleWheel);
-        };
-      }, []);
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   useEffect(() => {
     const loadColors = async () => {
@@ -65,15 +62,17 @@ function ColorsPage() {
 
   return (
     <div className="pb-5 overflow-hidden">
-      
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h1 className="mb-0">Colors Page</h1>
           {canModify && (
-            <Button variant="primary" onClick={() => {
-              setEditingColor(null);
-              setShowColorModal(true);
-            }}>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setEditingColor(null);
+                setShowColorModal(true);
+              }}
+            >
               Add Color
             </Button>
           )}
@@ -92,7 +91,10 @@ function ColorsPage() {
         {loading ? (
           <Loading />
         ) : (
-          <div className="table-responsive" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div
+            className="table-responsive"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
+          >
             <Table bordered hover responsive className="table">
               <thead>
                 <tr>
@@ -107,9 +109,9 @@ function ColorsPage() {
               </thead>
               <tbody>
                 {colors.map((color) => {
-//                  const imageUrl = dispatch(getImageById(color.imageId));
+                  //                  const imageUrl = dispatch(getImageById(color.imageId));
                   const imageUrl = color.imageData;
-                  const imageType = color.imageContentType || "image/jpeg"; 
+                  const imageType = color.imageContentType || "image/jpeg";
                   return (
                     <tr
                       key={color.colorId}
@@ -122,18 +124,20 @@ function ColorsPage() {
                       <td>{color.colorId}</td>
                       <td>
                         <Image
-//                          src={"data:image/jpeg;base64," + imageUrl}
-                          src={`data:${imageType || "image/jpeg"};base64,${imageUrl}`}
+                          //                          src={"data:image/jpeg;base64," + imageUrl}
+                          src={`/colors/${color.colorId}`}
+                          //                          src={`data:${imageType || "image/jpeg"};base64,${imageUrl}`}
                           alt={color.name}
                           style={{
-                            width: 100,        // fixed width
-                            height: 100,       // fixed height
-                            objectFit: "cover",// crop to fill
-                            cursor: "pointer",
+                            width: 100, // fixed width
+                            height: 100, // fixed height
+                            objectFit: "cover", // crop to fill
+                            cursor: "pointer"
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setFullscreenImage(imageUrl);
+                            setFullscreenImage(`/colors/${color.colorId}`);
+                            //                            setFullscreenImage(imageUrl);
                           }}
                         />
                       </td>
