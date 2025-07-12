@@ -20,7 +20,7 @@ import {
   Route,
   useNavigate,
   useLocation,
-  Navigate,
+  Navigate
 } from "react-router-dom";
 import { fetchAll, fetchUsers } from "./data/storeManager";
 import EditWork from "./modules/components/editWork.js";
@@ -48,7 +48,7 @@ function App() {
   const [isTokenChecked, setIsTokenChecked] = useState(false);
   const [isNavOpen, setIsNavOpen] = useState(true);
 
-  const PUBLIC_ROUTES = ["/login", "/forgot-password",  "/reset-password"];
+  const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password"];
 
   useEffect(() => {
     const checkToken = async () => {
@@ -65,34 +65,38 @@ function App() {
     checkToken();
   }, []);
 
-useEffect(() => {
-  const handleAuth = async () => {
-    if (!isTokenChecked) return;
+  useEffect(() => {
+    const handleAuth = async () => {
+      if (!isTokenChecked) return;
 
-    if (isLoggedIn) {
-      // 1) lekérjük a user-t, feltöltünk minden adatot...
-      const user = await dispatch(getUser());
-      setCurrentUser(user);
-      if (user.role === "admin" || user.role === "companyAdmin" || user.role === "companyUser") {
-        await fetchUsers();
-      }
-      await fetchAll();
+      if (isLoggedIn) {
+        // 1) lekérjük a user-t, feltöltünk minden adatot...
+        const user = await dispatch(getUser());
+        setCurrentUser(user);
+        if (
+          user.role === "admin" ||
+          user.role === "companyAdmin" ||
+          user.role === "companyUser"
+        ) {
+          await fetchUsers();
+        }
+        await fetchAll();
 
-      // 2) csak a gyökér útvonalon toljuk át automatikusan a dashboardra:
-      if (location.pathname === "/") {
-        navigate("/dashboard", { replace: true });
+        // 2) csak a gyökér útvonalon toljuk át automatikusan a dashboardra:
+        if (location.pathname === "/") {
+          navigate("/dashboard", { replace: true });
+        }
+        // **ÉS** ne redirectelj se /login-ról, se /reset-password-ről!
+      } else {
+        // ha nem vagyunk bent, és nem vagyunk épp egy publikus oldalon, toljuk a loginra
+        if (!PUBLIC_ROUTES.includes(location.pathname)) {
+          navigate("/login", { replace: true });
+        }
       }
-      // **ÉS** ne redirectelj se /login-ról, se /reset-password-ről!
-    } else {
-      // ha nem vagyunk bent, és nem vagyunk épp egy publikus oldalon, toljuk a loginra
-      if (!PUBLIC_ROUTES.includes(location.pathname)) {
-        navigate("/login", { replace: true });
-      }
-    }
-  };
+    };
 
-  handleAuth();
-}, [isLoggedIn, isTokenChecked, location.pathname]);
+    handleAuth();
+  }, [isLoggedIn, isTokenChecked]);
 
   if (!isTokenChecked) {
     return <Loading />;
@@ -105,25 +109,22 @@ useEffect(() => {
         backgroundColor: "#F3F5F7",
         display: "flex",
         flexDirection: "column",
-        minHeight: "150vh",
+        minHeight: "150vh"
       }}
     >
-      {isLoggedIn && 
-        location.pathname !== "/reset-password" && 
-        location.pathname !== "/login" && 
-        (
-      <TopNavigationBar />)}
+      {isLoggedIn &&
+        location.pathname !== "/reset-password" &&
+        location.pathname !== "/login" && <TopNavigationBar />}
 
       <div className="content-wrapper" style={{ display: "flex", flex: 1 }}>
-        {isLoggedIn && 
-          location.pathname !== "/reset-password" && 
-          location.pathname !== "/login" && 
-          (
-          <SideNavigation
-            isOpen={isNavOpen}
-            onToggle={() => setIsNavOpen((open) => !open)}
-          />
-        )}
+        {isLoggedIn &&
+          location.pathname !== "/reset-password" &&
+          location.pathname !== "/login" && (
+            <SideNavigation
+              isOpen={isNavOpen}
+              onToggle={() => setIsNavOpen((open) => !open)}
+            />
+          )}
 
         <div
           className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-hidden flex-fill d-flex flex-column"
@@ -137,7 +138,8 @@ useEffect(() => {
                   <UserDashboard />
                 ) : currentUser?.role === "admin" ? (
                   <UserDashboard />
-                ) : currentUser?.role === "companyAdmin" || currentUser?.role === "companyUser" ? (
+                ) : currentUser?.role === "companyAdmin" ||
+                  currentUser?.role === "companyUser" ? (
                   <CompanyDashboard />
                 ) : (
                   <div>Unauthorized</div>
@@ -152,7 +154,10 @@ useEffect(() => {
             <Route path="/clients" element={<ClientsPage />} />
             <Route path="/employee" element={<EmployeePage />} />
             <Route path="/works" element={<WorksPage />} />
-            <Route path="/clientAnalyzer/:clientId" element={<ClientAnalyzer />} />
+            <Route
+              path="/clientAnalyzer/:clientId"
+              element={<ClientAnalyzer />}
+            />
             <Route path="/userAnalyzer/:userId" element={<UserAnalyzer />} />
             <Route
               path="/workAnalyzer/:workId"
@@ -160,7 +165,8 @@ useEffect(() => {
                 currentUser?.role === "user" ||
                 currentUser?.role === "admin" ? (
                   <WorkAnalyzer />
-                ) : currentUser?.role === "companyAdmin" || currentUser?.role === "companyUser" ? (
+                ) : currentUser?.role === "companyAdmin" ||
+                  currentUser?.role === "companyUser" ? (
                   <CompanyWorkAnalyzer />
                 ) : (
                   <div>Unauthorized</div>
@@ -175,7 +181,13 @@ useEffect(() => {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/"
-              element={isLoggedIn ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+              element={
+                isLoggedIn ? (
+                  <Navigate to="/dashboard" />
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
             />
           </Routes>
         </div>
@@ -187,7 +199,12 @@ useEffect(() => {
 function AppWrapper() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
         <ScrollToTop />
         <App />
       </BrowserRouter>

@@ -133,10 +133,10 @@ export default function ModelViewer({
       "hemilight",
       new Vector3(0, 1, 0),
       scene
-    ).intensity = 0.7;
+    ).intensity = 1;
     new PointLight(
       "filllight",
-      new Vector3(2.5, 2, 2.5),
+      new Vector3(2.5, 1, 2.5),
       scene
     ).intensity = 0.3;
 

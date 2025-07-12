@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import ListGroup from "react-bootstrap/ListGroup";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
-import Table from "react-bootstrap/Button";
+import Table from "react-bootstrap/Table";
 import OverlayTrigger from "react-bootstrap/Button";
 import Tooltip from "react-bootstrap/Button";
 import { Modal } from "react-bootstrap";
@@ -134,11 +134,6 @@ function UserDashboard() {
       await fetchObjectsForWork(workId);
       await fetchCreatedItemsForWork(workId);
       await fetchCreatedTablesForWork(workId);
-
-      // 2) Ezután már tényleg bent lesz minden a store-ban, kiszedjük a work-öt
-      const work = getWorkById(store.getState(), workId);
-
-      // 3) A kliens és a work kiválasztása
 
       const clientId = dispatch(getWorkById(workId)).client.clientId;
       dispatch(selectClient(clientId));

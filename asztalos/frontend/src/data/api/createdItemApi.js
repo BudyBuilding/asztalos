@@ -6,7 +6,7 @@ import {
   addMoreCreatedItems,
   deleteCreatedItem,
   deleteMoreCreatedItems,
-  updateCreatedItem,
+  updateCreatedItem
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
 
@@ -85,7 +85,7 @@ const deleteMultipleCreatedItemsApi = (createdItemList) => {
     try {
       console.log(createdItemList);
       await axiosInstance.delete(`/created-items/delete/items`, {
-        data: createdItemList,
+        data: createdItemList
       });
       console.log("CreatedItem deleted successfully.");
       dispatch(deleteMoreCreatedItems(createdItemList));
@@ -133,7 +133,7 @@ const createCreatedItemApi = (createdItemData) => {
 const createMultipleCreatedItemsApi = (createdItemsDataList) => {
   return async (dispatch) => {
     try {
-      console.log("Creating multiple createdItems");
+      console.log("Creating multiple createdItems: ", createdItemsDataList);
       const response = await axiosInstance.post(
         `/created-items/items`,
         createdItemsDataList
@@ -178,5 +178,5 @@ export default {
   deleteMultipleCreatedItemsApi,
   updateCreatedItemApi,
   createCreatedItemApi,
-  getCreatedItemOfUserAdminApi,
+  getCreatedItemOfUserAdminApi
 };

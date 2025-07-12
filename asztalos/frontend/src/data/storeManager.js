@@ -113,15 +113,15 @@ export const fetchAll = async () => {
   const currentUser = store.getState().auth.user;
 
   try {
-    if (currentUser.role === "admin") {
+    if (currentUser.role === "admin" || currentUser.role === "companyAdmin") {
       await fetchUsers();
     }
     await fetchColors();
-// await fetchImages();
+    // await fetchImages();
     await fetchClients();
     await fetchWorks();
     await fetchScripts();
-    await fetchScriptItems();
+    //    await fetchScriptItems();
     await fetchSettings();
     await fetchCreatedTables();
   } catch (error) {

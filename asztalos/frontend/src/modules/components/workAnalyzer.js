@@ -2,7 +2,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Button, Table, Row, Col, Modal, Form } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { getWorkById, getCreatedTablesByWork, getCreatedItemsByWork, getAllCreatedItems } from "../../data/getters";
+import {
+  getWorkById,
+  getCreatedTablesByWork,
+  getCreatedItemsByWork,
+  getAllCreatedItems
+} from "../../data/getters";
 import Loading from "../helpers/Loading";
 import { updateWorkApi } from "../../data/api/workApi";
 
@@ -18,39 +23,27 @@ function WorkAnalyzer() {
   const [labelInput, setLabelInput] = useState(0);
   const [statusInput, setStatusInput] = useState(0); // itt a „Completed” vagy „Cancelled” egyikét fogjuk tartani
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [woodPriceInput, setWoodPriceInput] = useState(0);  
+  const [woodPriceInput, setWoodPriceInput] = useState(0);
   // Hover állapot a lenyitó gombhoz
   const [isHover, setIsHover] = useState(false);
 
   // Rendelés megerősítő modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-
-  const [allCreatedItems, setAllCreatedItems] = useState([]);       
-  const [createdItems, setCreatedItems] = useState([]);    
+  // const [allCreatedItems, setAllCreatedItems] = useState([]);
+  // const [createdItems, setCreatedItems] = useState([]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { workId } = useParams();
-  console.log("workId: ", workId);
-useEffect(() => {
-  // belső async függvény
-  const loadItems = async () => {
-    // 1) Lekérjük az összes CreatedItem-et a backendről
-    const items = await dispatch(getCreatedItemsByWork(workId));
-    console.log("items: ",items)
-    // 2) Beállítjuk a teljes tömböt
-    setAllCreatedItems(items);
-    // 3) Rögtön leszűrjük, hogy csak az aktuális munkához tartozó tételek maradjanak
-    setCreatedItems(items.filter(item => item.work.workId === +workId));
-  };
+  const allCreatedItems = useSelector((state) => state.createdItems);
+  const createdItems = useMemo(() => {
+    return allCreatedItems.filter((item) => item.work.workId === +workId);
+  }, [allCreatedItems, workId]);
 
-  loadItems();
-}, [dispatch, workId]);
-            
   // A store‐ból érkező „createdTables” lista
   const allCreatedTables = useSelector((state) => state.createdTables || []);
-  const createdTables = allCreatedTables.filter(t => t.work.workId == workId);  
+  const createdTables = allCreatedTables.filter((t) => t.work.workId == workId);
   const fallbackTotal = useMemo(
     () => createdTables.reduce((sum, t) => sum + t.price, 0),
     [createdTables]
@@ -62,11 +55,35 @@ useEffect(() => {
       : fallbackTotal + (selectedWork?.label ?? 0);
 
   // totalWoodPrice: ha van woodPrice (>0), azt mutatjuk, különben csak a createdTables összege
-  const totalWoodPrice = (selectedWork?.woodPrice ?? 0) > 0
-    ? selectedWork.woodPrice
-    : fallbackTotal;
+  const totalWoodPrice =
+    (selectedWork?.woodPrice ?? 0) > 0 ? selectedWork.woodPrice : fallbackTotal;
   // Betöltjük a work és kliens adatokat
+
   useEffect(() => {
+    const loadAllWorkData = async () => {
+      setLoading(true);
+      try {
+        const work = await dispatch(getWorkById(workId));
+        setSelectedWork(work);
+        setSelectedClient(work.client);
+        setStatusInput(work.status);
+
+        // Várjuk meg a táblák és itemek betöltését is
+        await Promise.all([
+          dispatch(getCreatedTablesByWork(workId)),
+          dispatch(getAllCreatedItems()) // vagy fetchCreatedItemsForWork(workId), ha az a jó
+        ]);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAllWorkData();
+  }, [dispatch, workId]);
+
+  /* useEffect(() => {
     const loadWorkData = async () => {
       setLoading(true);
       try {
@@ -89,7 +106,7 @@ useEffect(() => {
       }
     };
     loadWorkData();
-  }, [dispatch, workId]);
+  }, [dispatch, workId]);*/
 
   // Betöltjük a work‐hoz tartozó createdTables‐eket
   useEffect(() => {
@@ -116,7 +133,7 @@ useEffect(() => {
         color: color,
         quantity: 0,
         totalPrice: 0,
-        pricePerQty: 0,
+        pricePerQty: 0
       };
     }
     acc[color].quantity += 1;
@@ -205,17 +222,17 @@ useEffect(() => {
       return;
     }
 
-  const unassigned = createdItems.filter(ci =>
-    ci.tablePosition == null || ci.tablePosition == ""
-  );
-  console.log("createdItems: ", createdItems);
-  console.log("unassigned: ", unassigned);
-  if (unassigned.length > 0) {
-    alert(
-      `Még nincs hozzárendelve ${unassigned.length} tétel táblához. Kérlek, előbb számold újra a táblákat!`
+    const unassigned = createdItems.filter(
+      (ci) => ci.tablePosition == null || ci.tablePosition == ""
     );
-    return;
-  }
+    console.log("createdItems: ", createdItems);
+    console.log("unassigned: ", unassigned);
+    if (unassigned.length > 0) {
+      alert(
+        `Még nincs hozzárendelve ${unassigned.length} tétel táblához. Kérlek, előbb számold újra a táblákat!`
+      );
+      return;
+    }
 
     setShowConfirmModal(true);
   };
@@ -232,7 +249,7 @@ useEffect(() => {
         isOrdered: true,
         orderDate: today,
         status: "Ordered",
-        companyStatus: "Pending",
+        companyStatus: "Pending"
       })
     );
     setSelectedWork((prev) => ({
@@ -240,7 +257,7 @@ useEffect(() => {
       isOrdered: true,
       orderDate: today,
       status: "Ordered",
-      companyStatus: "Pending",  
+      companyStatus: "Pending"
     }));
     setShowConfirmModal(false);
   };
@@ -276,8 +293,7 @@ useEffect(() => {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Total Price:</strong>{" "}
-            {totalPrice} RON
+            <strong>Total Price:</strong> {totalPrice} RON
           </p>
         </div>
         <div style={{ flex: 1 }}>
@@ -310,9 +326,10 @@ useEffect(() => {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Client Has to Pay:</strong> { (+selectedWork?.clientPrice ?? 0) - (+selectedWork?.clientPaid ?? 0)} RON
-          
-          
+            <strong>Client Has to Pay:</strong>{" "}
+            {(+selectedWork?.clientPrice ?? 0) -
+              (+selectedWork?.clientPaid ?? 0)}{" "}
+            RON
           </p>
         </div>
         <div style={{ flex: 1 }}>
@@ -326,18 +343,18 @@ useEffect(() => {
       {/* Wood Price / Company Wood Price */}
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
-        <p className="fs-5 mb-0">
-          <strong>Wood Price:</strong>{" "}
-          {((selectedWork?.woodPrice ?? 0) > 0
-            ? selectedWork.woodPrice
-            : totalWoodPrice
-          )}{" "}
-          RON
-        </p>
+          <p className="fs-5 mb-0">
+            <strong>Wood Price:</strong>{" "}
+            {(selectedWork?.woodPrice ?? 0) > 0
+              ? selectedWork.woodPrice
+              : totalWoodPrice}{" "}
+            RON
+          </p>
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Company Wood Price:</strong> {selectedWork?.companyWoodPrice} RON
+            <strong>Company Wood Price:</strong>{" "}
+            {selectedWork?.companyWoodPrice} RON
           </p>
         </div>
       </div>
@@ -361,7 +378,9 @@ useEffect(() => {
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
             <strong>Measured Date:</strong>{" "}
-            {selectedWork?.measureDate ? formatDate(selectedWork.measureDate) : "—"}
+            {selectedWork?.measureDate
+              ? formatDate(selectedWork.measureDate)
+              : "—"}
           </p>
         </div>
         <div style={{ flex: 1 }}>
@@ -375,7 +394,9 @@ useEffect(() => {
         <div style={{ marginBottom: "0.75rem" }}>
           <p className="fs-5 mb-0">
             <strong>Complete Date:</strong>{" "}
-            {selectedWork?.finishDate ? formatDate(selectedWork.finishDate) : "—"}
+            {selectedWork?.finishDate
+              ? formatDate(selectedWork.finishDate)
+              : "—"}
           </p>
         </div>
       )}
@@ -383,7 +404,9 @@ useEffect(() => {
         <div style={{ marginBottom: "0.75rem" }}>
           <p className="fs-5 mb-0">
             <strong>Cancel Date:</strong>{" "}
-            {selectedWork?.cancelDate ? formatDate(selectedWork.cancelDate) : "—"}
+            {selectedWork?.cancelDate
+              ? formatDate(selectedWork.cancelDate)
+              : "—"}
           </p>
         </div>
       )}
@@ -402,78 +425,87 @@ useEffect(() => {
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-            <Row className="align-items-center">
-              <Col>
-                <Form.Label className="mb-0">Price</Form.Label>
-              </Col>
-              <Col className="text-end">
-                <Form.Text className="text-muted mb-0">
-                  Company Price: {selectedWork?.companyPrice ?? "—"} RON
-                </Form.Text>
-              </Col>
-            </Row>
-            <Form.Control
-              type="number"
-              value={priceInput}
-              onChange={e => setPriceInput(+e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Row className="align-items-center">
-              <Col><Form.Label className="mb-0">Paid</Form.Label></Col>
-              <Col className="text-end">
-                <Form.Text className="text-muted mb-0">
-                  User Paid: {selectedWork?.userPaid ?? "—"} RON
-                </Form.Text>
-              </Col>
-            </Row>
-            <Form.Control
-              type="number"
-              value={paidInput}
-              onChange={e => setPaidInput(+e.target.value)}
-            />
-          </Form.Group>
+              <Row className="align-items-center">
+                <Col>
+                  <Form.Label className="mb-0">Price</Form.Label>
+                </Col>
+                <Col className="text-end">
+                  <Form.Text className="text-muted mb-0">
+                    Company Price: {selectedWork?.companyPrice ?? "—"} RON
+                  </Form.Text>
+                </Col>
+              </Row>
+              <Form.Control
+                type="number"
+                value={priceInput}
+                onChange={(e) => setPriceInput(+e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Row className="align-items-center">
+                <Col>
+                  <Form.Label className="mb-0">Paid</Form.Label>
+                </Col>
+                <Col className="text-end">
+                  <Form.Text className="text-muted mb-0">
+                    User Paid: {selectedWork?.userPaid ?? "—"} RON
+                  </Form.Text>
+                </Col>
+              </Row>
+              <Form.Control
+                type="number"
+                value={paidInput}
+                onChange={(e) => setPaidInput(+e.target.value)}
+              />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Row className="align-items-center">
-              <Col><Form.Label className="mb-0">Label</Form.Label></Col>
-              <Col className="text-end">
-                <Form.Text className="text-muted mb-0">
-                  Company Label: {selectedWork?.companyLabel ?? "—"} RON
-                </Form.Text>
-              </Col>
-            </Row>
-            <Form.Control
-              type="text"
-              value={labelInput}
-              onChange={e => setLabelInput(e.target.value)}
-            />
-          </Form.Group>
+            <Form.Group className="mb-3">
+              <Row className="align-items-center">
+                <Col>
+                  <Form.Label className="mb-0">Label</Form.Label>
+                </Col>
+                <Col className="text-end">
+                  <Form.Text className="text-muted mb-0">
+                    Company Label: {selectedWork?.companyLabel ?? "—"} RON
+                  </Form.Text>
+                </Col>
+              </Row>
+              <Form.Control
+                type="text"
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+              />
+            </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Row className="align-items-center">
-              <Col><Form.Label className="mb-0">Wood Price</Form.Label></Col>
-              <Col className="text-end">
-                <Form.Text className="text-muted mb-0">
-                  Company Wood Price: {selectedWork?.companyWoodPrice ?? "—"} RON
-                </Form.Text>
-              </Col>
-            </Row>
-            <Form.Control
-              type="number"
-              value={woodPriceInput}
-              onChange={e => setWoodPriceInput(+e.target.value)}
-            />
-          </Form.Group>
+            <Form.Group className="mb-3">
+              <Row className="align-items-center">
+                <Col>
+                  <Form.Label className="mb-0">Wood Price</Form.Label>
+                </Col>
+                <Col className="text-end">
+                  <Form.Text className="text-muted mb-0">
+                    Company Wood Price: {selectedWork?.companyWoodPrice ?? "—"}{" "}
+                    RON
+                  </Form.Text>
+                </Col>
+              </Row>
+              <Form.Control
+                type="number"
+                value={woodPriceInput}
+                onChange={(e) => setWoodPriceInput(+e.target.value)}
+              />
+            </Form.Group>
 
             {/* Ezek után jön a státusz‐dropdown: csak „Completed” és „Cancelled” */}
-            { selectedWork?.isOrdered === true && selectedWork?.companyStatus !== "Completed" ?
-             <></> :
+            {selectedWork?.isOrdered === true &&
+            selectedWork?.companyStatus !== "Completed" ? (
+              <></>
+            ) : (
               <Form.Group className="mb-3">
                 <Form.Label>Status</Form.Label>
                 <Form.Select
                   value={statusInput}
-                  onChange={e => setStatusInput(e.target.value)}
+                  onChange={(e) => setStatusInput(e.target.value)}
                 >
                   {selectedWork?.status === "Active" && (
                     <>
@@ -489,17 +521,16 @@ useEffect(() => {
                   )}
                   {/* Ha szeretnéd, itt lehetne egy mindig elérhető alap opció */}
                 </Form.Select>
-                <Form.Text className="text-muted" style={{ fontSize: "0.875rem" }}>
+                <Form.Text
+                  className="text-muted"
+                  style={{ fontSize: "0.875rem" }}
+                >
                   {selectedWork?.status === "Active"
                     ? "A munkát most törölheted."
-                    : "A „Completed” csak akkor elérhető, ha a státusz már „Active”."
-                  }
+                    : "A „Completed” csak akkor elérhető, ha a státusz már „Active”."}
                 </Form.Text>
               </Form.Group>
-
-              
-            } 
-
+            )}
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -544,32 +575,46 @@ useEffect(() => {
             <div className="d-flex justify-content-between align-items-center">
               <p className="fs-3 text-start mb-0">
                 <span className="fs-1 fw-bold me-2">{selectedClient.name}</span>
-                <span className="fs-1 fw-bold me-2">| {selectedWork.workId}</span>
+                <span className="fs-1 fw-bold me-2">
+                  | {selectedWork.workId}
+                </span>
                 <span className="fs-5">workId</span>
               </p>
               <div className="button-box">
-                {selectedWork.status !== "Completed" && selectedWork.status !== "Cancelled" &&    
-                  <Button variant="warning" onClick={handleShowModal} className="me-1">
-                  Update
-                </Button>
-                }
-                <Button variant="success" onClick={handleShowTables} className="me-1">
+                {selectedWork.status !== "Completed" &&
+                  selectedWork.status !== "Cancelled" && (
+                    <Button
+                      variant="warning"
+                      onClick={handleShowModal}
+                      className="me-1"
+                    >
+                      Update
+                    </Button>
+                  )}
+                <Button
+                  variant="success"
+                  onClick={handleShowTables}
+                  className="me-1"
+                >
                   Show Table
                 </Button>
-                <Button variant="success" onClick={handleEditWork} className="me-1">
+                <Button
+                  variant="success"
+                  onClick={handleEditWork}
+                  className="me-1"
+                >
                   Edit Work
                 </Button>
                 {!selectedWork.isOrdered && (
-                <Button
-                  variant="primary"
-                  onClick={handleOrderSelectedWork}
-                  className="ms-auto"
-                  disabled={selectedWork.isOrdered === true}
-                > 
-                  Order Now
-                </Button>)
-                }
-
+                  <Button
+                    variant="primary"
+                    onClick={handleOrderSelectedWork}
+                    className="ms-auto"
+                    disabled={selectedWork.isOrdered === true}
+                  >
+                    Order Now
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -590,7 +635,7 @@ useEffect(() => {
               style={{
                 border: "1px solid #dee2e6",
                 padding: "1rem",
-                borderRadius: "0.25rem",
+                borderRadius: "0.25rem"
               }}
             >
               {/* === Mindig látható négy mező === */}
@@ -613,7 +658,7 @@ useEffect(() => {
                   borderRadius: "0.25rem",
                   fontWeight: 500,
                   border: "1px solid #b0b0b0",
-                  userSelect: "none",
+                  userSelect: "none"
                 }}
               >
                 {isDetailsOpen ? "Kevesebb mutatása" : "Több mutatása"}

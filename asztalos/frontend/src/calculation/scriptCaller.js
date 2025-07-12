@@ -246,21 +246,19 @@ export default function ScriptCaller({
       const itemsToSave = generatedItems.map((item) => ({
         size: item.size,
         qty: item.qty,
-        name: item.name ? item.name : "name",
+        name: item.name || "name",
         material: item.material,
         kant: item.kant,
         position: item.position,
         rotation: item.rotation,
         details: item.details || "",
         rotable: item.rotable,
-        scriptItem: { scriptItemId: item.scriptItemId },
+        scriptItem: { scriptItemId: item.scriptItemId || null },
         ...(item.colorId != null && { color: { colorId: item.colorId } }),
         object: {
-          objectId: newObjectId,
-          work: { workId: selectedWork.workId }
+          objectId: newObjectId // ✅ csak az ID
         },
-        work: { workId: selectedWork },
-        groupId: item.groupId || null
+        work: { workId: selectedWork } // ✅ csak az ID
       }));
       console.log("GeneratedItems:", generatedItems);
       console.log("CreatedItems payload:", itemsToSave);

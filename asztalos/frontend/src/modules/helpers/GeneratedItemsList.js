@@ -13,8 +13,8 @@ export default function GeneratedItemsList({
   handleItemChange,
   handleItemColorChange,
   onDragEnd,
-  onDelete,   // receives an index to delete
-  readOnly = false, 
+  onDelete, // receives an index to delete
+  readOnly = false
 }) {
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
@@ -38,7 +38,7 @@ export default function GeneratedItemsList({
       onBeforeCapture={handleBeforeCapture}
       onDragEnd={handleDragEnd}
     >
-      <div style={{ overflowY: "auto" }}>
+      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 200px)" }}>
         {/* No Color bucket */}
         <Droppable droppableId="no-color">
           {(provided, snapshot) => (
@@ -47,12 +47,10 @@ export default function GeneratedItemsList({
               {...provided.droppableProps}
               className="mb-3"
               style={{
-                backgroundColor: snapshot.isDraggingOver
-                  ? "#e6f3ff"
-                  : "white",
+                backgroundColor: snapshot.isDraggingOver ? "#e6f3ff" : "white",
                 padding: 8,
                 border: "1px solid #ddd",
-                borderRadius: 4,
+                borderRadius: 4
               }}
             >
               <div
@@ -60,14 +58,12 @@ export default function GeneratedItemsList({
                 style={{
                   cursor: "pointer",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "center"
                 }}
               >
                 <IonIcon
                   icon={
-                    collapsedColors["no-color"]
-                      ? chevronForward
-                      : chevronDown
+                    collapsedColors["no-color"] ? chevronForward : chevronDown
                   }
                 />
                 <strong style={{ marginLeft: 6 }}>No Color</strong>
@@ -89,21 +85,23 @@ export default function GeneratedItemsList({
                           {...prov.dragHandleProps}
                           style={{
                             ...prov.draggableProps.style,
-                           // padding: 8,
+                            // padding: 8,
                             margin: "4px 0",
                             backgroundColor: snap.isDragging
                               ? "#f0f9ff"
                               : "#fff",
                             border: "1px solid #ddd",
-                            borderRadius: 4,
+                            borderRadius: 4
                           }}
                         >
                           <Item
                             Item={itm}
-                            index={__idx}               // pa
-                            readOnly={readOnly}                       // 👈 hiányzott
-                            onItemChange={(upd) => !readOnly && handleItemChange(__idx, upd)}
-                            onDelete={() => !readOnly && onDelete(__idx)}  // delete callback // delete callback
+                            index={__idx} // pa
+                            readOnly={readOnly} // 👈 hiányzott
+                            onItemChange={(upd) =>
+                              !readOnly && handleItemChange(__idx, upd)
+                            }
+                            onDelete={() => !readOnly && onDelete(__idx)} // delete callback // delete callback
                           />
                         </div>
                       )}
@@ -134,7 +132,7 @@ export default function GeneratedItemsList({
                       : "white",
                     padding: 8,
                     border: "1px solid #ddd",
-                    borderRadius: 4,
+                    borderRadius: 4
                   }}
                 >
                   <div
@@ -142,15 +140,13 @@ export default function GeneratedItemsList({
                     style={{
                       cursor: "pointer",
                       display: "flex",
-                      alignItems: "center",
+                      alignItems: "center"
                     }}
                   >
                     <IonIcon
                       icon={isCollapsed ? chevronForward : chevronDown}
                     />
-                    <strong style={{ marginLeft: 6 }}>
-                      {color.name}
-                    </strong>
+                    <strong style={{ marginLeft: 6 }}>{color.name}</strong>
                   </div>
 
                   {!isCollapsed &&
@@ -175,14 +171,16 @@ export default function GeneratedItemsList({
                                   ? "#f0f9ff"
                                   : "#fff",
                                 border: "1px solid #ddd",
-                                borderRadius: 4,
+                                borderRadius: 4
                               }}
                             >
                               <Item
                                 Item={itm}
                                 index={__idx}
-                                readOnly={readOnly} 
-                                onItemChange={(upd) => !readOnly && handleItemChange(__idx, upd)}
+                                readOnly={readOnly}
+                                onItemChange={(upd) =>
+                                  !readOnly && handleItemChange(__idx, upd)
+                                }
                                 onDelete={() => !readOnly && onDelete(__idx)}
                               />
                             </div>
