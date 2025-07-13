@@ -1,6 +1,7 @@
 package asztalos.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import asztalos.model.Client;
 import asztalos.model.User;
 import asztalos.model.Work;
+import jakarta.persistence.EntityNotFoundException;
 
 public interface WorkRepository extends JpaRepository<Work, Long> {
 
@@ -43,4 +45,8 @@ public interface WorkRepository extends JpaRepository<Work, Long> {
 
     List<Work> findByUser(User user);
     List<Work> findByClient(Client client);
+
+    default Work getWorkById(Long id) {
+        return findById(id).orElseThrow(() -> new EntityNotFoundException("Work not found"));
+    }
 }

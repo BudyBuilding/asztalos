@@ -29,8 +29,10 @@ public class TableOptimizationService {
     private WorkRepository workRepository;
 
     @Transactional
-    public List<CreatedTables> generateTables(Work work, Long seed) {
-        log.info("Called generateTables for Work ID: {}, with seed: {}", work.getWorkId(), seed);
+    public List<CreatedTables> generateTables(Work workParam, Long seed) {
+        log.info("Called generateTables for Work ID: {}, with seed: {}", workParam.getWorkId(), seed);
+        Work work = workRepository.getWorkById(workParam.getWorkId());
+                
         long effectiveSeed = (seed != null) ? seed : System.currentTimeMillis();
 
         List<CreatedItem> items = createdItemRepository.findByWork(work);
