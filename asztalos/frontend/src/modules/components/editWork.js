@@ -64,7 +64,9 @@ function EditWork() {
   const [showModel, setShowModel] = useState(true);
 
   const [objects, setObjects] = useState([]);
-  const [createdItems, setCreatedItems] = useState([]);
+  const [createdItems1, setCreatedItems] = useState([]);
+  const createdItems =
+    useSelector((state) => state.createdItems) || createdItems1 || [];
   const [palette, setPalette] = useState([]);
   const [collapsedColors, setCollapsedColors] = useState({});
   const [currentObject, setCurrentObject] = useState([]);
@@ -110,7 +112,7 @@ function EditWork() {
     };
     loadObjects();
   }, [loading, workId, dispatch]);
-
+  /*
   // build createdItems from selectedTab
   useEffect(() => {
     const wid = +workId;
@@ -136,6 +138,39 @@ function EditWork() {
     setCreatedItems(
       all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
     );
+  }, [objects, selectedTab, workId, dispatch]);*/
+
+  useEffect(() => {
+    const wid = +workId;
+
+    const loadItems = async () => {
+      if (selectedTab === "newObject") {
+        setCreatedItems([]);
+        return;
+      }
+
+      try {
+        let all = [];
+        if (selectedTab === "0") {
+          const results = await Promise.all(
+            objects.map((o) => dispatch(getCreatedItemsByObject(o.objectId)))
+          );
+          all = results.flat().filter((it) => it.work?.workId === wid);
+        } else {
+          const oid = +selectedTab;
+          const items = await dispatch(getCreatedItemsByObject(oid));
+          all = items.filter((it) => it.work?.workId === wid);
+        }
+
+        setCreatedItems(
+          all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
+        );
+      } catch (err) {
+        console.error("Failed to load createdItems:", err);
+      }
+    };
+
+    loadItems();
   }, [objects, selectedTab, workId, dispatch]);
 
   // update palette on createdItems change
@@ -511,6 +546,7 @@ function EditWork() {
           {(selectedTab === "0" || selectedTab === "newObject") &&
             showModel && (
               <ModelViewer
+                key={selectedTab}
                 objects={objects}
                 createdItems={createdItems}
                 usedColors={palette}
@@ -626,7 +662,7 @@ function EditWork() {
                         </Button>
                       )}
                   </h3>
-                  <div style={{ maxHeight: "60vh" }}>
+                  <div style={{ maxHeight: "55vh" }}>
                     <GeneratedItemsList
                       generatedItems={createdItems}
                       palette={palette}

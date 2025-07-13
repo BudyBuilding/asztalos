@@ -12,8 +12,10 @@ function ColorsPage() {
   const role = useSelector((state) => state.auth.user?.role);
 
   const [loading, setLoading] = useState(true);
-  const [colors, setColors] = useState([]);
+  const [colors1, setColors] = useState([]);
   const [render, setRender] = useState(true);
+
+  const colors = useSelector((state) => state.colors) || colors1 || [];
 
   // Szerkesztéshez
   const [showColorModal, setShowColorModal] = useState(false);
@@ -96,7 +98,14 @@ function ColorsPage() {
             style={{ maxHeight: "80vh", overflowY: "auto" }}
           >
             <Table bordered hover responsive className="table">
-              <thead>
+              <thead
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
+                  backgroundColor: "#fff"
+                }}
+              >
                 <tr>
                   <th>ID</th>
                   <th>Image</th>

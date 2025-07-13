@@ -38,7 +38,7 @@ export default function GeneratedItemsList({
       onBeforeCapture={handleBeforeCapture}
       onDragEnd={handleDragEnd}
     >
-      <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 200px)" }}>
+      <div style={{ overflowY: "auto", maxHeight: "78vh" }}>
         {/* No Color bucket */}
         <Droppable droppableId="no-color">
           {(provided, snapshot) => (
