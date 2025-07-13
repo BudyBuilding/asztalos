@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { Nav, Button } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useDispatch } from "react-redux";
-import {
-  getUser,
-} from "../../data/getters";
+import { getUser } from "../../data/getters";
 import { useNavigate } from "react-router-dom";
 
 function SideNavigation({ onToggle }) {
@@ -30,8 +28,8 @@ function SideNavigation({ onToggle }) {
   const navLinkStyle = (tab) => {
     return {
       fontWeight: selectedTab === tab ? "bold" : "normal",
-    //  color: "#007bff",
-      height: "3rem",
+      //  color: "#007bff",
+      height: "3rem"
     };
   };
 
@@ -40,19 +38,21 @@ function SideNavigation({ onToggle }) {
       className="d-flex flex-row  "
       style={{
         //color: "#007bff",
-       // position: "fixed",
+        // position: "fixed",
         top: 0,
         left: 0,
         width: showNav ? "10vw" : "3vw",
         height: "inherit",
         transition: "width 0.3s",
         borderRight: "1px solid #dee2e6",
-        zIndex: 1000, 
-        paddingTop: "1rem",
+        zIndex: 1000,
+        paddingTop: "1rem"
       }}
     >
-      <Nav className="flex-column align-items-left" style={{ position: "fixed" }}>
-
+      <Nav
+        className="flex-column align-items-left"
+        style={{ position: "fixed" }}
+      >
         <Nav.Link
           onClick={() => handleSelectTab("dashboard")}
           style={navLinkStyle("dashboard")}
@@ -64,54 +64,56 @@ function SideNavigation({ onToggle }) {
           )}
           {showNav ? "Dashboard" : ""}
         </Nav.Link>
-        {userRole == "admin" || userRole == "user" ?
+        {userRole == "admin" || userRole == "user" ? (
+          <Nav.Link
+            onClick={() => handleSelectTab("clients")}
+            style={navLinkStyle("clients")}
+          >
+            {selectedTab === "clients" ? (
+              <i className="bi bi-people-fill me-2"></i>
+            ) : (
+              <i className="bi bi-people me-2"></i>
+            )}
 
-        <Nav.Link
-          onClick={() => handleSelectTab("clients")}
-          style={navLinkStyle("clients")}
-        >
-          {selectedTab === "clients" ? (
-            <i className="bi bi-people-fill me-2"></i>
-          ) : (
-            <i className="bi bi-people me-2"></i>
-          )}
+            {showNav ? "Clients" : ""}
+          </Nav.Link>
+        ) : (
+          <></>
+        )}
+        {userRole == "companyAdmin" ? (
+          <Nav.Link
+            onClick={() => handleSelectTab("employee")}
+            style={navLinkStyle("employee")}
+          >
+            {selectedTab === "employee" ? (
+              <i className="bi bi-people-fill me-2"></i>
+            ) : (
+              <i className="bi bi-people me-2"></i>
+            )}
 
-          {showNav ? "Clients" : ""}
-        </Nav.Link>
-        : <></>  
-      }
-        {userRole == "companyAdmin"  ?  
+            {showNav ? "Employee" : ""}
+          </Nav.Link>
+        ) : (
+          <></>
+        )}
+        {userRole == "companyAdmin" ||
+        userRole == "companyUser" ||
+        userRole == "admin" ? (
+          <Nav.Link
+            onClick={() => handleSelectTab("users")}
+            style={navLinkStyle("users")}
+          >
+            {selectedTab === "users" ? (
+              <i className="bi bi-people-fill me-2"></i>
+            ) : (
+              <i className="bi bi-people me-2"></i>
+            )}
 
-        <Nav.Link
-          onClick={() => handleSelectTab("employee")}
-          style={navLinkStyle("employee")}
-        >
-          {selectedTab === "employee" ? (
-            <i className="bi bi-people-fill me-2"></i>
-          ) : (
-            <i className="bi bi-people me-2"></i>
-          )}
-
-          {showNav ? "Employee" : ""}
-        </Nav.Link>
-        : <></>  
-      }
-        {userRole == "companyAdmin" || userRole == "companyUser" ?
-
-        <Nav.Link
-          onClick={() => handleSelectTab("users")}
-          style={navLinkStyle("users")}
-        >
-          {selectedTab === "users" ? (
-            <i className="bi bi-people-fill me-2"></i>
-          ) : (
-            <i className="bi bi-people me-2"></i>
-          )}
-
-          {showNav ? "Users" : ""}
-        </Nav.Link>
-        : <></>  
-      }
+            {showNav ? "Users" : ""}
+          </Nav.Link>
+        ) : (
+          <></>
+        )}
         <Nav.Link
           onClick={() => handleSelectTab("works")}
           style={navLinkStyle("works")}
@@ -123,20 +125,21 @@ function SideNavigation({ onToggle }) {
           )}
           {showNav ? "Works" : ""}
         </Nav.Link>
-        {userRole == "admin" || userRole == "user" ?
-        <Nav.Link
-          onClick={() => handleSelectTab("scripts")}
-          style={navLinkStyle("scripts")}
-        >
-          {selectedTab === "scripts" ? (
-            <i className="bi bi-file-earmark-code-fill me-2"></i>
-          ) : (
-            <i className="bi bi-file-earmark-code me-2"></i>
-          )}
-          {showNav ? "Scripts" : ""}
-        </Nav.Link>
-                : <></>  
-      }
+        {userRole == "admin" || userRole == "user" ? (
+          <Nav.Link
+            onClick={() => handleSelectTab("scripts")}
+            style={navLinkStyle("scripts")}
+          >
+            {selectedTab === "scripts" ? (
+              <i className="bi bi-file-earmark-code-fill me-2"></i>
+            ) : (
+              <i className="bi bi-file-earmark-code me-2"></i>
+            )}
+            {showNav ? "Scripts" : ""}
+          </Nav.Link>
+        ) : (
+          <></>
+        )}
         <Nav.Link
           onClick={() => handleSelectTab("colors")}
           style={navLinkStyle("colors")}
@@ -148,6 +151,22 @@ function SideNavigation({ onToggle }) {
           )}
           {showNav ? "Colors" : ""}
         </Nav.Link>
+        {userRole == "admin" ? (
+          <Nav.Link
+            onClick={() => handleSelectTab("settings")}
+            style={navLinkStyle("settings")}
+          >
+            {selectedTab === "settings" ? (
+              <i className="bi bi-gear-fill me-2"></i>
+            ) : (
+              <i className="bi bi-gear me-2"></i>
+            )}
+
+            {showNav ? "Settings" : ""}
+          </Nav.Link>
+        ) : (
+          <></>
+        )}
       </Nav>
       <Button
         onClick={toggleNav}
@@ -164,14 +183,13 @@ function SideNavigation({ onToggle }) {
           color: "#007bff",
           fontWeight: "900",
           left: showNav ? "9vw" : "2vw",
-          
-        transition: "left 0.3s",
+
+          transition: "left 0.3s",
           width: "40px",
           height: "40px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          
+          justifyContent: "center"
         }}
       >
         {showNav ? "<" : ">"}

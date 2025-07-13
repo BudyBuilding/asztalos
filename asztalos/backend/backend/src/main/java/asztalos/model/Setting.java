@@ -18,6 +18,8 @@ public class Setting {
     @Column(nullable = false)
     private String name;
         
+    private String value;
+
     public Setting() {
     }
 
@@ -37,4 +39,12 @@ public class Setting {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getValue() {
+        return value;
+    }       
+
+    public void setValue(String value) {
+        this.value = value;
+    }           
 }
