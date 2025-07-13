@@ -58,7 +58,7 @@ public class CreatedItemService {
         // pl. "[1140,0,1,89],[1346,0,1,89]"
         // szétválasztjuk egységekre
         String[] parts = tablePosition
-            .replace("][","]|[")    // "[…][…]" → "[…]|[…]"; így split könnyebb
+            .replace("],[","]|[")    // "[…][…]" → "[…]|[…]"; így split könnyebb
             .split("\\|");
         for (String part : parts) {
             // töröljük a zárójeleket, majd vesszővel szétdaraboljuk

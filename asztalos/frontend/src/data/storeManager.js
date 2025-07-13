@@ -115,15 +115,13 @@ export const fetchAll = async () => {
   try {
     if (currentUser.role === "admin" || currentUser.role === "companyAdmin") {
       await fetchUsers();
+      await fetchCreatedTables();
     }
     await fetchColors();
-    // await fetchImages();
     await fetchClients();
     await fetchWorks();
     await fetchScripts();
-    //    await fetchScriptItems();
     await fetchSettings();
-    await fetchCreatedTables();
   } catch (error) {
     console.error("Error fetching data:", error);
   }
