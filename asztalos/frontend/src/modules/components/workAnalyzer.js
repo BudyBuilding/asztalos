@@ -70,8 +70,8 @@ function WorkAnalyzer() {
 
         // Várjuk meg a táblák és itemek betöltését is
         await Promise.all([
-          dispatch(getCreatedTablesByWork(workId)),
-          dispatch(getAllCreatedItems()) // vagy fetchCreatedItemsForWork(workId), ha az a jó
+          dispatch(getCreatedTablesByWork(workId))
+          //   dispatch(getAllCreatedItems()) // vagy fetchCreatedItemsForWork(workId), ha az a jó
         ]);
       } catch (error) {
         console.error("Error loading data:", error);

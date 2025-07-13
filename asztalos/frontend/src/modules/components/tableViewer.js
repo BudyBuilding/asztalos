@@ -91,7 +91,6 @@ const TableViewer = () => {
 
   const allWorks = dispatch(getAllWorks());
   const selectedWork = allWorks.find((w) => w.workId == workId);
-  console.log("selectedWork: ", selectedWork);
   const isOrdered = selectedWork?.isOrdered;
 
   const cannotEdit =
@@ -548,7 +547,6 @@ const TableViewerComponent = ({
   const showNav = createdTables.length > 1;
   const allWorks = dispatch(getAllWorks());
   const selectedWork = allWorks.find((w) => w.workId == workId);
-  console.log("selectedWork: ", selectedWork);
   const isOrdered = selectedWork?.isOrdered;
 
   const currentUser = useSelector((state) => state.auth.user);
@@ -722,7 +720,7 @@ const TableViewerComponent = ({
   }
 
   if (isLoading) return <Loading />;
-
+  console.log("table: ", table);
   const [height = 0, width = 0, thickness = 0] = JSON.parse(
     table.size || "[0,0,0]"
   );
@@ -780,6 +778,7 @@ const TableViewerComponent = ({
       );
       // 3) update local state
       const newList = [...editedTables, created];
+      console.log("New table created:", newList);
       setEditedTables(newList);
       setCreatedTables(newList);
       setCurrentTableIndex(newList.length - 1);

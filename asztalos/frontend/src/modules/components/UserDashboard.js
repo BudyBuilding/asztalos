@@ -35,8 +35,7 @@ import Chart from "chart.js/auto";
 import {
   fetchCreatedItemsForWork,
   fetchCreatedTablesForWork,
-  fetchObjectsForWork,
-  fetchTables
+  fetchObjectsForWork
 } from "../../data/storeManager";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
 
@@ -129,8 +128,6 @@ function UserDashboard() {
   const handleRowClick = async (workId) => {
     setLoading(true);
     try {
-      // 1) Betöltjük a thunk-okat, dispatch-elünk rájuk
-      await fetchTables(workId);
       await fetchObjectsForWork(workId);
       await fetchCreatedItemsForWork(workId);
       await fetchCreatedTablesForWork(workId);
@@ -453,7 +450,6 @@ function UserDashboard() {
     setLoading(true);
     try {
       dispatch(selectWork(workId));
-      fetchTables(workId);
       fetchObjectsForWork(workId);
       fetchCreatedItemsForWork(workId);
       fetchCreatedTablesForWork(workId);

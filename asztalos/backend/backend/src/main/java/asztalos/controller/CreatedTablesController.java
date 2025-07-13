@@ -121,7 +121,7 @@ public class CreatedTablesController {
         return ResponseEntity.ok(generatedTables);
     } 
 
-    @GetMapping("work/{workId}")
+    @GetMapping("/work/{workId}")
     public ResponseEntity<?> getCreatedTablesOfWork(@PathVariable Long workId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
