@@ -89,43 +89,56 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String username = authentication.getName();
     User currentUser = userService.findByUsername(username).orElse(null);
-    System.out.println("createdItemList: " + createdItemList);                      
-    logger.info("Received payload for createMultipleCreatedItems: {}", createdItemList);                            
+
+    logger.info("Received payload for createMultipleCreatedItems: {}", createdItemList);
+
     if (currentUser == null) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
+    if (createdItemList == null || createdItemList.isEmpty()) {
+        return ResponseEntity.badRequest().body("Empty item list");
+    }
+
     try {
-        // Loop through the list of created items and check permissions if necessary
-            for (CreatedItem createdItem : createdItemList) {
-                Long workObjectId = createdItem.getObject().getObjectId();
-                WorkObject object = objectService.findById(workObjectId).get();
+        Work work = null;
 
-                // Check if object is null
-                if (object == null) {
-                    return ResponseEntity.status(551).body("object is null");
-                }
+        for (CreatedItem createdItem : createdItemList) {
+            Long workObjectId = createdItem.getObject().getObjectId();
+            WorkObject object = objectService.findById(workObjectId).orElse(null);
 
-                // Check if object's User is null
-                if (object.getUser() == null) {
-                    return ResponseEntity.status(552).body("User is null yes" + object);
-                }
-                    if (currentUser.getRole().equals("user")) {
-                        // Check if the current user has permission to create the item
-                        if (!object.getUser().getUsername().equals(username)) {
-                            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                        }
-                    }
-                    // Save each created item
-                    CreatedItem saved = createdItemService.save(createdItem);
-                    List<CreatedTables> tables = tableOptimizationService.generateTables(saved.getWork());
-                    tables.forEach(createdTablesService::save);
-                }
-        // Return 200 OK with the saved items
+            if (object == null) {
+                return ResponseEntity.status(551).body("object is null");
+            }
+
+            if (object.getUser() == null) {
+                return ResponseEntity.status(552).body("User is null in object: " + object);
+            }
+
+            if ("user".equals(currentUser.getRole()) &&
+                !object.getUser().getUsername().equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Set work (once) for use later
+            if (work == null) {
+                work = createdItem.getWork();
+            }
+
+            // Save the item
+            createdItemService.save(createdItem);
+        }
+
+        // Generate tables only ONCE after saving all items
+        if (work != null) {
+            List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+            tables.forEach(createdTablesService::save);
+        }
+
         return ResponseEntity.ok(createdItemList);
+
     } catch (Exception e) {
         logger.error("An error occurred while creating items", e);
-        // Handle any exceptions (e.g., database errors)
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 }
