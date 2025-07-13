@@ -25,7 +25,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [fullScreenImage, setFullScreenImage] = useState(null);
-  const [colorDimension, setColorDimension] = useState("2780 * 2050 * 18");
+  const [colorDimension, setColorDimension] = useState("[2780,2050,18]");
 
   // on open, populate form and load image if editing
   useEffect(() => {
@@ -67,7 +67,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setColorPrice(0);
       setSelectedFile(null);
       setPreviewImage(null);
-      setColorDimension("2780 * 2050 * 18");
+      setColorDimension("[2780,2050,18]");
     }
   }, [isEdit, colorToEdit, dispatch]);
 
@@ -208,8 +208,8 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                           setColorType(v);
                           if (v === "MDF") setColorDimension("NaN");
                           else if (v === "Gizir")
-                            setColorDimension("2780 * 1200 * 18");
-                          else setColorDimension("2780 * 2050 * 18");
+                            setColorDimension("[2780,1200,18]");
+                          else setColorDimension("[2780,2050,18]");
                         }}
                       >
                         <option value="PAL">PAL</option>
