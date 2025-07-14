@@ -28,6 +28,18 @@
   color: #61dafb;
 }
 
+@media (max-width: 576px) {
+  .fs-1 {
+    font-size: 1.5rem !important;
+  }
+  .fs-2 {
+    font-size: 1.25rem !important;
+  }
+  .pb-5 {
+    padding-bottom: 1rem !important;
+  }
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
