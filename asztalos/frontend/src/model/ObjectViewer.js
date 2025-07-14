@@ -155,7 +155,7 @@ export default function ObjectViewer({
       "cam",
       Math.PI / 2,
       Math.PI / 4,
-      25,
+      5000,
       Vector3.Zero(),
       scene
     );
@@ -366,20 +366,39 @@ export default function ObjectViewer({
     // Recenter camera
     const cam = cameraRef.current;
     //    fitCamera(scene, cam);
-
     if (!didInitialFit.current) {
-      fitCamera(scene, cam); // ► csak egyszer
+      fitCameraToMeshes(scene, cam);
       didInitialFit.current = true;
-    } else if (savedCamRef.current) {
-      // visszaállítjuk a felhasználó nézetét
-      const s = savedCamRef.current;
-      cam.setTarget(s.target);
-      cam.alpha = s.alpha;
-      cam.beta = s.beta;
-      cam.radius = s.radius;
     }
   }, [objectData, createdItems, colors, dispatch]);
   const lastResize = useRef(0);
+
+  const fitCameraToMeshes = (scene, camera) => {
+    // csak azok a mesh-ek, amik a dobozaid:
+    const boxes = scene.meshes.filter((m) => m.name.startsWith("box_"));
+    if (!boxes.length) return;
+
+    // egyesítsd mindnek a bounding box-át
+    let min = boxes[0].getBoundingInfo().boundingBox.minimumWorld.clone();
+    let max = boxes[0].getBoundingInfo().boundingBox.maximumWorld.clone();
+    for (let i = 1; i < boxes.length; i++) {
+      const bi = boxes[i].getBoundingInfo().boundingBox;
+      min = Vector3.Minimize(min, bi.minimumWorld);
+      max = Vector3.Maximize(max, bi.maximumWorld);
+    }
+
+    // középpont és sugar
+    const center = min.add(max).scale(150);
+    const radius = max.subtract(min).length();
+
+    // beállítod a kamerát
+    camera.setTarget(center);
+    // fov figyelembevételével kiszámolod, hogy mekkora távolság kell:
+    const distance = radius / Math.sin(camera.fov / 2);
+    camera.radius = distance * 1.1; // kis ráhagyás
+    camera.lowerRadiusLimit = distance * 0.8;
+    camera.upperRadiusLimit = distance * 10;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;

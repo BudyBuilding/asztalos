@@ -128,10 +128,11 @@ function UserDashboard() {
   const handleRowClick = async (workId) => {
     setLoading(true);
     try {
-      await fetchObjectsForWork(workId);
-      await fetchCreatedItemsForWork(workId);
-      await fetchCreatedTablesForWork(workId);
-
+      await Promise.all([
+        fetchObjectsForWork(workId),
+        fetchCreatedItemsForWork(workId),
+        fetchCreatedTablesForWork(workId)
+      ]);
       const clientId = dispatch(getWorkById(workId)).client.clientId;
       dispatch(selectClient(clientId));
       dispatch(selectWork(workId));

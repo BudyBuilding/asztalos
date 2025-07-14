@@ -265,8 +265,17 @@ function EditWork() {
   const handleSelectTab = (key) => {
     setSelectedTab(key);
     dispatch(selectObject(key));
+    if (key === "0") {
+      setShowForm(false);
+      setShowModel(true);
+    }
   };
-
+  useEffect(() => {
+    if (selectedTab === "0") setShowModel(true);
+    else setShowModel(false);
+    // and likewise for showForm:
+    setShowForm(selectedTab === "newObject");
+  }, [selectedTab]);
   const handleSaveWork = async () => {
     if (!localWork) return;
     setLoading(true);
