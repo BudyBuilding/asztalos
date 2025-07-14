@@ -28,7 +28,8 @@ import {
   getAllSettings,
   getAllColors,
   getImageById,
-  getColorById
+  getColorById,
+  getScriptItemsByScript
 } from "../data/getters";
 import {
   Engine,
@@ -41,6 +42,7 @@ import {
   Color3,
   Color4
 } from "@babylonjs/core";
+import scriptItemApi from "../data/api/scriptItemApi";
 export default function ScriptCaller({
   onSave,
   palette,
@@ -100,7 +102,7 @@ export default function ScriptCaller({
         .split(",")
         .map((p) => p.split(":").map((x) => x.trim()))
         .filter(([k, v]) => k && v)
-        .map(([k, v]) => [k, Number(v)])
+        .map(([k, v]) => [k, v])
     );
   }
 
@@ -150,7 +152,8 @@ export default function ScriptCaller({
     setSelectedScript(script);
     setConfig(parseSetting(script.setting));
     try {
-      await dispatch(fetchScriptItemsForScript(script.scriptId));
+      await scriptItemApi.getAllScriptItemsForScriptApi(script.scriptId);
+      await dispatch(getScriptItemsByScript(script.scriptId));
     } catch (error) {
       console.error("Error fetching script items:", error);
     }
@@ -170,8 +173,6 @@ export default function ScriptCaller({
     setGeneratedItems([]);
   }
 
-  // generate items via processScript
-  // generate items via processScript
   function handleGenerate() {
     if (!selectedScript) return;
     const height = Number(heightRef.current.value);
@@ -260,14 +261,11 @@ export default function ScriptCaller({
         },
         work: { workId: selectedWork } // ✅ csak az ID
       }));
-      console.log("GeneratedItems:", generatedItems);
-      console.log("CreatedItems payload:", itemsToSave);
 
       // 3) CreatedItems mentése
       const createdItemsResponse = await dispatch(
         createdItemApi.createMultipleCreatedItemsApi(itemsToSave)
       );
-      console.log("CreatedItems response:", createdItemsResponse);
 
       // 4) Visszahívjuk a onSave callback-et
       onSave();
@@ -289,7 +287,6 @@ export default function ScriptCaller({
   // általános item változtatás pl. mennyiség vagy size
   const handleItemChange = (index, updatedFields) => {
     const updated = { ...generatedItems[index], ...updatedFields };
-    console.log("Item módosítva:", updated); // <— ide is kiírhatod
     setGeneratedItems((prev) => {
       const arr = [...prev];
       arr[index] = updated;
@@ -542,27 +539,34 @@ export default function ScriptCaller({
             <Col md={3} className="border-end">
               <h5>Settings</h5>
               <Form>
-                {Object.entries(config)
-                  .filter(
-                    ([key]) => !["height", "width", "depth"].includes(key)
-                  )
-                  .map(([key, val], index, array) => {
-                    const isLast = index === array.length - 1;
-                    return (
-                      <Form.Group key={key} className="mb-3">
-                        <Form.Label>{settingNameById[key] || key}</Form.Label>
+                <Row className="g-2">
+                  {Object.entries(config)
+                    .filter(
+                      ([key]) => !["height", "width", "depth"].includes(key)
+                    )
+                    .map(([key, val]) => (
+                      <Col
+                        xs={12}
+                        className="d-flex align-items-center mb-2"
+                        key={key}
+                      >
+                        <Form.Label
+                          className="me-2 mb-0 text-capitalize"
+                          style={{ width: "100%" }}
+                        >
+                          {settingNameById[key] || key}
+                        </Form.Label>
                         <Form.Control
                           type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
+                          size="sm"
                           name={key}
                           value={val}
                           onChange={handleConfigChange}
-                          autoFocus={isLast}
+                          style={{ maxWidth: "6rem" }}
                         />
-                      </Form.Group>
-                    );
-                  })}
+                      </Col>
+                    ))}
+                </Row>
               </Form>
             </Col>
 

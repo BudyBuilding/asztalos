@@ -39,9 +39,20 @@ import {
   Color3,
   Color4,
   Quaternion,
-  Matrix,
-  TransformNode
+  Matrix
 } from "@babylonjs/core";
+
+import {
+  parseSettingString,
+  serializeSettingArray
+} from "./scriptsPageutil/serializeSettings";
+import {
+  evalArr,
+  expandIterated,
+  extractRawList,
+  evaluateFormula,
+  parseConditionalPosition
+} from "./scriptsPageutil/evalArr";
 
 // Custom backdrop CSS
 const style = `
@@ -73,6 +84,7 @@ export default function ScriptsPage() {
 
   const [positionDSL, setPositionDSL] = useState("");
   const [rotationDSL, setRotationDSL] = useState("");
+  const [editingSettingId, setEditingSettingId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -113,19 +125,6 @@ export default function ScriptsPage() {
 
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
-
-  const parseSettingString = (str) =>
-    str
-      ? str
-          .split(",")
-          .map((pair) => {
-            const [id, val] = pair.split(":");
-            return id && val ? { settingId: id, default_value: val } : null;
-          })
-          .filter(Boolean)
-      : [];
-  const serializeSettingArray = (arr) =>
-    arr.map((s) => `${s.settingId}:${s.default_value}`).join(",");
 
   const handleDuplicate = async (orig) => {
     try {
@@ -171,185 +170,16 @@ export default function ScriptsPage() {
           rotable: created.rotable
         };
 
-        // és dispatch-eld rögtön a store-ba
         dispatch(addScriptItem(normalized));
       }
       dispatch(getScriptItemsByScript(cloned.scriptId));
 
-      // 4) lista frissítése
       await dispatch(getAllScripts());
     } catch (err) {
       console.error("Duplikálás hiba:", err);
       alert("Hiba a duplikálás során");
     }
   };
-  /*
-  const evalArr = (raw, overrideSettings = null, overrideDims = null) => {
-  const settingsToUse = overrideSettings || parsedSettings;
-  const { width, height, depth } = overrideDims
-    ? { width: overrideDims[0], height: overrideDims[1], depth: overrideDims[2] }
-    : userDimensions;
-
-  // ha már tömb, maradjon a régi logika
-  if (Array.isArray(raw)) {
-    return raw.map(v => Number(v) || 0).slice(0,3);
-  }
-  const str = String(raw || "").trim();
-  // ha benne van a 'i(start,end)' makró, ne próbáljuk meg JS-en kiértékelni
-    if (/\bi\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)/.test(str)) {
-      return [0,0,0];
-     }
-
-  if (!str.startsWith("[")) return [0,0,0];
-
-  // 1) behelyettesítjük a változókat (width/height/depth és a setting-ek értékeit)
-  const jsExpr = str
-    .replace(/\bwidth\b/g, width)
-    .replace(/\bheight\b/g, height)
-    .replace(/\bdepth\b/g, depth)
-    .replace(/\(\*(\d+)\*\)/g, (_, id) => {
-      const s = settingsToUse.find(x => String(x.settingId) === id);
-      return s ? s.default_value : "0";
-    });
-
-  // 2) közvetlen JS-eval: támogatja a ? : operátort, logikai kifejezéseket, beágyazott függvényhívásokat stb.
-  try {
-    const result = new Function(`return ${jsExpr}`)();
-    if (Array.isArray(result)) {
-      // csak az első három komponensre van szükség
-      return result.slice(0,3).map(v => Number(v) || 0);
-    }
-  } catch (err) {
-    console.error("evalArr hiba:", err);
-  }
-  return [0,0,0];
-};*/
-
-  const evalArr = (raw, overrideSettings = null, overrideDims = null) => {
-    const settingsToUse = overrideSettings || parsedSettings;
-    const { width, height, depth } = overrideDims
-      ? {
-          width: overrideDims[0],
-          height: overrideDims[1],
-          depth: overrideDims[2]
-        }
-      : userDimensions;
-
-    // ha már tömb, tartsuk meg a korábbi viselkedést
-    if (Array.isArray(raw)) {
-      return raw.map((v) => Number(v) || 0).slice(0, 3);
-    }
-    const str = String(raw || "").trim();
-
-    // ha interpolációs makrót látunk, visszaadunk egy üres placeholder-t
-    if (/\bi\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)/.test(str)) {
-      return [0, 0, 0];
-    }
-
-    // nem is [ … ], szóval nincs mit kiértékelni
-    if (!str.startsWith("[") || !str.endsWith("]")) {
-      return [0, 0, 0];
-    }
-
-    // szedjük ki a belsejét: pl "[1+width, (*3*), 20]" → "1+width, (*3*), 20"
-    const inner = str.slice(1, -1);
-
-    // bontsuk fel vesszőn át top-levelben
-    const parts = [];
-    let depthPar = 0,
-      last = 0;
-    for (let i = 0; i < inner.length; i++) {
-      if (inner[i] === "(") depthPar++;
-      else if (inner[i] === ")") depthPar--;
-      else if (inner[i] === "," && depthPar === 0) {
-        parts.push(inner.slice(last, i).trim());
-        last = i + 1;
-      }
-    }
-    parts.push(inner.slice(last).trim());
-
-    // most minden tengelyre:
-    return parts.slice(0, 3).map((expr0) => {
-      // 1) trimeljük a whitespace-eket
-      let expr = expr0.trim();
-
-      // 2) töröljük az elején vagy végén álló '[' és ']' karaktereket
-      expr = expr.replace(/^[\[\]]+|[\[\]]+$/g, "");
-
-      // 3) ha üres, visszaadunk 0-t
-      if (!expr) {
-        return 0;
-      }
-
-      // 4) helyettesítések és JS-eval ugyanúgy, mint eddig
-      let js = expr
-        .replace(/\bwidth\b/g, width)
-        .replace(/\bheight\b/g, height)
-        .replace(/\bdepth\b/g, depth)
-        .replace(/\(\*(\d+)\*\)/g, (_, id) => {
-          const s = settingsToUse.find((x) => String(x.settingId) === id);
-          return s ? s.default_value : "0";
-        });
-
-      try {
-        const val = new Function(`return (${js})`)();
-        return Number(val) || 0;
-      } catch (err) {
-        console.error("evalArr hiba:", err, "expr:", expr);
-        return 0;
-      }
-    });
-  };
-
-  function expandIterated(rawParts, count, parentSettings, parentSize) {
-    // 1) legyen legalább 3 tengely
-    const parts = rawParts.slice();
-    while (parts.length < 3) parts.push("0");
-
-    // 2) ha bármelyik tengely makró, akkor a konstansokat is 'i(val,val)'-re cseréljük
-    const hasMacro = parts.some((p) =>
-      /\bi\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)/.test(p)
-    );
-    const normParts = parts.map((p) => {
-      return hasMacro && !/\bi\(/.test(p) ? `i(${p.trim()},${p.trim()})` : p;
-    });
-
-    // 3) tengelyenkénti sorozatok
-    const axes = normParts.map((part) => {
-      const m = part.match(/^i\(\s*([+-]?\d+)\s*,\s*([+-]?\d+)\s*\)$/);
-      if (m) {
-        // interpoláló makró
-        const start = +m[1],
-          end = +m[2];
-        if (count === 1) return [start];
-        const step = (end - start) / (count - 1);
-        return Array.from({ length: count }, (_, i) => start + step * i);
-      }
-      // konstans tengely: JS-eval, majd ismételjük count-szor
-      const val = evalArr(`[${part}]`, parentSettings, parentSize)[0] || 0;
-      return Array(count).fill(val);
-    });
-
-    // 4) összeállítjuk az [x,y,z] tömböt minden darabhoz
-    const res = Array.from({ length: count }, (_, i) => [
-      axes[0][i],
-      axes[1][i],
-      axes[2][i]
-    ]);
-
-    return res;
-  }
-
-  function extractRawList(str) {
-    if (!str) return [];
-    // először keresünk sima [x,y,z] párokat
-    const bracketMatches = String(str).match(/\[([^\]]+)\]/g);
-    if (bracketMatches && bracketMatches.length) {
-      return bracketMatches.map((m) => m.slice(1, -1).trim());
-    }
-    // ha nincs [], akkor visszaadjuk a teljes stringet (pl. "i(0,10),0,0")
-    return [String(str).trim()];
-  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -377,7 +207,7 @@ export default function ScriptsPage() {
           if (s.setting) {
             setParsedSettings(parseSettingString(s.setting));
           }
-
+          await scriptItemApi.getAllScriptItemsForScriptApi(scriptId);
           await dispatch(getScriptItemsByScript(scriptId));
         }
       } catch (err) {
@@ -425,7 +255,9 @@ export default function ScriptsPage() {
       ...it,
       isPending: it.tempId != null,
       rawSize: it.size,
-      rawPosition: extractRawList(it.position),
+      rawPosition: it.position.includes("?")
+        ? [it.position]
+        : extractRawList(it.position),
       rawRotation: extractRawList(it.rotation)
     }));
   }, [scriptItems, pendingItems]);
@@ -447,16 +279,13 @@ export default function ScriptsPage() {
   }, [dispatch, rawItems]);
 
   const settingsObj = useMemo(
-    () =>
-      Object.fromEntries(
-        parsedSettings.map((s) => [s.settingId, Number(s.default_value)])
-      ),
+    () => Object.fromEntries(parsedSettings.map((s) => [s.settingId, s.value])),
     [parsedSettings]
   );
 
   const computedQty = useMemo(() => {
     const raw = String(newItem.qty).trim() || "1";
-    const arr = evalArr(`[${raw}]`, settingsObj);
+    const arr = evalArr(`[${raw}]`, parsedSettings);
     return Math.max(1, Math.round(arr[0]));
   }, [newItem.qty, settingsObj]);
 
@@ -487,14 +316,59 @@ export default function ScriptsPage() {
       const size = evalArr(item.size, parentSettings, parentSize);
       let rawPos = splitTopLevel(item.position.replace(/^\[|\]$/g, ""));
       let rawRot = splitTopLevel(item.rotation.replace(/^\[|\]$/g, ""));
-      const n = Number(item.qty) || 1;
-
+      const qtyExpr = evaluateFormula(
+        item.qty,
+        Object.fromEntries(parentSettings.map((s) => [s.settingId, s.value]))
+      );
+      const n = Math.max(1, Math.round(new Function(`return (${qtyExpr})`)()));
       const posIsMacro = rawPos.some((s) => /\bi\(/.test(s));
       const rotIsMacro = rawRot.some((s) => /\bi\(/.test(s));
       let relPositions, relRotations;
+      /*
+      if (/\?/.test(item.position)) {
+        relPositions = parseConditionalPosition(
+          item.position,
+          parentSettings,
+          parentSize
+        );
+      } else {
+        relPositions = parseBracketExprList(item.position, (expr) =>
+          evalArr(expr, parentSettings, parentSize)
+        );
+      }*/
 
-      if (posIsMacro || rotIsMacro) {
-        // ha van i(...) makró, akkor interpolálunk
+      const settingsObj = Object.fromEntries(
+        parentSettings.map((s) => [
+          s.settingId,
+          isNaN(s.value) ? s.value : s.value
+        ])
+      );
+
+      // 2) Ha van ?: , akkor közvetlenül ezt hívjuk, és sosem írjuk felül később
+      if (item.position.includes("?")) {
+        console.log(
+          "parseConditionalPosition inner:",
+          item.position,
+          settingsObj
+        );
+        relPositions = parseConditionalPosition(
+          item.position,
+          settingsObj,
+          parentSize
+        );
+        if (item.rotation.includes("?")) {
+          relRotations = parseConditionalPosition(
+            item.rotation,
+            settingsObj,
+            parentSize
+          );
+        } else {
+          relRotations = parseBracketExprList(item.rotation, (expr) =>
+            evalArr(expr, parentSettings, parentSize)
+          );
+        }
+        console.log("relRotations: ", relRotations);
+      } else if (posIsMacro || rotIsMacro) {
         relPositions = expandIterated(rawPos, n, parentSettings, parentSize);
         relRotations = expandIterated(rawRot, n, parentSettings, parentSize);
       } else {
@@ -505,38 +379,31 @@ export default function ScriptsPage() {
         relRotations = parseBracketExprList(item.rotation, (expr) =>
           evalArr(expr, parentSettings, parentSize)
         );
-
-        // – ha kevesebb koordináta érkezett, mint amennyi qty, duplikáljuk
-        if (relPositions.length < n) {
-          const first = relPositions[0] || [0, 0, 0];
-          relPositions = Array.from({ length: n }, () => first);
-        }
-        if (relRotations.length < n) {
-          const first = relRotations[0] || [0, 0, 0];
-          relRotations = Array.from({ length: n }, () => first);
-        }
       }
 
-      /*
-  // 2) choose expansion
-  const relPositions = (posIsMacro || rotIsMacro)
-    ? expandIterated(rawPos, n, parentSettings, parentSize)
-    : parseBracketExprList(item.position, expr => evalArr(expr, parentSettings, parentSize));
-
-  const relRotations = (posIsMacro || rotIsMacro)
-    ? expandIterated(rawRot, n, parentSettings, parentSize)
-    : parseBracketExprList(item.rotation, expr => evalArr(expr, parentSettings, parentSize));
-*/
+      // – ha kevesebb koordináta érkezett, mint amennyi qty, duplikáljuk
+      if (relPositions.length < n) {
+        const first = relPositions[0] || [0, 0, 0];
+        relPositions = Array.from({ length: n }, () => first);
+      }
+      if (relRotations.length < n) {
+        const first = relRotations[0] || [0, 0, 0];
+        relRotations = Array.from({ length: n }, () => first);
+      }
 
       const pivot = new Vector3(size[0] / 2, size[1] / 2, size[2] / 2);
 
       if (!item.refScript) {
         return relPositions.map((pos, idx) => ({
           ...item,
-          qty: 1, // egy darab az adott példány
+          qty: 1,
           evaluatedSize: size,
-          evaluatedPosition: [pos], // egyetlen pozíció‐tömb
-          evaluatedRotation: [relRotations[idx] || [0, 0, 0]]
+          evaluatedPosition: [pos],
+          evaluatedRotation: [
+            relRotations[idx] != null
+              ? relRotations[idx]
+              : relRotations[0] || [0, 0, 0]
+          ]
         }));
       }
 
@@ -585,13 +452,11 @@ export default function ScriptsPage() {
           });
         });
       });
-
       return instances;
     }
     let all = [];
 
     rawItems.forEach((raw) => {
-      // always use the raw position/rotation arrays and raw qty
       all.push(
         ...expandItem(
           raw, // <-- no autoIterate override here
@@ -629,26 +494,6 @@ export default function ScriptsPage() {
     });
   }
 
-  function evaluateFormula(formula, settingsObj) {
-    // 1) stringgé alakítjuk és trimeljük
-    let expr = String(formula).trim();
-
-    // 2) levágjuk az esetleges végződő + - * / vagy szóközöket
-    expr = expr.replace(/[+\-*/\s]+$/, "");
-
-    // 3) (*id*) makrók cseréje
-    expr = expr.replace(/\(\*(\d+)\*\)/g, (_, id) =>
-      String(settingsObj[id] != null ? settingsObj[id] : 0)
-    );
-
-    // 4) width/height/depth változók cseréje
-    expr = expr.replace(/\b(width|height|depth)\b/g, (_, v) =>
-      String(settingsObj[v] != null ? settingsObj[v] : 0)
-    );
-
-    return expr;
-  }
-
   const handleScriptChange = (e) =>
     setScript((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   const handleDimensionChange = (e) =>
@@ -662,7 +507,7 @@ export default function ScriptsPage() {
   const addItem = () => {
     // Beállítjuk a settings objektumot
     const settingsObj = Object.fromEntries(
-      parsedSettings.map((s) => [s.settingId, Number(s.default_value)])
+      parsedSettings.map((s) => [s.settingId, s.value])
     );
 
     // Kiértékeljük a qty kifejezést
@@ -900,7 +745,7 @@ export default function ScriptsPage() {
       return alert("Ez a setting ID már létezik.");
     const newEntry = {
       settingId: String(id),
-      default_value: String(value)
+      value: String(value)
     };
     const updated = [...parsedSettings, newEntry];
     setParsedSettings(updated);
@@ -1038,6 +883,49 @@ export default function ScriptsPage() {
     } else {
       setPendingItems((prev) => prev.filter((p) => p.tempId !== item.tempId));
     }
+  };
+
+  const saveSettingPair = () => {
+    const { id, value } = newSettingPair;
+    if (!id) {
+      alert("Adj meg érvényes ID-t!");
+      return;
+    }
+    if (editingSettingId) {
+      // Frissítés
+      const updated = parsedSettings.map((s) =>
+        String(s.settingId) === String(editingSettingId)
+          ? { settingId: String(id), value: String(value) }
+          : s
+      );
+      setParsedSettings(updated);
+      setEditingSettingId(null);
+    } else {
+      // Új hozzáadása
+      if (parsedSettings.some((s) => String(s.settingId) === String(id))) {
+        alert("Ez a setting ID már létezik.");
+        return;
+      }
+      setParsedSettings((prev) => [
+        ...prev,
+        { settingId: String(id), value: String(value) }
+      ]);
+    }
+    // szinkronizálás a script objektummal
+    setScript((prev) => ({
+      ...prev,
+      setting: serializeSettingArray(
+        editingSettingId
+          ? parsedSettings.map((s) =>
+              String(s.settingId) === String(editingSettingId)
+                ? { settingId: String(id), value: String(value) }
+                : s
+            )
+          : [...parsedSettings, { settingId: String(id), value: String(value) }]
+      )
+    }));
+    setShowSettingModal(false);
+    setNewSettingPair({ id: "", value: "" });
   };
 
   return (
@@ -1266,13 +1154,11 @@ export default function ScriptsPage() {
                       setNewItem((prev) => ({
                         ...prev,
                         refScript: sel,
-                        // inicializáld a tömböt default_value-kkel
-                        refSettings: defaults.map(
-                          ({ settingId, default_value }) => ({
-                            settingId,
-                            default_value
-                          })
-                        )
+                        // inicializáld a tömböt value-kkel
+                        refSettings: defaults.map(({ settingId, value }) => ({
+                          settingId,
+                          value
+                        }))
                       }));
                     }}
                   >
@@ -1310,7 +1196,7 @@ export default function ScriptsPage() {
                             <InputGroup.Text>{ps.settingId}</InputGroup.Text>
                             <Form.Control
                               type="text"
-                              value={override?.value ?? ps.default_value}
+                              value={override?.value ?? ps.value}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setNewItem((prev) => {
@@ -1323,7 +1209,7 @@ export default function ScriptsPage() {
                                       ...others,
                                       {
                                         settingId: ps.settingId,
-                                        default_value: val
+                                        value: val
                                       }
                                     ]
                                   };
@@ -1728,10 +1614,18 @@ export default function ScriptsPage() {
                       (x) => String(x.settingId) === String(s.settingId)
                     )?.name || "";
                   return (
-                    <tr key={s.settingId}>
+                    <tr
+                      key={s.settingId}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setEditingSettingId(s.settingId);
+                        setNewSettingPair({ id: s.settingId, value: s.value });
+                        setShowSettingModal(true);
+                      }}
+                    >
                       <td>{s.settingId}</td>
                       <td>{name}</td>
-                      <td>{s.default_value}</td>
+                      <td>{s.value}</td>
                       <td>
                         <IonIcon
                           icon={trash}
@@ -1802,9 +1696,9 @@ export default function ScriptsPage() {
                               file: null,
                               refSettings: it.refSettings
                                 ? parseSettingString(it.refSettings).map(
-                                    ({ settingId, default_value }) => ({
+                                    ({ settingId, value }) => ({
                                       settingId,
-                                      default_value
+                                      value
                                     })
                                   )
                                 : [],
@@ -1833,13 +1727,20 @@ export default function ScriptsPage() {
 
           <Modal
             show={showSettingModal}
-            onHide={() => setShowSettingModal(false)}
+            onHide={() => {
+              setShowSettingModal(false);
+              setEditingSettingId(null);
+              setNewSettingPair({ id: "", value: "" });
+            }}
             className="custom-backdrop"
           >
             <Modal.Header closeButton>
-              <Modal.Title>Add Setting</Modal.Title>
+              <Modal.Title>
+                {editingSettingId ? "Edit Setting" : "Add Setting"}
+              </Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              {/* ID mező szerkesztésnél tiltva */}
               <Form.Group as={Row} className="mb-3">
                 <Form.Label column sm={3}>
                   ID
@@ -1847,11 +1748,9 @@ export default function ScriptsPage() {
                 <Col sm={9}>
                   <Form.Select
                     value={newSettingPair.id}
+                    disabled={!!editingSettingId}
                     onChange={(e) =>
-                      setNewSettingPair((p) => ({
-                        ...p,
-                        id: e.target.value
-                      }))
+                      setNewSettingPair((p) => ({ ...p, id: e.target.value }))
                     }
                   >
                     <option value="">Válassz ID-t</option>
@@ -1884,12 +1783,16 @@ export default function ScriptsPage() {
             <Modal.Footer>
               <Button
                 variant="secondary"
-                onClick={() => setShowSettingModal(false)}
+                onClick={() => {
+                  setShowSettingModal(false);
+                  setEditingSettingId(null);
+                  setNewSettingPair({ id: "", value: "" });
+                }}
               >
                 Mégse
               </Button>
-              <Button variant="primary" onClick={addSettingPair}>
-                Hozzáadás
+              <Button variant="primary" onClick={saveSettingPair}>
+                {editingSettingId ? "Frissítés" : "Hozzáadás"}
               </Button>
             </Modal.Footer>
           </Modal>
