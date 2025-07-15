@@ -48,7 +48,8 @@ public class ScriptItemController {
     @Transactional(readOnly = true)
     public ResponseEntity<List<ScriptItemDto>> getScriptItemsByScriptId(
             @PathVariable Long scriptId) {
-        List<ScriptItemDto> dtos = scriptItemService.findDtosByScriptId(scriptId);
+       // List<ScriptItemDto> dtos = scriptItemService.findDtosByScriptId(scriptId);
+        List<ScriptItemDto> dtos = scriptItemService.findDtosByScriptIdRecursive(scriptId);
         return ResponseEntity.ok(dtos);
     }
 

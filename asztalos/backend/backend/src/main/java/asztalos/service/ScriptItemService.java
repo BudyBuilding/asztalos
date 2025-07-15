@@ -1,8 +1,13 @@
 // src/main/java/asztalos/service/ScriptItemService.java
 package asztalos.service;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -68,6 +73,31 @@ public class ScriptItemService {
             "FROM ScriptItem si",
             ScriptItemDto.class
         ).getResultList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ScriptItemDto> findDtosByScriptIdRecursive(Long rootScriptId) {
+        List<ScriptItemDto> result = new ArrayList<>();
+        Deque<Long> queue = new ArrayDeque<>();
+        Set<Long> visitedScripts = new HashSet<>();
+
+        queue.add(rootScriptId);
+        visitedScripts.add(rootScriptId);
+
+        while (!queue.isEmpty()) {
+            Long scriptId = queue.pop();
+            List<ScriptItemDto> dtos = findDtosByScriptId(scriptId);
+
+            for (ScriptItemDto dto : dtos) {
+                result.add(dto);
+                Long ref = dto.getRefScript();
+                if (ref != null && visitedScripts.add(ref)) {
+                    queue.add(ref);
+                }
+            }
+        }
+
+        return result;
     }
 
     public void deleteScriptItem(Long itemId) {

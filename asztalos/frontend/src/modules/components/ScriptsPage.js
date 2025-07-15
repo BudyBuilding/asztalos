@@ -513,9 +513,9 @@ export default function ScriptsPage() {
     // Kiértékeljük a qty kifejezést
     const qtyExpr = evaluateFormula(newItem.qty, settingsObj);
     const q = Number(new Function(`return (${qtyExpr})`)());
-    if (isNaN(q) || q < 1) {
+    /*    if (isNaN(q) || q < 1) {
       return alert("A mennyiség minimum 1 kell legyen.");
-    }
+    }*/
 
     // Kant előkészítése
     let [kantType, hkant, skant] = (newItem.kant || "[-,0,0]")
@@ -526,18 +526,6 @@ export default function ScriptsPage() {
       skant = "0";
     }
     const kantString = `[${kantType},${hkant},${skant}]`;
-
-    // Megnézzük, van-e i(...) makró
-    const hasPosMacro = newItem.position.some((s) => /\bi\(/.test(s));
-    const hasRotMacro = newItem.rotation.some((s) => /\bi\(/.test(s));
-    /*
-  const posField = hasPosMacro
-    ? newItem.position.join(",")
-    : newItem.position.map(p => `[${p}]`).join(",");
-
-  const rotField = hasRotMacro
-    ? newItem.rotation.join(",")
-    : newItem.rotation.map(r => `[${r}]`).join(",");*/
 
     /***************************** */
     const posField = autoIterate
@@ -1225,61 +1213,6 @@ export default function ScriptsPage() {
               )}
               {!newItem.refScript && (
                 <div>
-                  <Form.Group as={Row} className="mb-3" controlId="newItemQty">
-                    <Form.Label column sm={3}>
-                      Qty
-                    </Form.Label>
-
-                    <Col sm={5}>
-                      <InputGroup>
-                        <Form.Control
-                          type="text"
-                          name="qty"
-                          value={newItem.qty}
-                          onChange={(e) =>
-                            setNewItem((prev) => ({
-                              ...prev,
-                              qty: e.target.value
-                            }))
-                          }
-                          placeholder="kifejezés vagy szám"
-                        />
-                        <Dropdown>
-                          <Dropdown.Toggle variant="outline-secondary">
-                            <IonIcon icon={add} />
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            {parsedSettings.map((s) => (
-                              <Dropdown.Item
-                                key={s.settingId}
-                                onClick={() =>
-                                  setNewItem((prev) => ({
-                                    ...prev,
-                                    qty: prev.qty + `(*${s.settingId}*)`
-                                  }))
-                                }
-                              >
-                                Setting {s.settingId}
-                              </Dropdown.Item>
-                            ))}
-                            {["width", "height", "depth"].map((k) => (
-                              <Dropdown.Item
-                                key={k}
-                                onClick={() =>
-                                  setNewItem((prev) => ({
-                                    ...prev,
-                                    qty: prev.qty + k
-                                  }))
-                                }
-                              >
-                                {k.charAt(0).toUpperCase() + k.slice(1)}
-                              </Dropdown.Item>
-                            ))}
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      </InputGroup>
-                    </Col>
-                  </Form.Group>
                   <Row className="mb-3 align-items-center">
                     <Col xs={3}>
                       <Form.Label className="mb-0">Beállítások</Form.Label>
@@ -1392,6 +1325,61 @@ export default function ScriptsPage() {
                   </Form.Group>
                 </div>
               )}
+              <Form.Group as={Row} className="mb-3" controlId="newItemQty">
+                <Form.Label column sm={3}>
+                  Qty
+                </Form.Label>
+
+                <Col sm={5}>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      name="qty"
+                      value={newItem.qty}
+                      onChange={(e) =>
+                        setNewItem((prev) => ({
+                          ...prev,
+                          qty: e.target.value
+                        }))
+                      }
+                      placeholder="kifejezés vagy szám"
+                    />
+                    <Dropdown>
+                      <Dropdown.Toggle variant="outline-secondary">
+                        <IonIcon icon={add} />
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        {parsedSettings.map((s) => (
+                          <Dropdown.Item
+                            key={s.settingId}
+                            onClick={() =>
+                              setNewItem((prev) => ({
+                                ...prev,
+                                qty: prev.qty + `(*${s.settingId}*)`
+                              }))
+                            }
+                          >
+                            Setting {s.settingId}
+                          </Dropdown.Item>
+                        ))}
+                        {["width", "height", "depth"].map((k) => (
+                          <Dropdown.Item
+                            key={k}
+                            onClick={() =>
+                              setNewItem((prev) => ({
+                                ...prev,
+                                qty: prev.qty + k
+                              }))
+                            }
+                          >
+                            {k.charAt(0).toUpperCase() + k.slice(1)}
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </InputGroup>
+                </Col>
+              </Form.Group>
               <Form.Group as={Row} className="mb-3" controlId="newItemSize">
                 <Form.Label column sm={3}>
                   Size
