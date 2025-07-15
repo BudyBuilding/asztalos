@@ -10,7 +10,7 @@ import {
   Modal,
   Dropdown,
   InputGroup,
-  Image, // Added for image display
+  Image as RBImage, // Added for image display
   Accordion
 } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
@@ -97,6 +97,9 @@ export default function ScriptsPage() {
     imageData: null,
     imageContentType: null
   });
+  const [scriptImageFile, setScriptImageFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const scriptFileInputRef = useRef();
   const [autoIterate, setAutoIterate] = useState(false);
   const [parsedSettings, setParsedSettings] = useState([]);
   const [newItem, setNewItem] = useState({
@@ -125,6 +128,44 @@ export default function ScriptsPage() {
 
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
+  useEffect(() => {
+    if (script.imageData && script.imageContentType) {
+      setPreviewImage(
+        `data:${script.imageContentType};base64,${script.imageData}`
+      );
+    } else {
+      setPreviewImage(null);
+    }
+  }, [script.imageData, script.imageContentType]);
+
+  const onScriptFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        // teljes kép beleszűkítése 128×128‑as raszterre
+        ctx.drawImage(img, 0, 0, 128, 128);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        // base64 adat kinyerése
+        const base64 = dataUrl.split(",")[1];
+        setPreviewImage(dataUrl);
+        setScript((prev) => ({
+          ...prev,
+          imageData: base64,
+          imageContentType: "image/jpeg"
+        }));
+        setScriptImageFile(file);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleDuplicate = async (orig) => {
     try {
@@ -176,7 +217,6 @@ export default function ScriptsPage() {
 
       await dispatch(getAllScripts());
     } catch (err) {
-      console.error("Duplikálás hiba:", err);
       alert("Hiba a duplikálás során");
     }
   };
@@ -211,7 +251,6 @@ export default function ScriptsPage() {
           await dispatch(getScriptItemsByScript(scriptId));
         }
       } catch (err) {
-        console.error("[useEffect fetchData] HIBA:", err);
         setError("Hiba az adatok betöltésekor");
       } finally {
         setLoading(false);
@@ -311,73 +350,64 @@ export default function ScriptsPage() {
       acc[it.scriptId].push(it);
       return acc;
     }, {});
-
+    /*
     function expandItem(item, parentSettings, parentSize) {
-      const size = evalArr(item.size, parentSettings, parentSize);
+      const settingsArr = Array.isArray(parentSettings)
+        ? parentSettings
+        : Object.entries(parentSettings).map(([settingId, value]) => ({
+            settingId,
+            value: String(value)
+          }));
+      const size = parseConditionalPosition(
+        item.size,
+        settingsArr,
+        parentSize,
+        1
+      )[0];
       let rawPos = splitTopLevel(item.position.replace(/^\[|\]$/g, ""));
       let rawRot = splitTopLevel(item.rotation.replace(/^\[|\]$/g, ""));
       const qtyExpr = evaluateFormula(
         item.qty,
-        Object.fromEntries(parentSettings.map((s) => [s.settingId, s.value]))
+        Object.fromEntries(settingsArr.map((s) => [s.settingId, s.value]))
       );
       const n = Math.max(1, Math.round(new Function(`return (${qtyExpr})`)()));
+      console.log("n: ", n);
       const posIsMacro = rawPos.some((s) => /\bi\(/.test(s));
       const rotIsMacro = rawRot.some((s) => /\bi\(/.test(s));
       let relPositions, relRotations;
-      /*
-      if (/\?/.test(item.position)) {
-        relPositions = parseConditionalPosition(
-          item.position,
-          parentSettings,
-          parentSize
-        );
-      } else {
-        relPositions = parseBracketExprList(item.position, (expr) =>
-          evalArr(expr, parentSettings, parentSize)
-        );
-      }*/
 
-      const settingsObj = Object.fromEntries(
-        parentSettings.map((s) => [
-          s.settingId,
-          isNaN(s.value) ? s.value : s.value
-        ])
-      );
-
-      // 2) Ha van ?: , akkor közvetlenül ezt hívjuk, és sosem írjuk felül később
+      // 1) POSITION kiértékelése
       if (item.position.includes("?")) {
-        console.log(
-          "parseConditionalPosition inner:",
-          item.position,
-          settingsObj
-        );
+        // ternary‐os conditional‐i-makró
         relPositions = parseConditionalPosition(
           item.position,
-          settingsObj,
-          parentSize
+          settingsArr,
+          parentSize,
+          n
         );
-        if (item.rotation.includes("?")) {
-          relRotations = parseConditionalPosition(
-            item.rotation,
-            settingsObj,
-            parentSize
-          );
-        } else {
-          relRotations = parseBracketExprList(item.rotation, (expr) =>
-            evalArr(expr, parentSettings, parentSize)
-          );
-        }
-        console.log("relRotations: ", relRotations);
-      } else if (posIsMacro || rotIsMacro) {
-        relPositions = expandIterated(rawPos, n, parentSettings, parentSize);
-        relRotations = expandIterated(rawRot, n, parentSettings, parentSize);
+      } else if (posIsMacro) {
+        // i(start,end)-es makrók
+        relPositions = expandIterated(rawPos, n, settingsArr, parentSize);
       } else {
-        // sima [x,y,z] sorozat
+        // sima [x,y,z] vagy tömb
         relPositions = parseBracketExprList(item.position, (expr) =>
-          evalArr(expr, parentSettings, parentSize)
+          evalArr(expr, settingsArr, parentSize)
         );
+      }
+
+      // 2) ROTATION kiértékelése
+      if (item.rotation.includes("?")) {
+        relRotations = parseConditionalPosition(
+          item.rotation,
+          settingsArr,
+          parentSize,
+          n
+        );
+      } else if (rotIsMacro) {
+        relRotations = expandIterated(rawRot, n, settingsArr, parentSize);
+      } else {
         relRotations = parseBracketExprList(item.rotation, (expr) =>
-          evalArr(expr, parentSettings, parentSize)
+          evalArr(expr, settingsArr, parentSize)
         );
       }
 
@@ -453,6 +483,107 @@ export default function ScriptsPage() {
         });
       });
       return instances;
+    }*/
+
+    function expandItem(item, parentSettings, parentSize) {
+      // Normalize settings array
+      const settingsArr = Array.isArray(parentSettings)
+        ? parentSettings
+        : Object.entries(parentSettings).map(([settingId, value]) => ({
+            settingId,
+            value: String(value)
+          }));
+
+      // 1) SIZE: handle ternary and macros in one go
+      const size = parseConditionalPosition(
+        item.size,
+        settingsArr,
+        parentSize,
+        1
+      )[0];
+
+      // 2) QTY
+      const qtyExpr = evaluateFormula(
+        item.qty,
+        Object.fromEntries(settingsArr.map((s) => [s.settingId, s.value]))
+      );
+      const n = Math.max(1, Math.round(new Function(`return (${qtyExpr})`)()));
+
+      // 3) POSITION: ternary + i(...) expansion
+      const relPositions = parseConditionalPosition(
+        item.position,
+        settingsArr,
+        parentSize,
+        n
+      );
+
+      // 4) ROTATION
+      const relRotations = parseConditionalPosition(
+        item.rotation,
+        settingsArr,
+        parentSize,
+        n
+      );
+
+      // 5) Pivot for nested transforms
+      const pivot = new Vector3(size[0] / 2, size[1] / 2, size[2] / 2);
+
+      // 6) No refScript: return direct instances
+      if (!item.refScript) {
+        return relPositions.map((pos, idx) => ({
+          ...item,
+          qty: 1,
+          evaluatedSize: size,
+          evaluatedPosition: [pos],
+          evaluatedRotation: [relRotations[idx]]
+        }));
+      }
+
+      // 7) Handle nested refScripts (rest of logic unchanged)
+      const children = byScript[item.refScript] || [];
+      const defaultSettings = parseSettingString(item.refSettings);
+      const instances = [];
+
+      relPositions.forEach((pPos, idx) => {
+        const pRot = relRotations[idx] || [0, 0, 0];
+        const pQuat = Quaternion.RotationYawPitchRoll(
+          (pRot[1] * Math.PI) / 2,
+          (pRot[0] * Math.PI) / 2,
+          (pRot[2] * Math.PI) / 2
+        );
+        const pMat = Matrix.Identity();
+        pQuat.toRotationMatrix(pMat);
+
+        children.forEach((child) => {
+          const adds = expandItem(child, defaultSettings, size);
+          adds.forEach((inst) => {
+            inst.evaluatedPosition = inst.evaluatedPosition.map(([x, y, z]) => {
+              const v0 = new Vector3(x, y, z).subtract(pivot);
+              const v1 = Vector3.TransformCoordinates(v0, pMat);
+              const v2 = v1.add(pivot).add(new Vector3(...pPos));
+              return [v2.x, v2.y, v2.z];
+            });
+            inst.evaluatedRotation = inst.evaluatedRotation.map(
+              ([cx, cy, cz]) => {
+                const cQuat = Quaternion.RotationYawPitchRoll(
+                  (cy * Math.PI) / 2,
+                  (cx * Math.PI) / 2,
+                  (cz * Math.PI) / 2
+                );
+                const combo = pQuat.multiply(cQuat).toEulerAngles();
+                return [
+                  Math.round(combo.x / (Math.PI / 2)) % 4,
+                  Math.round(combo.y / (Math.PI / 2)) % 4,
+                  Math.round(combo.z / (Math.PI / 2)) % 4
+                ];
+              }
+            );
+            instances.push(inst);
+          });
+        });
+      });
+
+      return instances;
     }
     let all = [];
 
@@ -466,6 +597,8 @@ export default function ScriptsPage() {
         )
       );
     });
+
+    console.log("all: ", all);
 
     const seen = new Set();
     return all.filter((inst) => {
@@ -629,7 +762,7 @@ export default function ScriptsPage() {
           await dispatch(
             scriptApi.updateScriptApi(
               { script_id: scriptId, ...scriptData },
-              newItem
+              scriptImageFile
             )
           );
         } catch (err) {
@@ -640,7 +773,9 @@ export default function ScriptsPage() {
           }
         }
       } else {
-        const newS = await dispatch(scriptApi.createScriptApi(scriptData));
+        const newS = await dispatch(
+          scriptApi.createScriptApi(scriptData, scriptImageFile)
+        );
         usedScriptId = newS.scriptId;
       }
 
@@ -721,7 +856,6 @@ export default function ScriptsPage() {
       await dispatch(getScriptItemsByScript(usedScriptId));
       navigate("/scripts");
     } catch (err) {
-      console.error("Hiba a mentés közben:", err);
       setError("Hiba a script mentésekor");
     }
   };
@@ -773,8 +907,6 @@ export default function ScriptsPage() {
   }, [showEditor, loading]);
   /********************************************* */
   useEffect(() => {
-    console.log("Modellnek átadott elemek:", processedItems);
-
     const scene = sceneRef.current;
     if (!scene) return;
 
@@ -807,8 +939,6 @@ export default function ScriptsPage() {
           scene
         );
 
-        // a pivot a bal-felső-első (front) sarok lesz a középponthoz képest:
-
         box.setPivotPoint(new Vector3(-sw / 2, -sh / 2, -sd / 2));
         box.position = new Vector3(px + sw / 2, py + sh / 2, pz + sd / 2);
 
@@ -818,7 +948,9 @@ export default function ScriptsPage() {
           (rawRot[1] * Math.PI) / 2,
           (rawRot[2] * Math.PI) / 2
         );
-
+        //   box.enableEdgesRendering();
+        //  box.edgesWidth = 0.4; // vastagabb vonalak
+        //  box.edgesColor = new Color4(1, 0, 0, 1);
         const mat = new StandardMaterial(`mat_${idx}_${j}`, scene);
         mat.diffuseColor = new Color3(0.3, 0.3, 0.3);
         box.material = mat;
@@ -856,9 +988,7 @@ export default function ScriptsPage() {
             newItem.file
           )
         );
-      } catch (err) {
-        console.error("Hiba a setting törlése közben:", err);
-      }
+      } catch (err) {}
     }
   };
 
@@ -1037,8 +1167,19 @@ export default function ScriptsPage() {
                 <Accordion.Item eventKey="0">
                   <Accordion.Header>Script Kép</Accordion.Header>
                   <Accordion.Body style={{ textAlign: "center" }}>
-                    {isEditing ? (
-                      <Image
+                    {previewImage ? (
+                      <img
+                        src={previewImage}
+                        alt="Script preview"
+                        style={{
+                          width: 128,
+                          height: 128,
+                          objectFit: "cover",
+                          border: "1px solid #ccc"
+                        }}
+                      />
+                    ) : isEditing ? (
+                      <RBImage
                         src={`data:${script.imageContentType};base64,${script.imageData}`}
                         alt="Script image"
                         thumbnail
@@ -1049,6 +1190,26 @@ export default function ScriptsPage() {
                       <span className="text-muted">
                         Szerkesztéskor itt fog megjelenni a kép
                       </span>
+                    )}
+                    {isEditing && (
+                      <>
+                        <div className="mt-2">
+                          <Button
+                            size="sm"
+                            variant="outline-secondary"
+                            onClick={() => scriptFileInputRef.current.click()}
+                          >
+                            Change Image
+                          </Button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            ref={scriptFileInputRef}
+                            onChange={onScriptFileChange}
+                            style={{ display: "none" }}
+                          />
+                        </div>
+                      </>
                     )}
                   </Accordion.Body>
                 </Accordion.Item>

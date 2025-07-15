@@ -572,6 +572,9 @@ function processScript(
   }
 
   const res = gen(scriptId, { ...currentConfig, width, height, depth });
+
+  // Ha bármelyik elemnek a material-je "PFL", állítsuk a color-t -1-re
+
   return res;
 }
 

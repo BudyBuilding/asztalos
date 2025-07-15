@@ -60,8 +60,9 @@ export default function ScriptCaller({
   const selectedClient = dispatch(useSelector(getSelectedClient));
   const scriptItems = dispatch(useSelector(getAllScriptItems)) || [];
   const allSettings = dispatch(useSelector(getAllSettings)) || [];
-  const allColors = dispatch(useSelector(getAllColors)) || [];
+  //const allColors = dispatch(useSelector(getAllColors)) || [];
   const [dummyScriptItems, setDummyScriptItems] = useState([]);
+  const [dims, setDims] = useState({ width: "", height: "", depth: "" });
   // map settingId → name
   const settingNameById = useMemo(() => {
     const m = {};
@@ -70,7 +71,6 @@ export default function ScriptCaller({
     });
     return m;
   }, [allSettings]);
-
   // local state
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState("");
@@ -78,7 +78,7 @@ export default function ScriptCaller({
   const [generatedItems, setGeneratedItems] = useState([]);
   const [objectToView, setObjectToView] = useState(null);
   const [objectToViewData, setObjectToViewData] = useState(null);
-
+  let lastGenerated = Date.now();
   const [collapsedColors, setCollapsedColors] = useState({});
   const toggleColor = (cid) =>
     setCollapsedColors((prev) => ({ ...prev, [cid]: !prev[cid] }));
@@ -187,8 +187,15 @@ export default function ScriptCaller({
       { height, width, depth },
       selectedScript.scriptId
     );
-    setGeneratedItems(items);
-
+    // defaultként add hozzá a palette[0]‑t minden újnak
+    const itemsWithColor = items.map((it) => ({
+      ...it,
+      colorId: it.material === "PFL" ? -1 : null
+    }));
+    setGeneratedItems(itemsWithColor);
+    widthRef.current.value = width;
+    heightRef.current.value = height;
+    depthRef.current.value = depth;
     // dummy tételek készítése refScriptId alapján
     const realItems = items.filter((i) => !i.refScriptId);
     const refItems = items.filter((i) => !!i.refScriptId);
@@ -378,14 +385,13 @@ export default function ScriptCaller({
   function Header() {
     return (
       <Container fluid className="py-3 border-bottom">
-        {/* Palette selection modal */}
         <Modal show={showPaletteModal} onHide={closePaletteModal} size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Válassz egy színt</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Row xs={2} md={3} lg={4} className="g-3">
-              {allColors.map((color) => {
+              {palette.map((color) => {
                 const imageUrl = color.imageData;
                 return (
                   <Col key={color.colorId}>
@@ -394,7 +400,7 @@ export default function ScriptCaller({
                       style={{ cursor: "pointer" }}
                     >
                       <RBImage
-                        src={`data:image/jpeg;base64,${imageUrl}`}
+                        src={imageUrl && `data:image/jpeg;base64,${imageUrl}`}
                         style={{ height: 100, objectFit: "cover" }}
                       />
                       <Card.Body className="p-2 text-center">

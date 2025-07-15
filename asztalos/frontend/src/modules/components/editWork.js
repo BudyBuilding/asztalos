@@ -174,18 +174,30 @@ function EditWork() {
   }, [objects, selectedTab, workId, dispatch]);
 
   // update palette on createdItems change
+
+  const PFL_COLOR = useSelector((state) =>
+    state.colors.find((c) => c.colorId === -1)
+  ) || { colorId: -1, name: "PFL", hex: "#FFFFFF" };
+
   useEffect(() => {
+    // 1) kigyűjtjük, mely színek vannak ténylegesen használatban
     const itemColorIds = Array.from(
-      new Set(createdItems.map((it) => it.colorId).filter((cid) => cid != null))
+      new Set(
+        createdItems
+          .map((it) => it.colorId)
+          .filter((cid) => cid != null && cid !== -1) // a PFL-t külön kezeljük
+      )
     );
-    setPalette((prev) => {
-      const allIds = Array.from(
-        new Set([...prev.map((c) => c.colorId), ...itemColorIds])
-      );
-      return allIds
-        .map((id) => colors.find((c) => c.colorId === id))
-        .filter(Boolean);
-    });
+
+    // 2) megvan a használt színek tömbje, lekérjük őket a 'colors'-ból
+    const usedColors = itemColorIds
+      .map((id) => colors.find((c) => c.colorId === id))
+      .filter(Boolean);
+
+    // 3) mindig tegyük eléjük a PFL_COLOR-t
+    const newPalette = [PFL_COLOR, ...usedColors];
+
+    setPalette(newPalette);
   }, [createdItems, colors]);
 
   // handle external item changes

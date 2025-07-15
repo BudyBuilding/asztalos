@@ -163,13 +163,21 @@ export default function ObjectViewer({
     camera.minZ = 0.01;
     cameraRef.current = camera;
     camera.wheelDeltaPercentage = 0.005;
-    new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
+    const hemi = new HemisphericLight("hemi", new Vector3(0, 1, 0), scene);
+    hemi.intensity = 1.0; // alap fény erősítése
+    hemi.diffuse = new Color3(1, 1, 1); // közvetlen fény fehér
+    hemi.groundColor = new Color3(0.8, 0.8, 0.8); // visszavert fény világosabb
+
+    // általános ambient fény:
+    scene.ambientColor = new Color3(1, 1, 1);
+
+    /* new HemisphericLight("sky", new Vector3(0, 1, 0), scene);
     new PointLight("fill", new Vector3(0, -10, 0), scene).intensity = 0.2;
     new HemisphericLight(
       "ground",
       new Vector3(0, -1, 0),
       scene
-    ).intensity = 0.2;
+    ).intensity = 0.2;*/
     engine.runRenderLoop(() => {
       engine.clear(scene.clearColor, true, true, true); // <-- mi törlünk
       scene.render();
@@ -267,7 +275,7 @@ export default function ObjectViewer({
 
         // ▸ Edge (outline) bekapcsolása
         mesh.enableEdgesRendering();
-        mesh.edgesWidth = 0.1; // próbálj ki 1-4-et, ízlés szerint
+        mesh.edgesWidth = 0.6; // próbálj ki 1-4-et, ízlés szerint
         mesh.edgesColor = new Color4(0, 0, 0, 1); // fekete körvonal
 
         // Only set parent if it's a group node
@@ -293,16 +301,20 @@ export default function ObjectViewer({
           const col = colors.find((c) => c.colorId === item.colorId);
           if (col) {
             const img = col.imageData;
-            mat.diffuseTexture = new Texture(
+            // self‑lit textúra, nem árnyékolódik:
+            mat.emissiveTexture = new Texture(
               `data:image/jpeg;base64,${img}`,
               scene
             );
+            mat.emissiveColor = new Color3(0, 0, 0);
+            mat.disableLighting = true;
           } else {
             mat.diffuseColor = new Color3(0.7, 0.7, 0.7);
           }
         } else {
           mat.diffuseColor = new Color3(0.7, 0.7, 0.7);
         }
+
         mesh.material = mat;
 
         mesh.metadata = { groupIdx, instIdx, groupId };
@@ -527,7 +539,7 @@ export default function ObjectViewer({
           width: "100%",
           height: "100%",
           display: "block",
-          backgroundColor: "#e6e6e6" // itt is megadhatod
+          backgroundColor: "#FFFFFF" // itt is megadhatod
         }}
       />
       <Modal
@@ -556,11 +568,9 @@ export default function ObjectViewer({
         )}
       >
         <Modal.Header
-          closeButton
+          //  closeButton
           onMouseDown={onHeaderMouseDown}
           style={{ cursor: "move" }}
-          show={isModalOpen}
-          onHide={() => setIsModalOpen(false)}
         >
           <Modal.Title style={{ flex: 1, margin: 0 }}>
             {isGroupMode
