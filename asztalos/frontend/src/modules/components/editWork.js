@@ -31,7 +31,7 @@ import { updateWork } from "../../data/store/actions/workStoreFunctions";
 import objectApi from "../../data/api/objectApi";
 
 function EditWork() {
-  useEffect(() => {
+  /* useEffect(() => {
     const orig = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -52,7 +52,7 @@ function EditWork() {
       document.body.style.overflow = orig;
       window.removeEventListener("wheel", handleWheel);
     };
-  }, []);
+  }, []);*/
 
   const dispatch = useDispatch();
   const works = useSelector((state) => state.works);
@@ -62,11 +62,15 @@ function EditWork() {
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
   const [showModel, setShowModel] = useState(true);
-
+  const [tablesGenerated, setTablesGenerated] = useState(false);
   const [objects, setObjects] = useState([]);
-  const [createdItems1, setCreatedItems] = useState([]);
-  const createdItems =
+  const [createdItems, setCreatedItems] = useState(
+    useSelector((state) => state.createdItems) || []
+  );
+  /*const createdItems =
     useSelector((state) => state.createdItems) || createdItems1 || [];
+*/
+
   const [palette, setPalette] = useState([]);
   const [collapsedColors, setCollapsedColors] = useState({});
   const [currentObject, setCurrentObject] = useState([]);
@@ -247,7 +251,6 @@ function EditWork() {
     }
   };
 
-  // callback from ModelViewer
   const handleModelViewerUpdate = (updatedItem, groupIdx) => {
     const idx = createdItems.findIndex(
       (it) => it.itemId === updatedItem.itemId
@@ -259,6 +262,24 @@ function EditWork() {
         rotation: updatedItem.rotation
       });
     }
+  };
+
+  const handleObjectUpdate = (updatedObject, objectIndex) => {
+    console.log("[EditWork] handleObjectUpdate()", {
+      updatedObject,
+      objectIndex
+    });
+    setObjects((prev) => {
+      const next = [...prev];
+      next[objectIndex] = updatedObject;
+      console.log("[EditWork] new objects[]:", next);
+      return next;
+    });
+    dispatch(objectApi.updateObjectApi(updatedObject.objectId, updatedObject))
+      .then(() =>
+        console.log("[EditWork] API sikeres object update:", updatedObject)
+      )
+      .catch((err) => console.error("[EditWork] Error updating object:", err));
   };
 
   const handleObjectViewerUpdate = (updatedItem, groupIdx) => {
@@ -401,7 +422,7 @@ function EditWork() {
   };
 
   return (
-    <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+    <div style={{ position: "relative", height: "94vh" }}>
       {/* Palette Modal */}
       <Modal show={showPaletteModal} onHide={closePalette} size="lg">
         <Modal.Header closeButton>
@@ -571,7 +592,8 @@ function EditWork() {
                 objects={objects}
                 createdItems={createdItems}
                 usedColors={palette}
-                onItemUpdate={handleModelViewerUpdate}
+                onItemUpdate={handleModelViewerUpdate} // ha egy box‑ot mozgatsz
+                onObjectUpdate={handleObjectUpdate}
               />
             )}
           {selectedTab === "newObject" && showForm && (
@@ -586,12 +608,27 @@ function EditWork() {
             >
               <ScriptCaller
                 newObjectKey="new"
-                onSave={async () => {
+                onSave={async (generatedItems) => {
+                  // 1) Lezárjuk a formot, vissza a modellre
                   setShowForm(false);
                   setShowModel(true);
-                  const all = await dispatch(getAllObjects());
-                  setObjects(all.filter((o) => o.work?.workId === +workId));
-                  setSelectedTab("0");
+
+                  try {
+                    // 2) MENTÉS: egyszerre batch létrehozás
+                    /*  await dispatch(
+                      createdItemApi.createCreatedItemApi(generatedItems)
+                    );*/
+
+                    // 3) Frissítjük az objektum‑lista UI‑t
+                    const all = await dispatch(getAllObjects());
+                    setObjects(all.filter((o) => o.work?.workId === +workId));
+
+                    // 4) Átváltunk a teljes modell nézetre
+                    setSelectedTab("0");
+                  } catch (err) {
+                    console.error("Hiba a CreatedItems mentésekor:", err);
+                    alert("Nem sikerült elmenteni az elemeket.");
+                  }
                 }}
                 palette={palette}
                 onColorSelect={selectColor}
@@ -683,7 +720,7 @@ function EditWork() {
                         </Button>
                       )}
                   </h3>
-                  <div style={{ maxHeight: "55vh" }}>
+                  <div style={{ maxHeight: "78vh", overflowY: "auto" }}>
                     <GeneratedItemsList
                       generatedItems={createdItems}
                       palette={palette}

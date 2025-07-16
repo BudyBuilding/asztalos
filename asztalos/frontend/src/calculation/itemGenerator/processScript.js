@@ -1,5 +1,12 @@
 import store from "../../data/store/store";
 import { Quaternion } from "@babylonjs/core";
+import {
+  evalArr as baseEvalArr,
+  expandIterated,
+  splitTopLevel,
+  extractRawList,
+  parseConditionalPosition
+} from "../../modules/components/scriptsPageutil/evalArr";
 /* function evaluateFormula(formula, settings) {
     const settingRegex = /\(\*(\d+)\*\)/g;
     let result = formula.replace(settingRegex, (_, p1) =>
@@ -112,22 +119,6 @@ function parseBracketedArrays(str) {
 /*
 function splitTopLevel(str) {
   const parts = [];
-  let depth = 0,
-    last = 0;
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] === "(") depth++;
-    else if (str[i] === ")") depth--;
-    else if (str[i] === "," && depth === 0) {
-      parts.push(str.slice(last, i).trim());
-      last = i + 1;
-    }
-  }
-  parts.push(str.slice(last).trim());
-  return parts;
-}*/
-
-function splitTopLevel(str) {
-  const parts = [];
   let d = 0,
     last = 0;
   for (let i = 0; i < str.length; i++) {
@@ -141,76 +132,6 @@ function splitTopLevel(str) {
   parts.push(str.slice(last).trim());
   return parts;
 }
-/*
-  function expandIterated(rawStr, count, parentSettings, parentSize) {
-    const parts = splitTopLevel(rawStr);
-    while (parts.length < 3) parts.push("0");
-
-    const hasMacro = parts.some(p => /\bi\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)/.test(p));
-    const norm = parts.map(p =>
-      hasMacro && !/\bi\(/.test(p)
-        ? `i(${p},${p})`
-        : p
-    );
-
-    const axes = norm.map(p => {
-      const m = p.match(/^i\(\s*([+-]?\d+)\s*,\s*([+-]?\d+)\s*\)$/);
-      if (m) {
-        const start = +m[1], end = +m[2];
-        if (count === 1) return [start];
-        const step = (end - start) / (count - 1);
-        return Array.from({ length: count }, (_, i) => start + step * i);
-      }
-      // konstans tengely
-      const val = evalArr(`[${p}]`, parentSettings, parentSize)[0] || 0;
-      return Array(count).fill(val);
-    });
-
-    // 5) összeállítjuk a [x,y,z]-t minden egyes i-edik példányra
-    const res = Array.from({ length: count }, (_, i) => [
-      axes[0][i],
-      axes[1][i],
-      axes[2][i]
-    ]);
-
-    return res;
-  }*/
-/*
-function expandIterated(rawStr, count, parentSettings, parentSize) {
-  // 1) felbontjuk top-levelben a három tengelyre
-  const parts = splitTopLevel(rawStr);
-  while (parts.length < 3) parts.push("0");
-
-  // 2) ha bármelyik tengely makró, konstansokat is i(val,val)-re alakítjuk
-  const hasMacro = parts.some((p) =>
-    /\bi\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)/.test(p)
-  );
-  const norm = parts.map((p) =>
-    hasMacro && !/\bi\(/.test(p) ? `i(${p.trim()},${p.trim()})` : p
-  );
-
-  // 3) tengelyenként generáljuk a sorozatot
-  const axes = norm.map((p) => {
-    const m = p.match(/^i\(\s*([+-]?\d+)\s*,\s*([+-]?\d+)\s*\)$/);
-    if (m) {
-      const start = +m[1],
-        end = +m[2];
-      if (count === 1) return [start];
-      const step = (end - start) / (count - 1);
-      return Array.from({ length: count }, (_, i) => start + step * i);
-    }
-    // konstans tengely
-    const v = evalArr(`[${p}]`, parentSettings, parentSize)[0] || 0;
-    return Array(count).fill(v);
-  });
-
-  // 4) összerakjuk a [x,y,z] tömböket
-  return Array.from({ length: count }, (_, i) => [
-    axes[0][i],
-    axes[1][i],
-    axes[2][i]
-  ]);
-}*/
 function expandIterated(rawStr, count, parentSettings, parentSize) {
   const parts = splitTopLevel(rawStr);
   while (parts.length < 3) parts.push("0");
@@ -239,7 +160,7 @@ function expandIterated(rawStr, count, parentSettings, parentSize) {
     axes[1][i],
     axes[2][i]
   ]);
-}
+}*/
 
 function parseSettingString(str) {
   return str
@@ -414,41 +335,57 @@ function processScript(
       }
       const Q = Math.max(1, Math.round(Number(rawQ)));
 
-      // prepare size list
-      const sizes = parseBracketedArrays(evaluateFormula(item.size, C));
+      const sizeStr = evaluateFormula(item.size, C);
+      // settingsArr kell a helpernek, hogy a (*id*) és width/height/depth cserét meg tudja oldani
+      const settingsArr = Object.entries(C).map(([settingId, value]) => ({
+        settingId,
+        value: String(value)
+      }));
+      // count=1 → egyszeri [x,y,z]; de ha nested lista vagy ternary, akkor is jó
+      const sizes = parseConditionalPosition(
+        sizeStr,
+        settingsArr,
+        [C.width, C.height, C.depth],
+        1
+      );
 
       // → POS és ROT expanzió a React-os logika szerint
       const posStr = evaluateFormula(item.position, C);
       const rotStr = evaluateFormula(item.rotation, C);
-
-      let fallbackPosArr = parseBracketedArrays(posStr);
+      /*
+      let fallbackPosArr = extractRawList(posStr);
       if (fallbackPosArr.length === 0) fallbackPosArr = [[0, 0, 0]];
-      let fallbackRotArr = parseBracketedArrays(rotStr);
-      if (fallbackRotArr.length === 0) fallbackRotArr = [[0, 0, 0]];
+      let fallbackRotArr = extractRawList(rotStr);
+      if (fallbackRotArr.length === 0) fallbackRotArr = [[0, 0, 0]];*/
 
-      // 2) ténylegesen bővítjük a Q hosszúságra
-      const hasMacro = /\bi\(/.test(posStr) || /\bi\(/.test(rotStr);
-      const posArr = hasMacro
-        ? expandIterated(posStr.replace(/^\[|\]$/g, ""), Q, C, [
-            C.width,
-            C.height,
-            C.depth
-          ])
-        : Array.from(
-            { length: Q },
-            (_, i) => fallbackPosArr[i] || fallbackPosArr[0]
-          );
+      const rawPosList = extractRawList(posStr);
+      let fallbackPosArr =
+        rawPosList.length > 0
+          ? rawPosList.map((str) =>
+              evalArr(`[${str}]`, C, [C.width, C.height, C.depth])
+            )
+          : [[0, 0, 0]];
 
-      const rotArr = hasMacro
-        ? expandIterated(rotStr.replace(/^\[|\]$/g, ""), Q, C, [
-            C.width,
-            C.height,
-            C.depth
-          ])
-        : Array.from(
-            { length: Q },
-            (_, i) => fallbackRotArr[i] || fallbackRotArr[0]
-          );
+      const rawRotList = extractRawList(rotStr);
+      let fallbackRotArr =
+        rawRotList.length > 0
+          ? rawRotList.map((str) =>
+              evalArr(`[${str}]`, C, [C.width, C.height, C.depth])
+            )
+          : [[0, 0, 0]];
+
+      const posArr = parseConditionalPosition(
+        posStr,
+        settingsArr,
+        [C.width, C.height, C.depth],
+        Q
+      );
+      const rotArr = parseConditionalPosition(
+        rotStr,
+        settingsArr,
+        [C.width, C.height, C.depth],
+        Q
+      );
       // ---------------------------------------------------------------------------
 
       const nid = item.refScriptId || item.refScript;
@@ -574,12 +511,16 @@ function processScript(
   const res = gen(scriptId, { ...currentConfig, width, height, depth });
 
   // Ha bármelyik elemnek a material-je "PFL", állítsuk a color-t -1-re
-
+  console.log("processScript output:", res);
   return res;
 }
 
 export default processScript;
 
+const evalArr = (raw, overrideSettings, overrideDims) =>
+  baseEvalArr(raw, overrideSettings, overrideDims);
+
+/*
 function evalArr(raw, settings = {}, parentSize = null) {
   // 1) alap dimenziók
   const {
@@ -616,4 +557,4 @@ function evalArr(raw, settings = {}, parentSize = null) {
     console.error("evalArr hiba:", err);
   }
   return [0, 0, 0];
-}
+}*/

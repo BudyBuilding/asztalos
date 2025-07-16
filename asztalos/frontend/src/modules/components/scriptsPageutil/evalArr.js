@@ -30,11 +30,8 @@ export function evalArr(
   }
   const str = String(raw || "").trim();
   if (!str.startsWith("[") || !str.endsWith("]")) {
-    // no bracket, or contains macro -> placeholder
-    if (/\bi\(\s*[+-]?\d+,\s*[+-]?\d+\s*\)/.test(str)) return [0, 0, 0];
     return [0, 0, 0];
   }
-
   // strip [ … ]
   const inner = str.slice(1, -1);
   // split top-level by commas
@@ -100,11 +97,35 @@ function splitIMacroArgs(str) {
 }
 
 export function expandIterated(rawParts, count, parentSettings, parentSize) {
-  // 1) Mindig 3 tengelyünk legyen
-  const parts = rawParts.slice();
+  // 0) Minden részről szabadítsd meg a külső [ ] jeleket
+  const cleaned = rawParts.map((p) => p.replace(/^\[|\]$/g, "").trim());
+  if (
+    cleaned.length === 1 &&
+    cleaned[0].includes(",") &&
+    // nincsen benne i(...) makró és nincsen ?: conditional
+    !/\bi\(/.test(cleaned[0]) &&
+    !cleaned[0].includes("?")
+  ) {
+    // használd a splitTopLevel-t, hogy jól kezelje akár belső zárójelezést is
+    const partsFromOne = splitTopLevel(cleaned[0]);
+    // csak az első három tengelyt tartsd meg
+    cleaned.splice(0, 1, ...partsFromOne.slice(0, 3));
+  }
+  // 1) Most már a cleaned-et használd tovább (helyettesítsd a parts-et ezzel)
+  const parts = cleaned.slice();
   while (parts.length < 3) parts.push("0");
 
-  // 2) Tagolás
+  // DEBUG, ha kell:
+  console.log(
+    "[EI] parts(cleaned):",
+    parts,
+    "count:",
+    count,
+    "parentSize:",
+    parentSize
+  );
+
+  // 2) A normál feldolgozás változatlan:
   const norm = parts.map((p) => p.trim());
 
   // 3) Settings + dims egy objektumba
@@ -226,21 +247,50 @@ export function expandIterated(
   ]);
 }*/
 
-/**
- * Extract raw “[x,y,z]” substrings from a string for later parsing.
- */
+// helper, már fent meg volt
+// helper, már fent meg volt
+function splitTopLevel(str) {
+  const parts = [];
+  let depthPar = 0,
+    depthBr = 0,
+    last = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === "(") depthPar++;
+    else if (ch === ")") depthPar--;
+    else if (ch === "[") depthBr++;
+    else if (ch === "]") depthBr--;
+    else if (ch === "," && depthPar === 0 && depthBr === 0) {
+      parts.push(str.slice(last, i).trim());
+      last = i + 1;
+    }
+  }
+  parts.push(str.slice(last).trim());
+  return parts;
+}
+
 export function extractRawList(str) {
   if (!str) return [];
   const s = String(str).trim();
-  // ha van ?: akkor az egész kifejezés egy elem legyen
-  if (s.includes("?")) {
-    return [s];
+
+  // ha tényleg nested lista a formátum (két vagy több "[…]" egymás után)
+  if (s.startsWith("[[") && s.endsWith("]]")) {
+    // vágjuk le az első/utolsó szögletes zárójelet
+    const inner = s.slice(1, -1);
+    // szedjük szét top‑levelben
+    const raws = splitTopLevel(inner);
+    // és szabadítsuk meg az egyes részeket a külső [ ]
+    return raws.map((r) => r.replace(/^\[|\]$/g, ""));
   }
-  const matches = s.match(/\[[^\]]+\]/g);
-  return matches ? matches.map((m) => m.slice(1, -1).trim()) : [s];
+
+  // ha van ?, passzoljuk tovább egyben
+  if (s.includes("?")) return [s];
+
+  // egyébként csak a "[…]" blokkokat gyűjtsük ki
+  const matches = s.match(/\[[^\]]*\]/g) || [];
+  return matches.length > 0 ? matches : [s];
 }
 
-// (You can similarly lift splitTopLevel, parseBracketExprList, evaluateFormula…)
 export function evaluateFormula(formula, settingsObj) {
   // 1) stringgé alakítjuk és trimeljük
   let expr = String(formula).trim();
@@ -260,91 +310,93 @@ export function evaluateFormula(formula, settingsObj) {
   );
 
   return expr;
-} /*
-export function parseConditionalPosition(expr, settingsObj, parentSize) {
-  // először is settingsObj-ot már jó formában kapjuk (felül javítottuk fent).
-  // cseréljük tovább a width/height/depth változókat is…
-  let inner = expr
-    .slice(1, -1)
-    .replace(/\(\*(\d+)\*\)/g, (_, id) => JSON.stringify(settingsObj[id] ?? 0));
-  const [w, h, d] = parentSize;
-  inner = inner
-    .replace(/\bwidth\b/g, w)
-    .replace(/\bheight\b/g, h)
-    .replace(/\bdepth\b/g, d);
+}
 
-  // és most már biztonságosan kiértékeljük
-  const result = new Function(`return (${inner});`)();
-  // ha tömbök tömbjét kaptuk, akkor az a több pozíció, egyébként csomagoljuk
-  return Array.isArray(result[0]) ? result : [result];
-}*/
 export function parseConditionalPosition(
   raw,
   parentSettings,
   parentSize,
   count = 1
 ) {
-  // 1) felépítjük a setting→number map‑et a feltételhez:
-  const S = Object.fromEntries(
-    parentSettings.map(({ settingId, value }) => {
-      const asNum = Number(value);
-      // if it really is a number, store it as Number; otherwise keep the raw string
-      return [
-        settingId,
-        String(value).trim() === String(asNum) ? asNum : value
-      ];
-    })
-  );
-  const [w, h, d] = parentSize;
-  S.width = w;
-  S.height = h;
-  S.depth = d;
+  count = parseInt(count, 10);
+  if (isNaN(count) || count < 1) count = 1;
+  // ——————————————————————————————————————
+  console.log("[PCP] raw:", raw, "parentSize:", parentSize);
 
-  // 2) kicsípjük a "cond ? trueBranch : falseBranch" részt
-  let inner = raw.trim().replace(/^\[|\]$/g, "");
+  // 1) Mátrix-vágás
+  const raws = extractRawList(raw);
+  console.log("[PCP] raws after extractRawList:", raws);
+
+  // 2) Egyszerű többsoros lista?
+  if (!raw.includes("?") && raws.length > 1) {
+    const coords = raws.map((str) =>
+      evalArr(`[${str}]`, parentSettings, parentSize)
+    );
+    console.log("[PCP] nested coords:", coords);
+    return coords;
+  }
+
+  // 3) Csak egy elem, nincs ?: → expandIterated
+  if (!raw.includes("?")) {
+    console.log("[PCP] simple expandIterated parts:", raws);
+    return expandIterated(raws, count, parentSettings, parentSize);
+  }
+
+  // 4) Van ?: → bontás
+  const inner = raw.replace(/^\[|\]$/g, "");
   let depth = 0,
-    q = -1,
-    c = -1;
+    qPos = -1,
+    cPos = -1;
   for (let i = 0; i < inner.length; i++) {
-    if (inner[i] === "(") depth++;
-    else if (inner[i] === ")") depth--;
-    else if (inner[i] === "?" && depth === 0) q = i;
-    else if (inner[i] === ":" && depth === 0) {
-      c = i;
+    const ch = inner[i];
+    if (ch === "(") depth++;
+    else if (ch === ")") depth--;
+    else if (ch === "?" && depth === 0) qPos = i;
+    else if (ch === ":" && depth === 0 && qPos >= 0) {
+      cPos = i;
       break;
     }
   }
-  if (q < 0 || c < 0) return Array(count).fill([0, 0, 0]); // fallback
-
-  const condExpr = inner.slice(0, q).trim();
-  const trueBranch = inner.slice(q + 1, c).trim();
-  const falseBranch = inner.slice(c + 1).trim();
-
-  // 3) kiértékeljük a feltételt
-  const cleanedCond = evaluateFormula(condExpr, S);
-  const condValue = new Function(`return (${cleanedCond})`)();
-
-  // 4) kiválasztjuk az ágat
-  const branch = condValue ? trueBranch : falseBranch;
-
-  // 5) bontsuk fel top‑level vessző mentén
-  let list = branch.trim();
-  if (list.startsWith("[") && list.endsWith("]")) {
-    list = list.slice(1, -1);
+  if (qPos < 0 || cPos < 0) {
+    console.warn("[PCP] malformed conditional, falling back");
+    return expandIterated(raws, count, parentSettings, parentSize);
   }
-  const parts = [];
-  depth = 0;
-  let last = 0;
-  for (let i = 0; i < list.length; i++) {
-    if (list[i] === "(") depth++;
-    else if (list[i] === ")") depth--;
-    else if (list[i] === "," && depth === 0) {
-      parts.push(list.slice(last, i).trim());
-      last = i + 1;
-    }
-  }
-  parts.push(list.slice(last).trim());
 
-  // 6) és végül az expandIterated megcsinálja nekünk a [x,y,z] tömböket:
-  return expandIterated(parts, count, parentSettings, parentSize);
+  const condExpr = inner.slice(0, qPos).trim();
+  const trueBranch = inner.slice(qPos + 1, cPos).trim();
+  const falseBranch = inner.slice(cPos + 1).trim();
+  console.log("[PCP] condExpr:", condExpr);
+
+  // 5) Makró- és dimenzió-helyettesítés
+  const S = Object.fromEntries(
+    parentSettings.map(({ settingId, value }) => {
+      const num = Number(value);
+      return [settingId, String(num) === String(value) ? num : value];
+    })
+  );
+  S.width = parentSize[0];
+  S.height = parentSize[1];
+  S.depth = parentSize[2];
+
+  const expr = evaluateFormula(condExpr, S);
+  console.log("[PCP] evaluated cond expr:", expr);
+  const condVal = new Function(`return (${expr})`)();
+
+  // 7) Végül ezeket átadjuk az expandIterated‑nek
+  const branchRaw = condVal ? trueBranch : falseBranch;
+  // ha nested lista (két vagy több "[…]" egymás után), akkor egyszerű lista‑eval
+  if (branchRaw.trim().startsWith("[[") && branchRaw.trim().endsWith("]]")) {
+    // extractRawList visszaadja az egyes "[…]" blokkokat belül
+    const raws = extractRawList(branchRaw);
+    console.log("[PCP] nested conditional coords:", raws);
+    // minden sorra hívd az evalArr-t
+    return raws.map((str) => evalArr(`[${str}]`, parentSettings, parentSize));
+  }
+  // egyébként mint eddig: split → expandIterated
+  const chosen1 = branchRaw.replace(/^\[|\]$/g, "");
+  const parts1 = splitTopLevel(chosen1)
+    .map((p) => p.trim())
+    .slice(0, 3);
+  console.log("[PCP] conditional parts1:", parts1);
+  return expandIterated(parts1, count, parentSettings, parentSize);
 }

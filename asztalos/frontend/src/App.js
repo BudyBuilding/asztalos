@@ -109,7 +109,7 @@ function App() {
         backgroundColor: "#F3F5F7",
         display: "flex",
         flexDirection: "column",
-        minHeight: "150vh"
+        maxHeight: "100vh"
       }}
     >
       {isLoggedIn &&

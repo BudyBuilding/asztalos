@@ -70,7 +70,9 @@ export default function ScriptsPage() {
   const isEditing = !!scriptId;
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  useEffect(() => {
+    setShowEditor(isEditing);
+  }, [isEditing]);
   const scripts = useSelector((state) => state.scripts || []);
   const settingsList = useSelector((state) => state.settings || []);
   const scriptItems = useSelector((state) => {
@@ -599,6 +601,7 @@ export default function ScriptsPage() {
     });
 
     console.log("all: ", all);
+    console.log("------------------------------------------");
 
     const seen = new Set();
     return all.filter((inst) => {
@@ -948,11 +951,9 @@ export default function ScriptsPage() {
           (rawRot[1] * Math.PI) / 2,
           (rawRot[2] * Math.PI) / 2
         );
-        //   box.enableEdgesRendering();
-        //  box.edgesWidth = 0.4; // vastagabb vonalak
-        //  box.edgesColor = new Color4(1, 0, 0, 1);
         const mat = new StandardMaterial(`mat_${idx}_${j}`, scene);
-        mat.diffuseColor = new Color3(0.3, 0.3, 0.3);
+        const col = Color3.FromHexString(it.material || "#4c4c4c");
+        mat.diffuseColor = col;
         box.material = mat;
       }
     });

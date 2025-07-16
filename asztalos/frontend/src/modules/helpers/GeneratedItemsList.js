@@ -34,12 +34,11 @@ export default function GeneratedItemsList({
   };
 
   return (
-    <DragDropContext
-      onBeforeCapture={handleBeforeCapture}
-      onDragEnd={handleDragEnd}
-    >
-      <div style={{ overflowY: "auto", maxHeight: "78vh" }}>
-        {/* No Color bucket */}
+    <div /*style={{ overflowY: "auto", maxHeight: "78vh" }}*/>
+      <DragDropContext
+        onBeforeCapture={handleBeforeCapture}
+        onDragEnd={handleDragEnd}
+      >
         <Droppable droppableId="no-color">
           {(provided, snapshot) => (
             <div
@@ -165,7 +164,6 @@ export default function GeneratedItemsList({
                               {...prov.dragHandleProps}
                               style={{
                                 ...prov.draggableProps.style,
-                                padding: 8,
                                 margin: "4px 0",
                                 backgroundColor: snap.isDragging
                                   ? "#f0f9ff"
@@ -195,7 +193,7 @@ export default function GeneratedItemsList({
             </Droppable>
           );
         })}
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+    </div>
   );
 }

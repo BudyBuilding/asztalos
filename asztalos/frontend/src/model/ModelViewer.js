@@ -21,12 +21,15 @@ import {
 import { Modal, Button, Form } from "react-bootstrap";
 import { useDispatch } from "react-redux";
 import { getImageById } from "../data/getters";
-
+import objectApi from "../data/api/objectApi";
+import { IonIcon } from "@ionic/react";
+import { refresh } from "ionicons/icons";
 export default function ModelViewer({
   objects,
   createdItems,
   usedColors,
-  onItemUpdate
+  onItemUpdate,
+  onObjectUpdate
 }) {
   const dispatch = useDispatch();
 
@@ -44,8 +47,8 @@ export default function ModelViewer({
 
   // draggable modal
   const [modalPos, setModalPos] = useState({
-    x: window.innerWidth / 2 - 200,
-    y: window.innerHeight / 2 - 150
+    x: window.innerWidth / 15,
+    y: window.innerHeight / 5
   });
   const [dragging, setDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0 });
@@ -294,29 +297,34 @@ export default function ModelViewer({
     // group roots
     createdItems.forEach((item) => {
       const oid = item.object.objectId;
-      if (!groupRootsRef.current[oid]) {
-        const objData = objects.find((o) => o.objectId === oid) || {};
-        const [opx, opy, opz] = parsePositionString(
-          objData.position || "[0,0,0]",
-          1
-        )[0];
-        const [orx, ory, orz] = parseRotationString(
-          objData.rotation || "[0,0,0]",
-          1
-        )[0];
-        const root = new TransformNode(`grp_${oid}`, scene);
-        root.position.set(
-          Math.max(0, Math.min(opx * objectScale, roomW)),
-          Math.max(0, Math.min(opy * objectScale, roomH)),
-          Math.max(0, Math.min(opz * objectScale, roomD))
-        );
-        root.rotation.set(
-          Tools.ToRadians(orx),
-          Tools.ToRadians(ory),
-          Tools.ToRadians(orz)
-        );
+      // Ha nincs még node, építsd fel:
+      let root = groupRootsRef.current[oid];
+      if (!root) {
+        root = new TransformNode(`grp_${oid}`, scene);
         groupRootsRef.current[oid] = root;
       }
+
+      // Mindig frissítsd a root pozícióját és rotációját:
+      const objData = objects.find((o) => o.objectId === oid) || {};
+      const [opx, opy, opz] = parsePositionString(
+        objData.position || "[0,0,0]",
+        1
+      )[0];
+      const [orx, ory, orz] = parseRotationString(
+        objData.rotation || "[0,0,0]",
+        1
+      )[0];
+
+      root.position.set(
+        Math.max(0, Math.min(opx, roomW)),
+        Math.max(0, Math.min(opy, roomH)),
+        Math.max(0, Math.min(opz, roomD))
+      );
+      root.rotation.set(
+        Tools.ToRadians(orx),
+        Tools.ToRadians(ory),
+        Tools.ToRadians(orz)
+      );
     });
 
     // instantiate items
@@ -381,6 +389,7 @@ export default function ModelViewer({
               m.outlineWidth = 0.01;
             });
             // store originals
+
             originalRef.current = {
               position: {
                 x: root.position.x * 1000,
@@ -393,6 +402,7 @@ export default function ModelViewer({
                 z: Math.round(Tools.ToDegrees(root.rotation.z))
               }
             };
+
             // initialize modal state
             setObjPosition(originalRef.current.position);
             setObjRotation(originalRef.current.rotation);
@@ -475,15 +485,23 @@ export default function ModelViewer({
     setIsModalOpen(false);
   };
 
+  useEffect(() => {
+    if (!isModalOpen && selectedObjectId != null) {
+      // visszaállítás után töröljük a kijelölést
+      const root = groupRootsRef.current[selectedObjectId];
+      if (root) {
+        root.getChildMeshes().forEach((m) => (m.renderOutline = false));
+      }
+      setSelectedObjectId(null);
+    }
+  }, [isModalOpen, selectedObjectId]);
+
   // save: propagate and close
   // replace your existing handleSave with this:
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedObjectId != null) {
-      // Find the object (not the createdItem) by its objectId
       const obj = objects.find((o) => o.objectId === selectedObjectId);
       if (obj) {
-        // Build the updated object payload, converting mm back to your scene units
         const updatedObject = {
           ...obj,
           position: `[${(objPosition.x / 1000).toFixed(3)},${(
@@ -491,16 +509,22 @@ export default function ModelViewer({
           ).toFixed(3)},${(objPosition.z / 1000).toFixed(3)}]`,
           rotation: `[${objRotation.x},${objRotation.y},${objRotation.z}]`
         };
-        // Notify parent to update the object, passing the object index
         const objectIndex = objects.findIndex(
           (o) => o.objectId === selectedObjectId
         );
-        onItemUpdate(updatedObject, objectIndex);
+        try {
+          await dispatch(
+            objectApi.updateObjectApi(updatedObject.objectId, updatedObject)
+          );
+          onItemUpdate(updatedObject, objectIndex);
+          onObjectUpdate(updatedObject, objectIndex);
+        } catch (err) {
+          console.error("[ModelViewer] Error updating object:", err);
+        }
       }
     }
     setIsModalOpen(false);
   };
-
   return (
     <>
       <canvas
@@ -510,12 +534,16 @@ export default function ModelViewer({
       <Modal
         show={isModalOpen}
         onHide={handleCancel}
-        backdrop="static"
-        keyboard={false}
         backdropClassName="no-blur-backdrop"
-        dialogAs={({ className, style, children, ...props }) => (
+        dialogAs={({
+          className,
+          style,
+          children,
+          contentClassName,
+          ...props
+        }) => (
           <div
-            {...props}
+            {...props} // itt már nincs contentClassName a props között
             className={className}
             style={{
               ...style,
@@ -533,49 +561,164 @@ export default function ModelViewer({
         )}
       >
         <Modal.Header
-          closeButton
           onMouseDown={onHeaderMouseDown}
           style={{ cursor: "move" }}
         >
           <Modal.Title>Transform Object #{selectedObjectId}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {["x", "y", "z"].map((ax) => (
-            <Form.Group key={ax} className="mb-3">
-              <Form.Label>
-                Position {ax.toUpperCase()}: {objPosition[ax].toFixed(0)} mm
-              </Form.Label>
-              <Form.Range
-                min={0}
-                max={ax === "y" ? 2000 : 5000}
-                step={1}
-                value={objPosition[ax]}
-                onInput={(e) =>
-                  handlePositionChange(ax, parseFloat(e.target.value))
-                }
-              />
-            </Form.Group>
-          ))}
-          {["x", "y", "z"].map((ax) => (
-            <Form.Group key={ax} className="mb-3">
-              <Form.Label>
-                Rotation {ax.toUpperCase()}: {objRotation[ax]}°
-              </Form.Label>
-              <Form.Range
-                min={0}
-                max={360}
-                step={1}
-                value={objRotation[ax]}
-                onChange={(e) =>
-                  setObjRotation((prev) => ({
-                    ...prev,
-                    [ax]: parseInt(e.target.value, 10)
-                  }))
-                }
-              />
-            </Form.Group>
-          ))}
+        <Modal.Body
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center"
+          }}
+        >
+          {["x", "y", "z"].map((ax) => {
+            const min = 0;
+            const max = ax === "y" ? 2000 : 5000;
+            const val = objPosition[ax];
+            const label = ax.toUpperCase();
+
+            return (
+              <Form.Group key={ax} className="mb-4">
+                {/* felső sor: label + –, input, +, reset */}
+                <div className="d-flex align-items-center mb-2">
+                  <span style={{ width: 20, fontWeight: "bold" }}>
+                    {label}:
+                  </span>
+
+                  {/* decrement */}
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="mx-2"
+                    onClick={() => handlePositionChange(ax, val - 10)}
+                  >
+                    –
+                  </Button>
+
+                  {/* number input */}
+                  <Form.Control
+                    type="number"
+                    size="sm"
+                    style={{ width: 70 }}
+                    min={min}
+                    max={max}
+                    value={val}
+                    onChange={(e) => {
+                      let v = Number(e.target.value);
+                      if (isNaN(v)) v = min;
+                      handlePositionChange(ax, v);
+                    }}
+                  />
+
+                  {/* increment */}
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="ms-2"
+                    onClick={() => handlePositionChange(ax, val + 10)}
+                  >
+                    +
+                  </Button>
+
+                  {/* reset */}
+                  <div
+                    variant="outline-danger"
+                    size="sm"
+                    className="ms-3"
+                    onClick={() => handlePositionChange(ax, 0)}
+                  >
+                    <IonIcon icon={refresh} />
+                  </div>
+                </div>
+
+                <Form.Range
+                  min={min}
+                  max={max}
+                  step={1}
+                  value={val}
+                  onInput={(e) => handlePositionChange(ax, +e.target.value)}
+                />
+              </Form.Group>
+            );
+          })}
+
+          {/* rotationök */}
+          {["x", "y", "z"].map((ax) => {
+            const val = objRotation[ax];
+            return (
+              <Form.Group key={`r${ax}`} className="mb-4">
+                <div className="d-flex align-items-center mb-2">
+                  <span style={{ width: 20, fontWeight: "bold" }}>
+                    {ax.toUpperCase()}:
+                  </span>
+                  <Button
+                    size="sm"
+                    className="mx-2"
+                    onClick={() =>
+                      setObjRotation((prev) => ({
+                        ...prev,
+                        [ax]: prev[ax] - 10
+                      }))
+                    }
+                  >
+                    –
+                  </Button>
+                  <Form.Control
+                    type="number"
+                    size="sm"
+                    style={{ width: 70 }}
+                    min={0}
+                    max={360}
+                    value={val}
+                    onChange={(e) => {
+                      let v = parseInt(e.target.value, 10);
+                      if (isNaN(v)) v = 0;
+                      setObjRotation((prev) => ({ ...prev, [ax]: v }));
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    className="ms-2"
+                    onClick={() =>
+                      setObjRotation((prev) => ({
+                        ...prev,
+                        [ax]: prev[ax] + 10
+                      }))
+                    }
+                  >
+                    +
+                  </Button>
+                  <div
+                    size="sm"
+                    className="ms-3"
+                    onClick={() =>
+                      setObjRotation((prev) => ({ ...prev, [ax]: 0 }))
+                    }
+                  >
+                    <IonIcon icon={refresh} />
+                  </div>
+                </div>
+                <Form.Range
+                  min={0}
+                  max={360}
+                  step={1}
+                  value={val}
+                  onChange={(e) =>
+                    setObjRotation((prev) => ({
+                      ...prev,
+                      [ax]: parseInt(e.target.value, 10)
+                    }))
+                  }
+                />
+              </Form.Group>
+            );
+          })}
         </Modal.Body>
+
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancel}>
             Cancel
