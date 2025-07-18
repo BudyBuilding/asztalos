@@ -216,7 +216,7 @@ export default function ModelViewer({
     // room dims in meters
     const roomW = 5,
       roomD = 5,
-      roomH = 2;
+      roomH = 3;
     const thin = 0.00001;
 
     // floor
@@ -577,7 +577,7 @@ export default function ModelViewer({
         >
           {["x", "y", "z"].map((ax) => {
             const min = 0;
-            const max = ax === "y" ? 2000 : 5000;
+            const max = ax === "y" ? 3000 : 5000;
             const val = objPosition[ax];
             const label = ax.toUpperCase();
 

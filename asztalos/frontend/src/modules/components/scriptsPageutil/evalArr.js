@@ -12,6 +12,24 @@ export function evalArr(
   settingsList = [],
   userDimensions = {}
 ) {
+  const asStr = String(raw || "").trim();
+  // if it looks like an i‑macro in the 3rd slot, split on top‑level commas instead of `String.split`
+  if (asStr.startsWith("[") && asStr.endsWith("]") && /\b,i\(/.test(asStr)) {
+    const inner = asStr.slice(1, -1);
+    // this will give you exactly three pieces, even if the 3rd contains commas
+    const parts = splitTopLevel(inner);
+    const coords = expandIterated(
+      parts,
+      1,
+      overrideSettings || settingsList,
+      overrideDims || [
+        userDimensions.width,
+        userDimensions.height,
+        userDimensions.depth
+      ]
+    );
+    return coords[0] || [0, 0, 0];
+  }
   const settingsToUse = overrideSettings || settingsList;
   const {
     width = 0,
@@ -76,7 +94,7 @@ export function evalArr(
     }
   });
 }
-
+/*
 function splitIMacroArgs(str) {
   // str === "i(...)" bemenet
   const inner = str.slice(2, -1);
@@ -95,8 +113,25 @@ function splitIMacroArgs(str) {
   // ha nem találunk vesszőt, visszaadunk mindkettőt ugyanúgy
   return [inner, inner];
 }
+*/
+
+function splitIMacroArgs(str) {
+  const inner = str.slice(2, -1);
+  const parts = splitTopLevel(inner).map((s) => s.trim());
+  return parts;
+}
 
 export function expandIterated(rawParts, count, parentSettings, parentSize) {
+  let settingsArr;
+  if (Array.isArray(parentSettings)) {
+    settingsArr = parentSettings;
+  } else if (parentSettings && typeof parentSettings === "object") {
+    settingsArr = Object.entries(parentSettings)
+      .filter(([k]) => !["width", "height", "depth"].includes(k))
+      .map(([settingId, value]) => ({ settingId, value }));
+  } else {
+    settingsArr = [];
+  }
   // 0) Minden részről szabadítsd meg a külső [ ] jeleket
   const cleaned = rawParts.map((p) => p.replace(/^\[|\]$/g, "").trim());
   if (
@@ -129,8 +164,9 @@ export function expandIterated(rawParts, count, parentSettings, parentSize) {
   const norm = parts.map((p) => p.trim());
 
   // 3) Settings + dims egy objektumba
+  console.log("parentsettings: ", parentSettings);
   const S = Object.fromEntries(
-    parentSettings.map(({ settingId, value }) => {
+    settingsArr.map(({ settingId, value }) => {
       // if it parses as a plain number, store Number; otherwise keep the raw string
       const asNum = Number(value);
       return [
@@ -147,19 +183,28 @@ export function expandIterated(rawParts, count, parentSettings, parentSize) {
   const axes = norm.map((part) => {
     if (part.startsWith("i(") && part.endsWith(")")) {
       // bontsuk fel start‐re és end‐re
-      const [startExpr, endExpr] = splitIMacroArgs(part);
+      const [startExpr, endExpr, mode] = splitIMacroArgs(part);
       // tisztítsuk meg (makrócsere, változóhelyettesítés)
       const cleanStart = evaluateFormula(startExpr, S);
       const cleanEnd = evaluateFormula(endExpr, S);
       // JS‐eval
       const start = Number(new Function(`return (${cleanStart})`)());
       const end = Number(new Function(`return (${cleanEnd})`)());
+
+      if (mode === "c") {
+        if (count === 1) {
+          return [(start + end) / 2];
+        }
+        const step = (end - start) / (count + 1);
+        return Array.from({ length: count }, (_, i) => start + step * (i + 1));
+      }
+
       if (count === 1) return [start];
       const step = (end - start) / (count - 1);
       return Array.from({ length: count }, (_, i) => start + step * i);
     }
     // ha nem i(...), akkor evalArr‐rel egyszer lekérjük, és ismételjük
-    const v = evalArr(`[${part}]`, parentSettings, parentSize)[0] || 0;
+    const v = evalArr(`[${part}]`, settingsArr, parentSize)[0] || 0;
     return Array(count).fill(v);
   });
 
@@ -171,84 +216,6 @@ export function expandIterated(rawParts, count, parentSettings, parentSize) {
   ]);
 }
 
-/**
- * Expands “i(start,end)” macros into count-length arrays along each axis,
- * or repeats constants.
- */ /*
-export function expandIterated(
-  rawParts,
-  count,
-  parentSettings,
-  parentSize,
-  settingsList,
-  userDimensions
-) {
-  // ensure length 3
-  const parts = rawParts.slice();
-  while (parts.length < 3) parts.push("0");
-  const hasMacro = parts.some((p) =>
-    /\bi\(\s*[+-]?\d+,\s*[+-]?\d+\s*\)/.test(p)
-  );
-  // normalize: wrap constants in i(...)
-  const norm = parts.map((p) =>
-    /\bi\(/.test(p) && !/^i\(/.test(p) ? `i(${p},${p})` : p
-  );
-
-  const macroRe = /^i\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/;
-  const axes = norm.map((part) => {
-    const m = part.match(macroRe);
-    if (m) {
-      const startExpr = m[1].trim();
-      const endExpr = m[2].trim();
-      // kiértékeljük kifejezéseket:
-      const start = evalArr(`[${startExpr}]`, parentSettings, parentSize)[0];
-      const end = evalArr(`[${endExpr}]`, parentSettings, parentSize)[0];
-      if (count === 1) return [start];
-      const step = (end - start) / (count - 1);
-      return Array.from({ length: count }, (_, i) => start + step * i);
-    }
-    // konstans → egyszer kiértékeljük, aztán ismételjük
-    const v = evalArr(`[${part}]`, parentSettings, parentSize)[0] || 0;
-    return Array(count).fill(v);
-  });
-
-  return Array.from({ length: count }, (_, i) => [
-    axes[0][i],
-    axes[1][i],
-    axes[2][i]
-  ]);
-*/
-/*
-
-  const axes = norm.map((part) => {
-    const m = part.match(/^i\(\s*([+-]?\d+)\s*,\s*([+-]?\d+)\s*\)$/);
-    if (m) {
-      const [_, s, e] = m.map(Number);
-      if (count === 1) return [s];
-      const step = (e - s) / (count - 1);
-      return Array.from({ length: count }, (_, i) => s + step * i);
-    }
-    // constant → eval once, repeat
-    const v =
-      evalArr(
-        `[${part}]`,
-        parentSettings,
-        parentSize,
-        settingsList,
-        userDimensions
-      )[0] || 0;
-    return Array(count).fill(v);
-  });*/
-/*
-  return Array.from({ length: count }, (_, i) => [
-    axes[0][i],
-    axes[1][i],
-    axes[2][i]
-  ]);
-}*/
-
-// helper, már fent meg volt
-// helper, már fent meg volt
 function splitTopLevel(str) {
   const parts = [];
   let depthPar = 0,
@@ -338,8 +305,14 @@ export function parseConditionalPosition(
 
   // 3) Csak egy elem, nincs ?: → expandIterated
   if (!raw.includes("?")) {
-    console.log("[PCP] simple expandIterated parts:", raws);
-    return expandIterated(raws, count, parentSettings, parentSize);
+    // vágjuk le a külső [ ]
+    const inner = raw.replace(/^\[|\]$/g, "");
+    // osszuk a három tengelyre top-level vesszőknél
+    const parts = splitTopLevel(inner)
+      .map((s) => s.trim())
+      .slice(0, 3);
+    console.log("[PCP] simple expandIterated parts:", parts);
+    return expandIterated(parts, count, parentSettings, parentSize);
   }
 
   // 4) Van ?: → bontás

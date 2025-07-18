@@ -22,6 +22,7 @@ import {
   getScriptItemsByScript
 } from "../../data/getters";
 import scriptApi from "../../data/api/scriptApi";
+import { AxesViewer } from "@babylonjs/core/Debug/axesViewer";
 import scriptItemApi from "../../data/api/scriptItemApi";
 import {
   deleteScriptItem,
@@ -83,7 +84,8 @@ export default function ScriptsPage() {
           .filter((it) => it.itemId !== -1)
       : [];
   });
-
+  console.log("----------------------------------------------");
+  console.log(evalArr("[18,0,i(18, height - 36, c)]", [], [1000, 1000, 1000]));
   const [positionDSL, setPositionDSL] = useState("");
   const [rotationDSL, setRotationDSL] = useState("");
   const [editingSettingId, setEditingSettingId] = useState(null);
@@ -127,6 +129,18 @@ export default function ScriptsPage() {
   const [showSettingModal, setShowSettingModal] = useState(false);
   const [newSettingPair, setNewSettingPair] = useState({ id: "", value: "" });
   const [activeImageKey, setActiveImageKey] = useState(null);
+
+  const [hiddenItems, setHiddenItems] = useState(new Set());
+
+  const toggleVisibility = (item) => {
+    setHiddenItems((prev) => {
+      const next = new Set(prev);
+      const key = item.itemId > 0 ? item.itemId : item.tempId;
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
 
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
@@ -264,6 +278,41 @@ export default function ScriptsPage() {
 
   useEffect(() => setScriptList(scripts), [scripts]);
 
+  // after you’ve loaded scriptItems and scripts into state
+  useEffect(() => {
+    if (!scriptItems.length || !scripts.length) return;
+
+    // start from whatever settings you already have
+    let merged = [...parsedSettings];
+
+    scriptItems.forEach((item) => {
+      if (!item.refScript) return;
+      // find that referenced script
+      const parent = scripts.find(
+        (s) => String(s.scriptId) === String(item.refScript)
+      );
+      if (!parent?.setting) return;
+
+      // parse its defaults
+      const defaults = parseSettingString(parent.setting);
+      defaults.forEach((def) => {
+        if (!merged.some((s) => s.settingId === def.settingId)) {
+          merged.push(def);
+        }
+      });
+    });
+
+    // only update if we actually added something
+    if (merged.length !== parsedSettings.length) {
+      setParsedSettings(merged);
+      // also keep your serialized `script.setting` in sync
+      setScript((prev) => ({
+        ...prev,
+        setting: serializeSettingArray(merged)
+      }));
+    }
+  }, [scriptItems, scripts]);
+
   const refParsedSettings = useMemo(() => {
     if (!newItem.refScript) return [];
     const parent = scripts.find(
@@ -324,168 +373,12 @@ export default function ScriptsPage() {
     [parsedSettings]
   );
 
-  const computedQty = useMemo(() => {
-    const raw = String(newItem.qty).trim() || "1";
-    const arr = evalArr(`[${raw}]`, parsedSettings);
-    return Math.max(1, Math.round(arr[0]));
-  }, [newItem.qty, settingsObj]);
-
-  function splitTopLevel(str) {
-    const parts = [];
-    let depth = 0,
-      last = 0;
-    for (let i = 0; i < str.length; i++) {
-      if (str[i] === "(") depth++;
-      else if (str[i] === ")") depth--;
-      else if (str[i] === "," && depth === 0) {
-        parts.push(str.slice(last, i).trim());
-        last = i + 1;
-      }
-    }
-    parts.push(str.slice(last).trim());
-    return parts;
-  }
-
   const processedItems = useMemo(() => {
     const byScript = allScriptItems.reduce((acc, it) => {
       acc[it.scriptId] = acc[it.scriptId] || [];
       acc[it.scriptId].push(it);
       return acc;
     }, {});
-    /*
-    function expandItem(item, parentSettings, parentSize) {
-      const settingsArr = Array.isArray(parentSettings)
-        ? parentSettings
-        : Object.entries(parentSettings).map(([settingId, value]) => ({
-            settingId,
-            value: String(value)
-          }));
-      const size = parseConditionalPosition(
-        item.size,
-        settingsArr,
-        parentSize,
-        1
-      )[0];
-      let rawPos = splitTopLevel(item.position.replace(/^\[|\]$/g, ""));
-      let rawRot = splitTopLevel(item.rotation.replace(/^\[|\]$/g, ""));
-      const qtyExpr = evaluateFormula(
-        item.qty,
-        Object.fromEntries(settingsArr.map((s) => [s.settingId, s.value]))
-      );
-      const n = Math.max(1, Math.round(new Function(`return (${qtyExpr})`)()));
-      console.log("n: ", n);
-      const posIsMacro = rawPos.some((s) => /\bi\(/.test(s));
-      const rotIsMacro = rawRot.some((s) => /\bi\(/.test(s));
-      let relPositions, relRotations;
-
-      // 1) POSITION kiértékelése
-      if (item.position.includes("?")) {
-        // ternary‐os conditional‐i-makró
-        relPositions = parseConditionalPosition(
-          item.position,
-          settingsArr,
-          parentSize,
-          n
-        );
-      } else if (posIsMacro) {
-        // i(start,end)-es makrók
-        relPositions = expandIterated(rawPos, n, settingsArr, parentSize);
-      } else {
-        // sima [x,y,z] vagy tömb
-        relPositions = parseBracketExprList(item.position, (expr) =>
-          evalArr(expr, settingsArr, parentSize)
-        );
-      }
-
-      // 2) ROTATION kiértékelése
-      if (item.rotation.includes("?")) {
-        relRotations = parseConditionalPosition(
-          item.rotation,
-          settingsArr,
-          parentSize,
-          n
-        );
-      } else if (rotIsMacro) {
-        relRotations = expandIterated(rawRot, n, settingsArr, parentSize);
-      } else {
-        relRotations = parseBracketExprList(item.rotation, (expr) =>
-          evalArr(expr, settingsArr, parentSize)
-        );
-      }
-
-      // – ha kevesebb koordináta érkezett, mint amennyi qty, duplikáljuk
-      if (relPositions.length < n) {
-        const first = relPositions[0] || [0, 0, 0];
-        relPositions = Array.from({ length: n }, () => first);
-      }
-      if (relRotations.length < n) {
-        const first = relRotations[0] || [0, 0, 0];
-        relRotations = Array.from({ length: n }, () => first);
-      }
-
-      const pivot = new Vector3(size[0] / 2, size[1] / 2, size[2] / 2);
-
-      if (!item.refScript) {
-        return relPositions.map((pos, idx) => ({
-          ...item,
-          qty: 1,
-          evaluatedSize: size,
-          evaluatedPosition: [pos],
-          evaluatedRotation: [
-            relRotations[idx] != null
-              ? relRotations[idx]
-              : relRotations[0] || [0, 0, 0]
-          ]
-        }));
-      }
-
-      // Ha van refScript, rekurzívan bejárjuk a gyerekeket és transzformáljuk őket
-      const children = byScript[item.refScript] || [];
-      const defaultSettings = parseSettingString(item.refSettings);
-      const instances = [];
-
-      relPositions.forEach((pPos, idx) => {
-        const pRot = relRotations[idx] || [0, 0, 0];
-        const pQuat = Quaternion.RotationYawPitchRoll(
-          (pRot[1] * Math.PI) / 2,
-          (pRot[0] * Math.PI) / 2,
-          (pRot[2] * Math.PI) / 2
-        );
-        const pMat = Matrix.Identity();
-        pQuat.toRotationMatrix(pMat);
-
-        children.forEach((child) => {
-          const adds = expandItem(child, defaultSettings, size);
-          adds.forEach((inst) => {
-            // Pozíció transzformáció
-            inst.evaluatedPosition = inst.evaluatedPosition.map(([x, y, z]) => {
-              const v0 = new Vector3(x, y, z).subtract(pivot);
-              const v1 = Vector3.TransformCoordinates(v0, pMat);
-              const v2 = v1.add(pivot).add(new Vector3(...pPos));
-              return [v2.x, v2.y, v2.z];
-            });
-            // Rotáció transzformáció
-            inst.evaluatedRotation = inst.evaluatedRotation.map(
-              ([cx, cy, cz]) => {
-                const cQuat = Quaternion.RotationYawPitchRoll(
-                  (cy * Math.PI) / 2,
-                  (cx * Math.PI) / 2,
-                  (cz * Math.PI) / 2
-                );
-                const combo = pQuat.multiply(cQuat).toEulerAngles();
-                return [
-                  Math.round(combo.x / (Math.PI / 2)) % 4,
-                  Math.round(combo.y / (Math.PI / 2)) % 4,
-                  Math.round(combo.z / (Math.PI / 2)) % 4
-                ];
-              }
-            );
-            instances.push(inst);
-          });
-        });
-      });
-      return instances;
-    }*/
 
     function expandItem(item, parentSettings, parentSize) {
       // Normalize settings array
@@ -557,7 +450,13 @@ export default function ScriptsPage() {
         pQuat.toRotationMatrix(pMat);
 
         children.forEach((child) => {
-          const adds = expandItem(child, defaultSettings, size);
+          //   const adds = expandItem(child, defaultSettings, size);
+          const mergedSettings = [...settingsArr, ...defaultSettings].filter(
+            // dedupe same settingId, keep the refScript’s override last
+            (v, i, self) =>
+              self.findIndex((x) => x.settingId === v.settingId) === i
+          );
+          const adds = expandItem(child, mergedSettings, size);
           adds.forEach((inst) => {
             inst.evaluatedPosition = inst.evaluatedPosition.map(([x, y, z]) => {
               const v0 = new Vector3(x, y, z).subtract(pivot);
@@ -614,21 +513,6 @@ export default function ScriptsPage() {
   }, [rawItems, allScriptItems, parsedSettings, userDimensions]);
 
   useEffect(() => {}, [processedItems]);
-
-  function parseBracketExprList(input, evalArrFn) {
-    if (Array.isArray(input)) {
-      return input.map((item) => {
-        const coords = evalArrFn(item);
-        return coords;
-      });
-    }
-    const str = String(input || "");
-    const matches = str.match(/\[[^\]]*\]/g) || [];
-    return matches.map((expr) => {
-      const coords = evalArrFn(expr);
-      return coords;
-    });
-  }
 
   const handleScriptChange = (e) =>
     setScript((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -905,6 +789,19 @@ export default function ScriptsPage() {
 
     new HemisphericLight("light", new Vector3(0, 1, 0), scene);
 
+    const originSphere = MeshBuilder.CreateSphere(
+      "originSphere",
+      { diameter: 500 },
+      scene
+    );
+    originSphere.position = Vector3.Zero();
+    const originMat = new StandardMaterial("originMat", scene);
+    originMat.diffuseColor = new Color3(1, 0, 0);
+    originSphere.material = originMat;
+
+    // 2) vagy ha inkább tengelyeket is szeretnél látni:
+    new AxesViewer(scene, 250);
+
     engine.runRenderLoop(() => scene.render());
     return () => engine.dispose();
   }, [showEditor, loading]);
@@ -920,43 +817,46 @@ export default function ScriptsPage() {
     const maxDim = Math.max(width, height, depth) || 1;
     const globalScale = 1 / maxDim;
 
-    processedItems.forEach((it, idx) => {
-      const [w, h, d] = it.evaluatedSize;
-      const positions = it.evaluatedPosition;
-      const rotations = it.evaluatedRotation;
+    //    processedItems.forEach((it, idx) => {
+    processedItems
+      .filter((it) => !hiddenItems.has(it.itemId > 0 ? it.itemId : it.tempId))
+      .forEach((it, idx) => {
+        const [w, h, d] = it.evaluatedSize;
+        const positions = it.evaluatedPosition;
+        const rotations = it.evaluatedRotation;
 
-      for (let j = 0; j < it.qty; j++) {
-        const rawPos = positions[j] || [0, 0, 0];
-        const rawRot = rotations[j] || [0, 0, 0];
+        for (let j = 0; j < it.qty; j++) {
+          const rawPos = positions[j] || [0, 0, 0];
+          const rawRot = rotations[j] || [0, 0, 0];
 
-        const sw = w * globalScale;
-        const sh = h * globalScale;
-        const sd = d * globalScale;
-        const px = rawPos[0] * globalScale;
-        const py = rawPos[1] * globalScale;
-        const pz = rawPos[2] * globalScale;
+          const sw = w * globalScale;
+          const sh = h * globalScale;
+          const sd = d * globalScale;
+          const px = rawPos[0] * globalScale;
+          const py = rawPos[1] * globalScale;
+          const pz = rawPos[2] * globalScale;
 
-        const box = MeshBuilder.CreateBox(
-          `box_${idx}_${j}`,
-          { width: sw, height: sh, depth: sd },
-          scene
-        );
+          const box = MeshBuilder.CreateBox(
+            `box_${idx}_${j}`,
+            { width: sw, height: sh, depth: sd },
+            scene
+          );
 
-        box.setPivotPoint(new Vector3(-sw / 2, -sh / 2, -sd / 2));
-        box.position = new Vector3(px + sw / 2, py + sh / 2, pz + sd / 2);
+          box.setPivotPoint(new Vector3(-sw / 2, -sh / 2, -sd / 2));
+          box.position = new Vector3(px + sw / 2, py + sh / 2, pz + sd / 2);
 
-        // forgatás a pivot körül
-        box.rotation = new Vector3(
-          (rawRot[0] * Math.PI) / 2,
-          (rawRot[1] * Math.PI) / 2,
-          (rawRot[2] * Math.PI) / 2
-        );
-        const mat = new StandardMaterial(`mat_${idx}_${j}`, scene);
-        const col = Color3.FromHexString(it.material || "#4c4c4c");
-        mat.diffuseColor = col;
-        box.material = mat;
-      }
-    });
+          // forgatás a pivot körül
+          box.rotation = new Vector3(
+            (rawRot[0] * Math.PI) / 2,
+            (rawRot[1] * Math.PI) / 2,
+            (rawRot[2] * Math.PI) / 2
+          );
+          const mat = new StandardMaterial(`mat_${idx}_${j}`, scene);
+          const col = Color3.FromHexString(it.material || "#4c4c4c");
+          mat.diffuseColor = col;
+          box.material = mat;
+        }
+      });
   }, [processedItems, userDimensions, parsedSettings]);
 
   if (loading) return <Loading />;
@@ -1293,23 +1193,54 @@ export default function ScriptsPage() {
                     value={newItem.refScript}
                     onChange={(e) => {
                       const sel = e.target.value;
-                      // keresd meg a script objektumot
                       const scriptObj = scripts.find(
                         (s) => String(s.scriptId) === sel
                       );
-                      // parse-eld ki a default setting párokat
                       const defaults = scriptObj
-                        ? parseSettingString(scriptObj.setting || "")
+                        ? parseSettingString(scriptObj.setting)
                         : [];
+
+                      // 1) seed the New‑Item’s own overrides
                       setNewItem((prev) => ({
                         ...prev,
                         refScript: sel,
-                        // inicializáld a tömböt value-kkel
                         refSettings: defaults.map(({ settingId, value }) => ({
                           settingId,
                           value
                         }))
                       }));
+
+                      // 2) now *also* add any of those defaults into the main script’s settings
+                      setParsedSettings((prevSettings) => {
+                        const merged = [...prevSettings];
+                        defaults.forEach((d) => {
+                          if (
+                            !merged.some((s) => s.settingId === d.settingId)
+                          ) {
+                            merged.push(d);
+                          }
+                        });
+                        return merged;
+                      });
+
+                      // 3) and update the serialized `script.setting` so it sticks when you save
+                      setScript((prev) => {
+                        const all = [
+                          ...(prev.setting
+                            ? parseSettingString(prev.setting)
+                            : []),
+                          ...defaults
+                        ].filter(
+                          (s, i, arr) =>
+                            arr.findIndex(
+                              (x) => x.settingId === s.settingId
+                            ) === i
+                        );
+                        return {
+                          ...prev,
+                          setting: serializeSettingArray(all)
+                        };
+                      });
                     }}
                   >
                     <option value="">— none —</option>
@@ -1695,6 +1626,8 @@ export default function ScriptsPage() {
                                 >
                                   <option value="0">0 (0°)</option>
                                   <option value="1">1 (90°)</option>
+                                  <option value="2">2 (180°)</option>
+                                  <option value="3">3 (270°)</option>
                                 </Form.Select>
                               </Col>
                             ))}
@@ -1804,6 +1737,7 @@ export default function ScriptsPage() {
                   <th>Material</th>
                   <th>Szerkesztés</th>
                   <th>Törlés</th>
+                  <th>Látható</th>
                 </tr>
               </thead>
               <tbody>
@@ -1858,15 +1792,26 @@ export default function ScriptsPage() {
                           }}
                         />
                       </td>
+
                       <td>
                         <IonIcon
                           icon={trash}
                           style={{ cursor: "pointer", color: "red" }}
-                          onClick={async () => {
-                            // eltávolítjuk a sorból
-                            handleDeleteItem(it);
-                          }}
+                          onClick={() => handleDeleteItem(it)}
                         />
+                      </td>
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="outline-secondary"
+                          onClick={() => toggleVisibility(it)}
+                        >
+                          {hiddenItems.has(
+                            it.itemId > 0 ? it.itemId : it.tempId
+                          )
+                            ? "Mutat"
+                            : "Elrejt"}
+                        </Button>
                       </td>
                     </tr>
                   ))

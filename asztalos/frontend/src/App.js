@@ -97,6 +97,9 @@ function App() {
 
     handleAuth();
   }, [isLoggedIn, isTokenChecked]);
+  const isFullScreenModal =
+    location.pathname.startsWith("/editWork") ||
+    location.pathname.startsWith("/TableViewer");
 
   if (!isTokenChecked) {
     return <Loading />;
@@ -109,7 +112,7 @@ function App() {
         backgroundColor: "#F3F5F7",
         display: "flex",
         flexDirection: "column",
-        maxHeight: "100vh"
+        ...(isFullScreenModal ? { maxHeight: "100vh" } : { minHeight: "150vh" })
       }}
     >
       {isLoggedIn &&
