@@ -106,6 +106,12 @@ export default function ScriptCaller({
     );
   }
 
+  const dimLabels = {
+    width: "Szélesség",
+    height: "Magasság",
+    depth: "Mélység"
+  };
+
   const onDragEnd = (result) => {
     const { destination, source, draggableId } = result;
     if (!destination) return;
@@ -415,7 +421,9 @@ export default function ScriptCaller({
         </Modal>
         <Row className="align-items-center">
           <Col xs="auto">
-            <h3>{selectedScript ? selectedScript.name : "Script Selector"}</h3>
+            <h3>
+              {selectedScript ? selectedScript.name : "Terv kiválasztása"}
+            </h3>
           </Col>
           {selectedScript && (
             <>
@@ -424,7 +432,7 @@ export default function ScriptCaller({
                 {["width", "height", "depth"].map((dim) => (
                   <Form.Group key={dim} className="mx-2" style={{ width: 120 }}>
                     <Form.Label className="mb-1 text-capitalize">
-                      {dim}
+                      {dimLabels[dim]}
                     </Form.Label>
                     <Form.Control
                       type="number"
@@ -448,17 +456,17 @@ export default function ScriptCaller({
                   onClick={handleBack}
                   className="me-2"
                 >
-                  Back
+                  Vissza
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleGenerate}
                   className="me-2"
                 >
-                  Generate
+                  Generálás
                 </Button>
                 <Button variant="success" onClick={handleSave}>
-                  Save
+                  Bútor mentése
                 </Button>
               </Col>
             </>
@@ -543,7 +551,7 @@ export default function ScriptCaller({
         >
           <Row style={{ height: "100%" }}>
             <Col md={3} className="border-end">
-              <h5>Settings</h5>
+              <h5>Beállítások</h5>
               <Form>
                 <Row className="g-2">
                   {Object.entries(config)
@@ -597,7 +605,7 @@ export default function ScriptCaller({
             </Col>
 
             <Col md={3} className="border-start">
-              <h5>Selected Colors</h5>
+              <h5>Kiválasztott színek</h5>
               <div className="d-flex mb-3">
                 {palette.map((color) => {
                   const imageUrl = color.imageDataReduced;
@@ -646,9 +654,9 @@ export default function ScriptCaller({
 
               <div style={{ flex: 1, overflowY: "auto" }}>
                 <h5 className="d-flex align-items-center justify-content-between">
-                  Generated Items
+                  Generált elemek
                   <Button size="sm" variant="secondary" onClick={handleAddNew}>
-                    New Item
+                    Új méret hozzáadás
                   </Button>
                 </h5>
                 <GeneratedItemsList

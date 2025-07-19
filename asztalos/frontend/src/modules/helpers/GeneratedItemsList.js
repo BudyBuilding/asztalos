@@ -65,7 +65,7 @@ export default function GeneratedItemsList({
                     collapsedColors["no-color"] ? chevronForward : chevronDown
                   }
                 />
-                <strong style={{ marginLeft: 6 }}>No Color</strong>
+                <strong style={{ marginLeft: 6 }}>Nincs szín</strong>
               </div>
 
               {!collapsedColors["no-color"] &&

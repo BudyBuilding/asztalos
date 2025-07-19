@@ -483,7 +483,7 @@ function EditWork() {
                 setShowModel(false);
               }}
             >
-              New Object
+              Új bútor
             </Nav.Link>
           </Nav.Item>
         )}
