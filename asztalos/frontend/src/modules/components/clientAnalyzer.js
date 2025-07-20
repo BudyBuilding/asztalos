@@ -3,7 +3,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { Table, Button, Modal } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
-import { filter, options, trash, radioButtonOn, radioButtonOffOutline } from "ionicons/icons";
+import {
+  filter,
+  options,
+  trash,
+  radioButtonOn,
+  radioButtonOffOutline
+} from "ionicons/icons";
 import Loading from "../helpers/Loading";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
 import NewWorkModal from "../modals/newWorkModal.js";
@@ -11,7 +17,7 @@ import {
   fetchCreatedItemsForWork,
   fetchCreatedTablesForWork,
   fetchObjectsForWork,
-  fetchTables,
+  fetchTables
 } from "../../data/storeManager";
 import sorting from "../helpers/sort";
 import filtering from "../helpers/filter"; // Assuming this exists or needs to be implemented
@@ -34,11 +40,18 @@ function ClientAnalyzer() {
   const [error, setError] = useState("");
   const [showSortWork, setShowSortWork] = useState(false);
   const [showFilterWork, setShowFilterWork] = useState(false);
-  const [workSortConfig, setWorkSortConfig] = useState({ key: null, direction: 1 });
+  const [workSortConfig, setWorkSortConfig] = useState({
+    key: null,
+    direction: 1
+  });
   const [workFilterOptions, setWorkFilterOptions] = useState([]);
   const [visibleStatus, setVisibleStatus] = useState(false);
-  const [allWorks, setAllWorks] = useState(useSelector((state) => state.works || [])); 
-  const [clientWorks, setClientsWorks] = useState(allWorks.filter((work) => work.client.clientId == clientId));        
+  const [allWorks, setAllWorks] = useState(
+    useSelector((state) => state.works || [])
+  );
+  const [clientWorks, setClientsWorks] = useState(
+    allWorks.filter((work) => work.client.clientId == clientId)
+  );
 
   // Load client data
   useEffect(() => {
@@ -49,9 +62,27 @@ function ClientAnalyzer() {
         setSelectedClient(clientData);
         setWorkFilterOptions([
           { label: "Name", vkey: "name", type: "string", value: "" },
-          { label: "Paid", vkey: "paid", type: "interval", min: getMin(clientWorks, "paid"), max: getMax(clientWorks, "paid") },
-          { label: "Price", vkey: "price", type: "interval", min: getMin(clientWorks, "price"), max: getMax(clientWorks, "price") },
-          { label: "Status", vkey: "status", type: "valueList", values: getValues(clientWorks, "status"), value: getValues(clientWorks, "status") },
+          {
+            label: "Paid",
+            vkey: "paid",
+            type: "interval",
+            min: getMin(clientWorks, "paid"),
+            max: getMax(clientWorks, "paid")
+          },
+          {
+            label: "Price",
+            vkey: "price",
+            type: "interval",
+            min: getMin(clientWorks, "price"),
+            max: getMax(clientWorks, "price")
+          },
+          {
+            label: "Status",
+            vkey: "status",
+            type: "valueList",
+            values: getValues(clientWorks, "status"),
+            value: getValues(clientWorks, "status")
+          }
         ]);
       } catch (err) {
         setError("Failed to load client data");
@@ -63,8 +94,10 @@ function ClientAnalyzer() {
   }, [render, clientId, dispatch]);
 
   useEffect(() => {
-    setClientsWorks(allWorks.filter((work) => work.client.clientId == clientId)); 
-    setRender(!render); 
+    setClientsWorks(
+      allWorks.filter((work) => work.client.clientId == clientId)
+    );
+    setRender(!render);
   }, [allWorks]);
 
   // Helper functions for filtering
@@ -102,7 +135,11 @@ function ClientAnalyzer() {
   // Sorting
   const sortWorks = (key) => {
     let direction = 1;
-    if (workSortConfig && workSortConfig.key === key && workSortConfig.direction === 1) {
+    if (
+      workSortConfig &&
+      workSortConfig.key === key &&
+      workSortConfig.direction === 1
+    ) {
       direction = 2;
     }
     setShowSortWork(false);
@@ -157,7 +194,7 @@ function ClientAnalyzer() {
       await fetchCreatedTablesForWork(workId);
       navigate(`/workAnalyzer/${workId}`);
     } catch (error) {
-      setError("Failed to select work");
+      setError("Nem sikerült kiválasztani a munkát, próbáld újra később.");
       console.error("Error selecting work:", error);
     } finally {
       setLoading(false);
@@ -176,13 +213,14 @@ function ClientAnalyzer() {
       // 2) Frissítjük a teljes listát
       setAllWorks(freshWorks);
       // 3) Kiszűrjük a kliens munkáit
-      const filtered = freshWorks.filter(w => String(w.client.clientId) === String(clientId));
+      const filtered = freshWorks.filter(
+        (w) => String(w.client.clientId) === String(clientId)
+      );
       setClientsWorks(filtered);
       // 4) Frissítjük a látható workListet is
       setWorkList(filtered);
-
     } catch (error) {
-      setError("Failed to create new work");
+      setError("Nem sikerült létrehozni a munkát, próbld meg később.");
       console.error("Error creating new work:", error);
     }
   };
@@ -193,7 +231,7 @@ function ClientAnalyzer() {
       await dispatch(workApi.deleteWorkApi(workId));
       rerender();
     } catch (error) {
-      setError("Failed to delete work");
+      setError("Nem sikerült törölni a munkát, próbld meg később.");
       console.error("Error deleting work:", error);
     }
   };
@@ -202,11 +240,13 @@ function ClientAnalyzer() {
 
   const handleClientUpdate = async (updatedClientData) => {
     try {
-      await dispatch(clientApi.updateClientApi(selectedClient.clientId, updatedClientData));
+      await dispatch(
+        clientApi.updateClientApi(selectedClient.clientId, updatedClientData)
+      );
       setShowClientUpdateModal(false);
       rerender();
     } catch (error) {
-      setError("Failed to update client");
+      setError("Nem sikerült frissíteni a klienst, próbld meg később.");
       console.error("Error updating client:", error);
     }
   };
@@ -223,30 +263,42 @@ function ClientAnalyzer() {
     { label: "Price", value: "price" },
     { label: "Status", value: "status" },
     { label: "Ordered", value: "orderDate" },
-    { label: "Completed", value: "finishDate" },
+    { label: "Completed", value: "finishDate" }
   ];
 
   return (
     <div style={{ height: "100vh", overflow: "hidden" }}>
-      <div className="container d-xl-block" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      <div
+        className="container d-xl-block"
+        style={{ height: "100%", display: "flex", flexDirection: "column" }}
+      >
         {loading ? (
           <Loading />
         ) : (
           <>
-            {error && <ErrorModal error={error} onClose={handleCloseErrorModal} />}
+            {error && (
+              <ErrorModal error={error} onClose={handleCloseErrorModal} />
+            )}
             {selectedClient ? (
               <>
                 <Modal show={showNewWork} onHide={closeNewWork}>
                   <Modal.Header closeButton>
-                    <Modal.Title>Create New Work</Modal.Title>
+                    <Modal.Title>Új munka létrehozása</Modal.Title>
                   </Modal.Header>
                   <Modal.Body>
-                    <NewWorkModal show={showNewWork} handleClose={closeNewWork} onSubmit={handleNewWork} />
+                    <NewWorkModal
+                      show={showNewWork}
+                      handleClose={closeNewWork}
+                      onSubmit={handleNewWork}
+                    />
                   </Modal.Body>
                 </Modal>
-                <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
+                <Modal
+                  show={showClientUpdateModal}
+                  onHide={handleClientUpdateClose}
+                >
                   <Modal.Header closeButton>
-                    <Modal.Title>Update Client</Modal.Title>
+                    <Modal.Title>Kliens frissítése</Modal.Title>
                   </Modal.Header>
                   <Modal.Body>
                     <ClientUpdateModal
@@ -258,45 +310,83 @@ function ClientAnalyzer() {
                 </Modal>
 
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <p className="fs-1 fw-bold text-start mb-0">{selectedClient?.name} Works</p>
+                  <p className="fs-1 text-start mb-0">
+                    <strong>{selectedClient?.name} </strong>
+                    munkái
+                  </p>
                   <div>
-                    <Button variant="primary" onClick={() => setShowClientUpdateModal(true)} className="me-3">
-                      Edit Client
+                    <Button
+                      variant="primary"
+                      onClick={() => setShowClientUpdateModal(true)}
+                      className="me-3"
+                    >
+                      Kliens szerkesztés
                     </Button>
                     <Button variant="primary" onClick={handleNewWorkClick}>
-                      New Work
+                      Új munka
                     </Button>
                   </div>
                 </div>
 
                 <div className="mb-3">
-                  <p className="fs-2 fw-bold text-start">Informations</p>
+                  <p className="fs-2 fw-bold text-start">Részletek</p>
                   <div className="row">
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Tel: <span>{selectedClient?.telephone}</span></p>
+                      <p className="fs-5 text-start">
+                        Telefonszám: <span>{selectedClient?.telephone}</span>
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Address: <span>{selectedClient?.address}</span></p>
+                      <p className="fs-5 text-start">
+                        Cím: <span>{selectedClient?.address}</span>
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">All works: <span>{clientWorks.length}</span></p>
+                      <p className="fs-5 text-start">
+                        Munkák száma: <span>{clientWorks.length}</span>
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Active works: <span>{clientWorks.filter((w) => w.status === "Active").length}</span></p>
+                      <p className="fs-5 text-start">
+                        Aktív munkák:{" "}
+                        <span>
+                          {
+                            clientWorks.filter((w) => w.status === "Active")
+                              .length
+                          }
+                        </span>
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Completed works: <span>{clientWorks.filter((w) => w.status === "Completed").length}</span></p>
+                      <p className="fs-5 text-start">
+                        Kész munkák:{" "}
+                        <span>
+                          {
+                            clientWorks.filter((w) => w.status === "Completed")
+                              .length
+                          }
+                        </span>
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p className="fs-5 text-start">Still to pay: <span>{selectedClient?.clientSold} RON</span></p>
+                      <p className="fs-5 text-start">
+                        Még fizetnie kell:{" "}
+                        <span>{selectedClient?.clientSold} RON</span>
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <p className="fs-2 fw-bold text-start mb-0">Recent Works</p>
-                  <div style={{ position: "relative", display: "inline-block" }}>
-                    <Button variant="link" style={{ fontSize: "20px", textDecoration: "none" }} onClick={() => setShowSortWork(!showSortWork)}>
+                  <p className="fs-2 fw-bold text-start mb-0">Korábbi munkák</p>
+                  <div
+                    style={{ position: "relative", display: "inline-block" }}
+                  >
+                    <Button
+                      variant="link"
+                      style={{ fontSize: "20px", textDecoration: "none" }}
+                      onClick={() => setShowSortWork(!showSortWork)}
+                    >
                       <IonIcon icon={options} />
                     </Button>
                     {showSortWork && (
@@ -310,7 +400,7 @@ function ClientAnalyzer() {
                           padding: "8px",
                           zIndex: 1100,
                           width: "200px",
-                          borderRadius: "2rem",
+                          borderRadius: "2rem"
                         }}
                       >
                         {workSortOptions.map((option) => (
@@ -318,7 +408,11 @@ function ClientAnalyzer() {
                             key={option.value}
                             variant="outline-primary"
                             className="w-100 mb-2"
-                            style={{ border: "none", color: "black", borderRadius: "3rem" }}
+                            style={{
+                              border: "none",
+                              color: "black",
+                              borderRadius: "3rem"
+                            }}
                             onClick={() => sortWorks(option.value)}
                           >
                             {option.label}
@@ -326,7 +420,11 @@ function ClientAnalyzer() {
                         ))}
                       </div>
                     )}
-                    <Button variant="link" style={{ fontSize: "20px", textDecoration: "none" }} onClick={() => setShowFilterWork(!showFilterWork)}>
+                    <Button
+                      variant="link"
+                      style={{ fontSize: "20px", textDecoration: "none" }}
+                      onClick={() => setShowFilterWork(!showFilterWork)}
+                    >
                       <IonIcon icon={filter} />
                     </Button>
                     {showFilterWork && (
@@ -340,41 +438,112 @@ function ClientAnalyzer() {
                           padding: "8px",
                           zIndex: 1100,
                           width: "15vw",
-                          borderRadius: "2rem",
+                          borderRadius: "2rem"
                         }}
                       >
                         {workFilterOptions.map((option) => {
                           if (option.type === "string") {
                             return (
                               <div key={option.vkey}>
-                                <div style={{ marginBottom: "6px", fontWeight: "bold" }}>{option.label}</div>
+                                <div
+                                  style={{
+                                    marginBottom: "6px",
+                                    fontWeight: "bold"
+                                  }}
+                                >
+                                  {option.label}
+                                </div>
                                 <input
                                   type="text"
                                   placeholder={option.label}
-                                  onChange={(e) => startFilter(option.vkey, "string", "min", e.target.value)}
-                                  style={{ width: "100%", padding: "6px", borderRadius: "1rem", border: "1px solid #ccc", marginBottom: "8px" }}
+                                  onChange={(e) =>
+                                    startFilter(
+                                      option.vkey,
+                                      "string",
+                                      "min",
+                                      e.target.value
+                                    )
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "6px",
+                                    borderRadius: "1rem",
+                                    border: "1px solid #ccc",
+                                    marginBottom: "8px"
+                                  }}
                                 />
                               </div>
                             );
                           }
                           if (option.type === "interval") {
-                            const isDateInterval = option.vkey.toLowerCase().includes("date");
+                            const isDateInterval = option.vkey
+                              .toLowerCase()
+                              .includes("date");
                             return (
-                              <div key={option.vkey} style={{ marginBottom: "12px" }}>
-                                <div style={{ marginBottom: "6px", fontWeight: "bold" }}>{option.label}</div>
+                              <div
+                                key={option.vkey}
+                                style={{ marginBottom: "12px" }}
+                              >
+                                <div
+                                  style={{
+                                    marginBottom: "6px",
+                                    fontWeight: "bold"
+                                  }}
+                                >
+                                  {option.label}
+                                </div>
                                 {isDateInterval ? (
                                   <>
                                     <input
                                       type="date"
-                                      value={option.min ? new Date(option.min).toISOString().split("T")[0] : ""}
-                                      onChange={(e) => startFilter(option.vkey, "interval", "min", e.target.value)}
-                                      style={{ width: "47.5%", padding: "6px", borderRadius: "1rem", border: "1px solid #ccc", marginRight: "10px", marginBottom: "8px" }}
+                                      value={
+                                        option.min
+                                          ? new Date(option.min)
+                                              .toISOString()
+                                              .split("T")[0]
+                                          : ""
+                                      }
+                                      onChange={(e) =>
+                                        startFilter(
+                                          option.vkey,
+                                          "interval",
+                                          "min",
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{
+                                        width: "47.5%",
+                                        padding: "6px",
+                                        borderRadius: "1rem",
+                                        border: "1px solid #ccc",
+                                        marginRight: "10px",
+                                        marginBottom: "8px"
+                                      }}
                                     />
                                     <input
                                       type="date"
-                                      value={option.max ? new Date(option.max).toISOString().split("T")[0] : ""}
-                                      onChange={(e) => startFilter(option.vkey, "interval", "max", e.target.value)}
-                                      style={{ width: "47.5%", padding: "6px", borderRadius: "1rem", border: "1px solid #ccc", marginBottom: "8px" }}
+                                      value={
+                                        option.max
+                                          ? new Date(option.max)
+                                              .toISOString()
+                                              .split("T")[0]
+                                          : ""
+                                      }
+                                      onChange={(e) =>
+                                        startFilter(
+                                          option.vkey,
+                                          "interval",
+                                          "max",
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{
+                                        width: "47.5%",
+                                        padding: "6px",
+                                        borderRadius: "1rem",
+                                        border: "1px solid #ccc",
+                                        marginBottom: "8px"
+                                      }}
                                     />
                                   </>
                                 ) : (
@@ -382,14 +551,41 @@ function ClientAnalyzer() {
                                     <input
                                       type="number"
                                       value={option.min || ""}
-                                      onChange={(e) => startFilter(option.vkey, "interval", "min", e.target.value)}
-                                      style={{ width: "47.5%", padding: "6px", borderRadius: "1rem", border: "1px solid #ccc", marginRight: "10px", marginBottom: "8px" }}
+                                      onChange={(e) =>
+                                        startFilter(
+                                          option.vkey,
+                                          "interval",
+                                          "min",
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{
+                                        width: "47.5%",
+                                        padding: "6px",
+                                        borderRadius: "1rem",
+                                        border: "1px solid #ccc",
+                                        marginRight: "10px",
+                                        marginBottom: "8px"
+                                      }}
                                     />
                                     <input
                                       type="number"
                                       value={option.max || ""}
-                                      onChange={(e) => startFilter(option.vkey, "interval", "max", e.target.value)}
-                                      style={{ width: "47.5%", padding: "6px", borderRadius: "1rem", border: "1px solid #ccc", marginBottom: "8px" }}
+                                      onChange={(e) =>
+                                        startFilter(
+                                          option.vkey,
+                                          "interval",
+                                          "max",
+                                          e.target.value
+                                        )
+                                      }
+                                      style={{
+                                        width: "47.5%",
+                                        padding: "6px",
+                                        borderRadius: "1rem",
+                                        border: "1px solid #ccc",
+                                        marginBottom: "8px"
+                                      }}
                                     />
                                   </>
                                 )}
@@ -399,7 +595,14 @@ function ClientAnalyzer() {
                           if (option.type === "valueList") {
                             return (
                               <div key={option.vkey}>
-                                <div style={{ marginBottom: "6px", fontWeight: "bold", cursor: "pointer" }} onClick={handleToggleVisibility}>
+                                <div
+                                  style={{
+                                    marginBottom: "6px",
+                                    fontWeight: "bold",
+                                    cursor: "pointer"
+                                  }}
+                                  onClick={handleToggleVisibility}
+                                >
                                   {option.label}
                                 </div>
                                 {visibleStatus && (
@@ -413,7 +616,7 @@ function ClientAnalyzer() {
                                       border: "thin solid #dee2e6",
                                       zIndex: "1500",
                                       borderRadius: "1.5rem",
-                                      width: "8rem",
+                                      width: "8rem"
                                     }}
                                   >
                                     {option.values.map((status) => (
@@ -424,14 +627,28 @@ function ClientAnalyzer() {
                                           display: "flex",
                                           alignItems: "center",
                                           justifyContent: "space-between",
-                                          cursor: "pointer",
+                                          cursor: "pointer"
                                         }}
-                                        onClick={() => startFilter(option.vkey, "valueList", "noaction", status)}
+                                        onClick={() =>
+                                          startFilter(
+                                            option.vkey,
+                                            "valueList",
+                                            "noaction",
+                                            status
+                                          )
+                                        }
                                       >
                                         <p style={{ margin: 0 }}>{status}</p>
                                         <IonIcon
-                                          icon={option.value.includes(status) ? radioButtonOn : radioButtonOffOutline}
-                                          style={{ fontSize: "20px", color: "#6c757d" }}
+                                          icon={
+                                            option.value.includes(status)
+                                              ? radioButtonOn
+                                              : radioButtonOffOutline
+                                          }
+                                          style={{
+                                            fontSize: "20px",
+                                            color: "#6c757d"
+                                          }}
                                         />
                                       </div>
                                     ))}
@@ -447,25 +664,64 @@ function ClientAnalyzer() {
                   </div>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", border: "thin solid #dee2e6", borderRadius: "0.25rem" }}>
-                  <Table striped hover responsive style={{ width: "100%", margin: 0 }}>
-                    <thead style={{ position: "sticky", top: 0, backgroundColor: "#E9E7F1", borderBottom: "5px solid black", zIndex: 10 }}>
+                <div
+                  style={{
+                    flex: 1,
+                    overflowY: "auto",
+                    border: "thin solid #dee2e6",
+                    borderRadius: "0.25rem"
+                  }}
+                >
+                  <Table
+                    striped
+                    hover
+                    responsive
+                    style={{ width: "100%", margin: 0 }}
+                  >
+                    <thead
+                      style={{
+                        position: "sticky",
+                        top: 0,
+                        backgroundColor: "#E9E7F1",
+                        borderBottom: "5px solid black",
+                        zIndex: 10
+                      }}
+                    >
                       <tr>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Name</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Paid</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Price</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Label</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Status</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Ordered</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Completed</th>
-                        <th style={{ padding: "10px", textAlign: "left" }}>Actions</th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Név
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Fizetve
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Teljes ár
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Munkadíj
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Állapot
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Rendelés dátuma
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Befejezés dátuma
+                        </th>
+                        <th style={{ padding: "10px", textAlign: "left" }}>
+                          Műveletek
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {workList.length === 0 ? (
                         <tr>
-                          <td colSpan="8" style={{ textAlign: "center", padding: "10px" }}>
-                            There are no works yet.
+                          <td
+                            colSpan="8"
+                            style={{ textAlign: "center", padding: "10px" }}
+                          >
+                            Még nincs munka, hozz létre egyet.
                           </td>
                         </tr>
                       ) : (
@@ -473,21 +729,48 @@ function ClientAnalyzer() {
                           <tr
                             key={work.workId}
                             onClick={() => handleRowClick(work.workId)}
-                            style={{ cursor: "pointer", borderBottom: "thin solid #E9E7F1" }}
+                            style={{
+                              cursor: "pointer",
+                              borderBottom: "thin solid #E9E7F1"
+                            }}
                           >
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.name || "N/A"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.clientpaid || "0"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.clientPrice || "0"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.label || "0"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{work.status || "N/A"}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.orderDate)}</td>
-                            <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.finishDate)}</td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {work.name || "N/A"}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {work.clientpaid || "0"}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {work.clientPrice || "0"}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {work.label || "0"}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {work.status || "N/A"}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {formatDate(work.orderDate)}
+                            </td>
+                            <td style={{ padding: "10px", textAlign: "left" }}>
+                              {formatDate(work.finishDate)}
+                            </td>
                             <td style={{ padding: "10px", textAlign: "left" }}>
                               <Button
-                                style={{ color: "red", border: "none", background: "none", cursor: "pointer" }}
-                                onClick={(e) => handleWorkDelete(e, work.workId)}
+                                style={{
+                                  color: "red",
+                                  border: "none",
+                                  background: "none",
+                                  cursor: "pointer"
+                                }}
+                                onClick={(e) =>
+                                  handleWorkDelete(e, work.workId)
+                                }
                               >
-                                <IonIcon icon={trash} style={{ fontSize: "20px" }} />
+                                <IonIcon
+                                  icon={trash}
+                                  style={{ fontSize: "20px" }}
+                                />
                               </Button>
                             </td>
                           </tr>
@@ -499,9 +782,15 @@ function ClientAnalyzer() {
               </>
             ) : (
               <div className="d-flex justify-content-center mt-3">
-                <ErrorModal error="There is no client to load" onClose={handleCloseErrorModal} />
-                <Button variant="primary" onClick={() => navigate("/UserDashboard")}>
-                  Back to Dashboard
+                <ErrorModal
+                  error="There is no client to load"
+                  onClose={handleCloseErrorModal}
+                />
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/UserDashboard")}
+                >
+                  Vissza a kezdőlapra
                 </Button>
               </div>
             )}

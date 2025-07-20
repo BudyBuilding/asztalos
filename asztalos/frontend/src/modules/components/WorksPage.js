@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Table, Button } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
-import { filter, options, trash, radioButtonOn, radioButtonOffOutline, star } from "ionicons/icons";
+import {
+  filter,
+  options,
+  trash,
+  radioButtonOn,
+  radioButtonOffOutline,
+  star
+} from "ionicons/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllWorks, getWorkById } from "../../data/getters";
 import Loading from "../helpers/Loading";
@@ -11,7 +18,7 @@ import {
   fetchCreatedItemsForWork,
   fetchCreatedTablesForWork,
   fetchObjectsForWork,
-  fetchTables,
+  fetchTables
 } from "../../data/storeManager";
 import { selectClient } from "../../data/store/actions/clientStoreFunctions";
 import sorting from "../helpers/sort";
@@ -22,7 +29,10 @@ function WorksPage() {
   const [loading, setLoading] = useState(true);
   const [showSortWork, setShowSortWork] = useState(false);
   const [showFilterWork, setShowFilterWork] = useState(false);
-  const [workSortConfig, setWorkSortConfig] = useState({ key: null, direction: 1 });
+  const [workSortConfig, setWorkSortConfig] = useState({
+    key: null,
+    direction: 1
+  });
   const [workFilterOptions, setWorkFilterOptions] = useState([]);
   const [visibleStatus, setVisibleStatus] = useState(false);
 
@@ -31,24 +41,26 @@ function WorksPage() {
   const works = useSelector((state) => state.works || []);
 
   const tableContainerRef = useRef(null);
-      useEffect(() => {
-          const orig = document.body.style.overflow;
-          document.body.style.overflow = "hidden";
-  
-          const handleWheel = e => {
-           if (tableContainerRef.current && !tableContainerRef.current.contains(e.target)) {
-             e.preventDefault();
-           }
-          };
-  
-          window.addEventListener("wheel", handleWheel, { passive: false });
-  
-          return () => {
-            document.body.style.overflow = orig;
-            window.removeEventListener("wheel", handleWheel);
-          };
-        }, []);
+  useEffect(() => {
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
+    const handleWheel = (e) => {
+      if (
+        tableContainerRef.current &&
+        !tableContainerRef.current.contains(e.target)
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   // Segédfüggvények
   const getMin = (items, key) => {
@@ -106,11 +118,41 @@ function WorksPage() {
       setWorkFilterOptions([
         { label: "Client", vkey: "client.name", type: "string", value: "" },
         { label: "Name", vkey: "name", type: "string", value: "" },
-        { label: "Paid", vkey: "paid", type: "interval", min: getMin(works, "paid"), max: getMax(works, "paid") },
-        { label: "Status", vkey: "status", type: "valueList", values: getValues(works, "status"), value: getValues(works, "status") },
-        { label: "Measured", vkey: "measureDate", type: "interval", min: getMin(works, "measureDate"), max: getMax(works, "measureDate") },
-        { label: "Ordered", vkey: "orderDate", type: "interval", min: getMin(works, "orderDate"), max: getMax(works, "orderDate") },
-        { label: "Completed", vkey: "finishDate", type: "interval", min: getMin(works, "finishDate"), max: getMax(works, "finishDate") },
+        {
+          label: "Paid",
+          vkey: "paid",
+          type: "interval",
+          min: getMin(works, "paid"),
+          max: getMax(works, "paid")
+        },
+        {
+          label: "Status",
+          vkey: "status",
+          type: "valueList",
+          values: getValues(works, "status"),
+          value: getValues(works, "status")
+        },
+        {
+          label: "Measured",
+          vkey: "measureDate",
+          type: "interval",
+          min: getMin(works, "measureDate"),
+          max: getMax(works, "measureDate")
+        },
+        {
+          label: "Ordered",
+          vkey: "orderDate",
+          type: "interval",
+          min: getMin(works, "orderDate"),
+          max: getMax(works, "orderDate")
+        },
+        {
+          label: "Completed",
+          vkey: "finishDate",
+          type: "interval",
+          min: getMin(works, "finishDate"),
+          max: getMax(works, "finishDate")
+        }
       ]);
     }
   }, [works]);
@@ -118,7 +160,11 @@ function WorksPage() {
   // Rendezés
   const sortWorks = (key) => {
     let direction = 1;
-    if (workSortConfig && workSortConfig.key === key && workSortConfig.direction === 1) {
+    if (
+      workSortConfig &&
+      workSortConfig.key === key &&
+      workSortConfig.direction === 1
+    ) {
       direction = 2;
     }
     setShowSortWork(false);
@@ -195,7 +241,7 @@ function WorksPage() {
     { label: "Status", value: "status" },
     { label: "Measured", value: "measureDate" },
     { label: "Ordered", value: "orderDate" },
-    { label: "Completed", value: "finishDate" },
+    { label: "Completed", value: "finishDate" }
   ];
 
   return (
@@ -203,7 +249,7 @@ function WorksPage() {
       <div className="container d-xl-block">
         {/* Cím és gombok konténere */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h1>Works Page</h1>
+          <h1>Munkák</h1>
           <div style={{ position: "relative", display: "inline-block" }}>
             <Button
               variant="link"
@@ -223,7 +269,7 @@ function WorksPage() {
                   padding: "8px",
                   zIndex: 1100,
                   width: "200px",
-                  borderRadius: "2rem",
+                  borderRadius: "2rem"
                 }}
               >
                 {workSortOptions.map((option) => (
@@ -231,7 +277,11 @@ function WorksPage() {
                     key={option.value}
                     variant="outline-primary"
                     className="w-100 mb-2"
-                    style={{ border: "none", color: "black", borderRadius: "3rem" }}
+                    style={{
+                      border: "none",
+                      color: "black",
+                      borderRadius: "3rem"
+                    }}
                     onClick={() => sortWorks(option.value)}
                   >
                     {option.label}
@@ -257,59 +307,102 @@ function WorksPage() {
                   padding: "8px",
                   zIndex: 1100,
                   width: "15vw",
-                  borderRadius: "2rem",
+                  borderRadius: "2rem"
                 }}
               >
                 {workFilterOptions.map((option) => {
                   if (option.type === "string") {
                     return (
                       <div key={option.vkey}>
-                        <div style={{ marginBottom: "6px", fontWeight: "bold" }}>{option.label}</div>
+                        <div
+                          style={{ marginBottom: "6px", fontWeight: "bold" }}
+                        >
+                          {option.label}
+                        </div>
                         <input
                           type="text"
                           placeholder={option.label}
-                          onChange={(e) => startFilter(option.vkey, "string", "min", e.target.value)}
+                          onChange={(e) =>
+                            startFilter(
+                              option.vkey,
+                              "string",
+                              "min",
+                              e.target.value
+                            )
+                          }
                           style={{
                             width: "100%",
                             padding: "6px",
                             borderRadius: "1rem",
                             border: "1px solid #ccc",
-                            marginBottom: "8px",
+                            marginBottom: "8px"
                           }}
                         />
                       </div>
                     );
                   }
                   if (option.type === "interval") {
-                    const isDateInterval = option.vkey.toLowerCase().includes("date");
+                    const isDateInterval = option.vkey
+                      .toLowerCase()
+                      .includes("date");
                     return (
                       <div key={option.vkey} style={{ marginBottom: "12px" }}>
-                        <div style={{ marginBottom: "6px", fontWeight: "bold" }}>{option.label}</div>
+                        <div
+                          style={{ marginBottom: "6px", fontWeight: "bold" }}
+                        >
+                          {option.label}
+                        </div>
                         {isDateInterval ? (
                           <>
                             <input
                               type="date"
-                              value={option.min ? new Date(option.min).toISOString().split("T")[0] : ""}
-                              onChange={(e) => startFilter(option.vkey, "interval", "min", e.target.value)}
+                              value={
+                                option.min
+                                  ? new Date(option.min)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                startFilter(
+                                  option.vkey,
+                                  "interval",
+                                  "min",
+                                  e.target.value
+                                )
+                              }
                               style={{
                                 width: "47.5%",
                                 padding: "6px",
                                 borderRadius: "1rem",
                                 border: "1px solid #ccc",
                                 marginRight: "10px",
-                                marginBottom: "8px",
+                                marginBottom: "8px"
                               }}
                             />
                             <input
                               type="date"
-                              value={option.max ? new Date(option.max).toISOString().split("T")[0] : ""}
-                              onChange={(e) => startFilter(option.vkey, "interval", "max", e.target.value)}
+                              value={
+                                option.max
+                                  ? new Date(option.max)
+                                      .toISOString()
+                                      .split("T")[0]
+                                  : ""
+                              }
+                              onChange={(e) =>
+                                startFilter(
+                                  option.vkey,
+                                  "interval",
+                                  "max",
+                                  e.target.value
+                                )
+                              }
                               style={{
                                 width: "47.5%",
                                 padding: "6px",
                                 borderRadius: "1rem",
                                 border: "1px solid #ccc",
-                                marginBottom: "8px",
+                                marginBottom: "8px"
                               }}
                             />
                           </>
@@ -318,26 +411,40 @@ function WorksPage() {
                             <input
                               type="number"
                               value={option.min || ""}
-                              onChange={(e) => startFilter(option.vkey, "interval", "min", e.target.value)}
+                              onChange={(e) =>
+                                startFilter(
+                                  option.vkey,
+                                  "interval",
+                                  "min",
+                                  e.target.value
+                                )
+                              }
                               style={{
                                 width: "47.5%",
                                 padding: "6px",
                                 borderRadius: "1rem",
                                 border: "1px solid #ccc",
                                 marginRight: "10px",
-                                marginBottom: "8px",
+                                marginBottom: "8px"
                               }}
                             />
                             <input
                               type="number"
                               value={option.max || ""}
-                              onChange={(e) => startFilter(option.vkey, "interval", "max", e.target.value)}
+                              onChange={(e) =>
+                                startFilter(
+                                  option.vkey,
+                                  "interval",
+                                  "max",
+                                  e.target.value
+                                )
+                              }
                               style={{
                                 width: "47.5%",
                                 padding: "6px",
                                 borderRadius: "1rem",
                                 border: "1px solid #ccc",
-                                marginBottom: "8px",
+                                marginBottom: "8px"
                               }}
                             />
                           </>
@@ -349,7 +456,11 @@ function WorksPage() {
                     return (
                       <div key={option.vkey}>
                         <div
-                          style={{ marginBottom: "6px", fontWeight: "bold", cursor: "pointer" }}
+                          style={{
+                            marginBottom: "6px",
+                            fontWeight: "bold",
+                            cursor: "pointer"
+                          }}
                           onClick={handleToggleVisibility}
                         >
                           {option.label}
@@ -365,7 +476,7 @@ function WorksPage() {
                               border: "thin solid #dee2e6",
                               zIndex: "1500",
                               borderRadius: "1.5rem",
-                              width: "8rem",
+                              width: "8rem"
                             }}
                           >
                             {option.values.map((status) => (
@@ -376,13 +487,24 @@ function WorksPage() {
                                   display: "flex",
                                   alignItems: "center",
                                   justifyContent: "space-between",
-                                  cursor: "pointer",
+                                  cursor: "pointer"
                                 }}
-                                onClick={() => startFilter(option.vkey, "valueList", "noaction", status)}
+                                onClick={() =>
+                                  startFilter(
+                                    option.vkey,
+                                    "valueList",
+                                    "noaction",
+                                    status
+                                  )
+                                }
                               >
                                 <p style={{ margin: 0 }}>{status}</p>
                                 <IonIcon
-                                  icon={option.value.includes(status) ? radioButtonOn : radioButtonOffOutline}
+                                  icon={
+                                    option.value.includes(status)
+                                      ? radioButtonOn
+                                      : radioButtonOffOutline
+                                  }
                                   style={{ fontSize: "20px", color: "#6c757d" }}
                                 />
                               </div>
@@ -408,39 +530,67 @@ function WorksPage() {
               maxHeight: "80vh",
               overflowY: "auto",
               border: "thin solid #dee2e6",
-              borderRadius: "0.25rem",
+              borderRadius: "0.25rem"
             }}
             ref={tableContainerRef}
           >
-            <Table striped hover responsive style={{ width: "100%", margin: 0 }}>
+            <Table
+              striped
+              hover
+              responsive
+              style={{ width: "100%", margin: 0 }}
+            >
               <thead
                 style={{
                   position: "sticky",
                   top: 0,
                   backgroundColor: "#E9E7F1",
                   borderBottom: "5px solid black",
-                  zIndex: 10,
+                  zIndex: 10
                 }}
               >
                 <tr>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Work Id</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Client</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Name</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Paid</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Price</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Label</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Status</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Measured</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Ordered</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Completed</th>
-                  <th style={{ padding: "10px", textAlign: "left" }}>Actions</th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Azonosító
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>Kliens</th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Munka neve
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Fizetve
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Teljes ár
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Munkadíj
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Állapot
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Felmért
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Rendelt
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Befejezett
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Műveletek
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {workList.length === 0 ? (
                   <tr>
-                    <td colSpan="10" style={{ textAlign: "center", padding: "10px" }}>
-                      There are no works, create one
+                    <td
+                      colSpan="10"
+                      style={{ textAlign: "center", padding: "10px" }}
+                    >
+                      Még nincs munka, hozz létre egyet.
                     </td>
                   </tr>
                 ) : (
@@ -448,25 +598,58 @@ function WorksPage() {
                     <tr
                       key={work.workId}
                       onClick={() => handleRowClick(work.workId)}
-                      style={{ cursor: "pointer", borderBottom: "thin solid #E9E7F1" }}
+                      style={{
+                        cursor: "pointer",
+                        borderBottom: "thin solid #E9E7F1"
+                      }}
                     >
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.workId || "N/A"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.client?.name || "N/A"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.name || "N/A"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.paid || "0"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.price || "0"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.label || "N/A"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{work.status || "N/A"}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.measureDate)}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.orderDate)}</td>
-                      <td style={{ padding: "10px", textAlign: "left" }}>{formatDate(work.finishDate)}</td>
                       <td style={{ padding: "10px", textAlign: "left" }}>
-                      {!work.isOrdered && (  <Button
-                          style={{ color: "red", border: "none", background: "none", cursor: "pointer" }}
-                          onClick={(e) => handleDeleteWork(e, work.workId)}
-                        >
-                          <IonIcon icon={trash} style={{ fontSize: "20px" }} />
-                        </Button>)}
+                        {work.workId || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.client?.name || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.name || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.paid || "0"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.price || "0"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.label || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {work.status || "N/A"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {formatDate(work.measureDate)}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {formatDate(work.orderDate)}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {formatDate(work.finishDate)}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "left" }}>
+                        {!work.isOrdered && (
+                          <Button
+                            style={{
+                              color: "red",
+                              border: "none",
+                              background: "none",
+                              cursor: "pointer"
+                            }}
+                            onClick={(e) => handleDeleteWork(e, work.workId)}
+                          >
+                            <IonIcon
+                              icon={trash}
+                              style={{ fontSize: "20px" }}
+                            />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))

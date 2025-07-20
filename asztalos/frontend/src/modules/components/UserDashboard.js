@@ -107,6 +107,22 @@ function UserDashboard() {
       setVisibleStatus(!visibleStatus);
     }
   };
+
+  const statusMap = {
+    MEASURED: "Felmért",
+    PENDING: "Függőben",
+    ORDERED: "Rendelve",
+    ACTIVE: "Aktív",
+    COMPLETED: "Teljesítve",
+    CANCELLED: "Törölve"
+  };
+
+  function translateStatus(status) {
+    // Ha biztosan uppercase-ben van, a toUpperCase() felesleges, de
+    // így hibabiztosabb, ha jön kisbetűs változat is
+    const key = status?.toUpperCase?.() ?? "";
+    return statusMap[key] || status;
+  }
   /*
       const handleRowClick = async (workId) => {
         setLoading(true);
@@ -708,7 +724,7 @@ function UserDashboard() {
     <div className="pb-5">
       <Modal show={showNewClient} onHide={handleNewClientClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Add New Client</Modal.Title>
+          <Modal.Title>Új kliens hozzáadása</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <NewClientModal onClose={handleNewClientClose} />
@@ -717,7 +733,7 @@ function UserDashboard() {
 
       <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Update Client</Modal.Title>
+          <Modal.Title>Kliens frissítése</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <ClientUpdateModal
@@ -730,29 +746,29 @@ function UserDashboard() {
 
       <Modal show={showDeleteConfirmation} onHide={handleCancelDelete}>
         <Modal.Header closeButton>
-          <Modal.Title>Delete Client</Modal.Title>
+          <Modal.Title>Kliens törlése</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this client?</Modal.Body>
+        <Modal.Body>Biztosan törölni szeretnéd ezt a klienst?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancelDelete}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="danger" onClick={handleConfirmDelete}>
-            Delete
+            Törlés
           </Button>
         </Modal.Footer>
       </Modal>
 
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center">
-          <p className="fs-1 fw-bold text-start mb-0 ">Dashboard</p>
+          <p className="fs-1 fw-bold text-start mb-0 ">Kezdőlap</p>
           <div>
             <Button
               variant="primary"
               onClick={handleNewClientClick}
               className="me-3"
             >
-              New client
+              Új kliens
             </Button>
           </div>
         </div>
@@ -798,7 +814,7 @@ function UserDashboard() {
             cursor: "pointer"
           }}
         >
-          <p className="fs-2 fw-bold text-start mb-0">Clients</p>
+          <p className="fs-2 fw-bold text-start mb-0">Kliensek</p>
 
           <div style={{ position: "relative", display: "inline-block" }}>
             <Button
@@ -940,14 +956,14 @@ function UserDashboard() {
                       onClick={() => handleSelectClient(client.clientId)}
                     >
                       <p className="fw-bold">{client.name}</p>
-                      <p>Tel: {client.telephone}</p>
-                      <p>Address: {client.address}</p>
+                      <p>Telefon: {client.telephone}</p>
+                      <p>Cím: {client.address}</p>
                       <div className="d-flex">
                         <p
                           className="fs-xs"
                           style={{ fontSize: "13px", color: "#6c757d" }}
                         >
-                          Id: {client.clientId}
+                          Azonosító: {client.clientId}
                         </p>
                       </div>
 
@@ -1009,7 +1025,7 @@ function UserDashboard() {
             cursor: "pointer"
           }}
         >
-          <p className="fs-2 fw-bold text-start mb-3">Recent works</p>
+          <p className="fs-2 fw-bold text-start mb-3">Utóbbi munkák</p>
 
           <div style={{ position: "relative", display: "inline-block" }}>
             <Button
@@ -1399,16 +1415,16 @@ function UserDashboard() {
                         }}
                       >
                         {[
-                          "Work ID",
-                          "Client",
-                          "Name",
-                          "Paid",
-                          "Price",
-                          "Label",
-                          "Status",
-                          "Measured",
-                          "Ordered",
-                          "Completed"
+                          "Munka azonosító",
+                          "Kliens",
+                          "Munka neve",
+                          "Fizetve",
+                          "Teljes ár",
+                          "Munkadíj",
+                          "Státusz",
+                          "Felmérés dátuma",
+                          "Rendelés dátuma",
+                          "Befejezés dátuma"
                         ].map((title, idx) => (
                           <th
                             key={idx}
@@ -1447,7 +1463,9 @@ function UserDashboard() {
                           <td style={cellStyle}>{work.clientPaid || 0}</td>
                           <td style={cellStyle}>{work.clientPrice || 0}</td>
                           <td style={cellStyle}>{work.label}</td>
-                          <td style={cellStyle}>{work.status}</td>
+                          <td style={cellStyle}>
+                            {translateStatus(work.status)}
+                          </td>
                           <td style={cellStyle}>
                             {formatDate(work.measureDate) || "--"}
                           </td>

@@ -131,7 +131,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!previewImage) {
-      alert("Please select or keep an image.");
+      alert("Kérlek tölts fel képet.");
       return;
     }
 
@@ -178,7 +178,9 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
     <>
       <Modal show={show} onHide={onHide} size="xl" centered>
         <Modal.Header closeButton>
-          <Modal.Title>{isEdit ? "Edit Color" : "Add Color"}</Modal.Title>
+          <Modal.Title>
+            {isEdit ? "Szín szerkesztése" : "Szín hozzáadása"}
+          </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
@@ -187,12 +189,12 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
               <Col md={6}>
                 <FloatingLabel
                   controlId="floatingColorName"
-                  label="Color Name"
+                  label="Szín neve"
                   className="mb-3"
                 >
                   <Form.Control
                     type="text"
-                    placeholder="Enter color name"
+                    placeholder="Írd be a szín nevét"
                     value={colorName}
                     onChange={(e) => setColorName(e.target.value)}
                     required
@@ -200,7 +202,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                 </FloatingLabel>
                 <Row className="g-3">
                   <Col>
-                    <FloatingLabel controlId="colorType" label="Material type">
+                    <FloatingLabel controlId="colorType" label="Anyag">
                       <Form.Select
                         value={colorType}
                         onChange={(e) => {
@@ -220,43 +222,43 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                     </FloatingLabel>
                   </Col>
                   <Col>
-                    <FloatingLabel controlId="dimension" label="Dimension">
+                    <FloatingLabel controlId="dimension" label="Méretek">
                       <Form.Control value={colorDimension} disabled />
                     </FloatingLabel>
                   </Col>
                 </Row>
                 <Row className="g-3 mt-3">
                   <Col>
-                    <FloatingLabel controlId="rotable" label="Rotable">
+                    <FloatingLabel controlId="rotable" label="Forgathatóság">
                       <Form.Select
                         value={String(colorRotable)}
                         onChange={(e) =>
                           setColorRotable(e.target.value === "true")
                         }
                       >
-                        <option value="true">Rotable</option>
-                        <option value="false">Non rotable</option>
+                        <option value="true">Forgatható</option>
+                        <option value="false">Nem forgatható</option>
                       </Form.Select>
                     </FloatingLabel>
                   </Col>
                   <Col>
-                    <FloatingLabel controlId="active" label="Active">
+                    <FloatingLabel controlId="active" label="Elérhetőség">
                       <Form.Select
                         value={String(colorActive)}
                         onChange={(e) =>
                           setColorActive(e.target.value === "true")
                         }
                       >
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="true">Elérhető</option>
+                        <option value="false">Nem érhető el</option>
                       </Form.Select>
                     </FloatingLabel>
                   </Col>
                   <Col>
-                    <FloatingLabel controlId="price" label="Price">
+                    <FloatingLabel controlId="price" label="Ár">
                       <Form.Control
                         type="number"
-                        placeholder="Enter price"
+                        placeholder="Írd be az árat"
                         value={colorPrice}
                         onChange={(e) => setColorPrice(e.target.value)}
                         required
@@ -267,7 +269,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                 <FloatingLabel
                   className="mt-3"
                   controlId="imageUpload"
-                  label="Upload Image"
+                  label="Kép"
                 >
                   <Form.Control
                     type="file"
@@ -278,7 +280,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                 {/* show a note when editing and no new file chosen */}
                 {isEdit && !selectedFile && previewImage && (
                   <Form.Text className="text-muted">
-                    Currently loaded image (you can replace it above)
+                    Jelenleg betöltött kép (cserélheted ha újat választasz ki)
                   </Form.Text>
                 )}
               </Col>
@@ -291,7 +293,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                 {previewImage ? (
                   <Image
                     src={previewImage}
-                    alt="Preview"
+                    alt="Előnézet"
                     fluid
                     style={{
                       width: "100%",
@@ -304,7 +306,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                     onClick={() => setFullScreenImage(previewImage)}
                   />
                 ) : (
-                  <div className="text-muted">No image selected</div>
+                  <div className="text-muted">Nincs kép kiválasztva</div>
                 )}
               </Col>
             </Row>
@@ -312,10 +314,10 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
 
           <Modal.Footer>
             <Button variant="secondary" onClick={onHide}>
-              Close
+              Mégsem
             </Button>
             <Button variant="primary" type="submit">
-              {isEdit ? "Save Changes" : "Add Color"}
+              {isEdit ? "Módosítások mentése" : "Szín hozzáadása"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -329,7 +331,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Preview - {colorName}</Modal.Title>
+          <Modal.Title>Előnézet - {colorName}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="text-center">
           <Image src={fullScreenImage} fluid />

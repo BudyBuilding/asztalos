@@ -1,0 +1,34 @@
+/* editWork.css */
+
+/* Klippelő konténer */
+.color-name-container {
+  width: 100%;
+  height: 1.2em;
+  overflow: hidden;
+  text-align: center;
+  cursor: default;
+}
+
+/* Szöveg span, alapból állítgatjuk, de nem mozog */
+.color-name {
+  display: inline-block;
+  white-space: nowrap;
+  transform: translateX(0);
+  /* az animáció eleinte PAUSED állapotban van */
+  animation: marquee var(--marquee-duration, 5s) linear infinite paused;
+}
+
+/* Hover‑kor elindítjuk az animációt */
+.card:hover .color-name {
+  animation-play-state: running;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* CSS‑változóból vesszük a tényleges eltolást */
+    transform: translateX(calc(-1 * var(--scroll-distance, 0px)));
+  }
+}

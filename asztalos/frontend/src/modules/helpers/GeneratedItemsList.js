@@ -14,8 +14,10 @@ export default function GeneratedItemsList({
   handleItemColorChange,
   onDragEnd,
   onDelete, // receives an index to delete
-  readOnly = false
+  readOnly = false,
+  objects = []
 }) {
+  /*
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
       const cid = item.colorId ?? "no-color";
@@ -23,7 +25,24 @@ export default function GeneratedItemsList({
       acc[cid].push({ ...item, __idx: idx });
       return acc;
     }, {});
+  }, [generatedItems]);*/
+
+  const itemsByColor = React.useMemo(() => {
+    return generatedItems.reduce((acc, item, idx) => {
+      const cid = item.colorId != null ? String(item.colorId) : "no-color";
+      acc[cid] = acc[cid] || {};
+
+      const oid =
+        item.object?.objectId != null
+          ? String(item.object.objectId)
+          : "no-object";
+      acc[cid][oid] = acc[cid][oid] || [];
+
+      acc[cid][oid].push({ ...item, __idx: idx });
+      return acc;
+    }, {});
   }, [generatedItems]);
+
   const handleBeforeCapture = () => {
     document.body.style.overflow = "hidden";
   };
@@ -39,6 +58,7 @@ export default function GeneratedItemsList({
         onBeforeCapture={handleBeforeCapture}
         onDragEnd={handleDragEnd}
       >
+        {/* No‐color bucket, object‐grouped */}
         <Droppable droppableId="no-color">
           {(provided, snapshot) => (
             <div
@@ -68,43 +88,53 @@ export default function GeneratedItemsList({
                 <strong style={{ marginLeft: 6 }}>Nincs szín</strong>
               </div>
 
+              {/* Objektumonként csoportosítva */}
               {!collapsedColors["no-color"] &&
-                (itemsByColor["no-color"] || []).map(
-                  ({ __idx, ...itm }, index) => (
-                    <Draggable
-                      key={__idx}
-                      draggableId={String(__idx)}
-                      index={index}
-                      isDragDisabled={readOnly}
-                    >
-                      {(prov, snap) => (
-                        <div
-                          ref={prov.innerRef}
-                          {...prov.draggableProps}
-                          {...prov.dragHandleProps}
-                          style={{
-                            ...prov.draggableProps.style,
-                            // padding: 8,
-                            margin: "4px 0",
-                            backgroundColor: snap.isDragging
-                              ? "#f0f9ff"
-                              : "#fff",
-                            border: "1px solid #ddd",
-                            borderRadius: 4
-                          }}
+                Object.entries(itemsByColor["no-color"] || {}).map(
+                  ([oid, items]) => (
+                    <div key={oid} style={{ marginTop: 8 }}>
+                      <strong>
+                        {objects.find((o) => String(o.objectId) === oid)
+                          ?.name || `Obj #${oid}`}
+                      </strong>
+
+                      {items.map(({ __idx, ...itm }, idx) => (
+                        <Draggable
+                          key={__idx}
+                          draggableId={String(__idx)}
+                          index={idx}
+                          isDragDisabled={readOnly}
                         >
-                          <Item
-                            Item={itm}
-                            index={__idx} // pa
-                            readOnly={readOnly} // 👈 hiányzott
-                            onItemChange={(upd) =>
-                              !readOnly && handleItemChange(__idx, upd)
-                            }
-                            onDelete={() => !readOnly && onDelete(__idx)} // delete callback // delete callback
-                          />
-                        </div>
-                      )}
-                    </Draggable>
+                          {(prov, snap) => (
+                            <div
+                              ref={prov.innerRef}
+                              {...prov.draggableProps}
+                              {...prov.dragHandleProps}
+                              style={{
+                                ...prov.draggableProps.style,
+                                margin: "4px 0",
+                                paddingLeft: "1rem", // behúzás a fához
+                                backgroundColor: snap.isDragging
+                                  ? "#f0f9ff"
+                                  : "#fff",
+                                border: "1px solid #ddd",
+                                borderRadius: 4
+                              }}
+                            >
+                              <Item
+                                Item={itm}
+                                index={__idx}
+                                readOnly={readOnly}
+                                onItemChange={(upd) =>
+                                  !readOnly && handleItemChange(__idx, upd)
+                                }
+                                onDelete={() => !readOnly && onDelete(__idx)}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                    </div>
                   )
                 )}
 
@@ -148,44 +178,52 @@ export default function GeneratedItemsList({
                     <strong style={{ marginLeft: 6 }}>{color.name}</strong>
                   </div>
 
-                  {!isCollapsed &&
-                    (itemsByColor[cid] || []).map(
-                      ({ __idx, ...itm }, index) => (
-                        <Draggable
-                          key={__idx}
-                          draggableId={String(__idx)}
-                          index={index}
-                          isDragDisabled={readOnly}
-                        >
-                          {(prov, snap) => (
-                            <div
-                              ref={prov.innerRef}
-                              {...prov.draggableProps}
-                              {...prov.dragHandleProps}
-                              style={{
-                                ...prov.draggableProps.style,
-                                margin: "4px 0",
-                                backgroundColor: snap.isDragging
-                                  ? "#f0f9ff"
-                                  : "#fff",
-                                border: "1px solid #ddd",
-                                borderRadius: 4
-                              }}
-                            >
-                              <Item
-                                Item={itm}
-                                index={__idx}
-                                readOnly={readOnly}
-                                onItemChange={(upd) =>
-                                  !readOnly && handleItemChange(__idx, upd)
-                                }
-                                onDelete={() => !readOnly && onDelete(__idx)}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      )
-                    )}
+                  {!collapsedColors[cid] &&
+                    itemsByColor[cid] &&
+                    Object.entries(itemsByColor[cid]).map(([oid, items]) => (
+                      <div key={oid} style={{ marginTop: 8 }}>
+                        <strong>
+                          {objects.find((o) => String(o.objectId) === oid)
+                            ?.name || `Obj #${oid}`}
+                        </strong>
+                        {items.map(({ __idx, ...itm }, idx) => (
+                          <Draggable
+                            key={__idx}
+                            draggableId={String(__idx)}
+                            index={idx}
+                            isDragDisabled={readOnly}
+                          >
+                            {(prov, snap) => (
+                              <div
+                                ref={prov.innerRef}
+                                {...prov.draggableProps}
+                                {...prov.dragHandleProps}
+                                style={{
+                                  ...prov.draggableProps.style,
+                                  margin: "4px 0",
+                                  paddingLeft: "1rem", // behúzás
+                                  backgroundColor: snap.isDragging
+                                    ? "#f0f9ff"
+                                    : "#fff",
+                                  border: "1px solid #ddd",
+                                  borderRadius: 4
+                                }}
+                              >
+                                <Item
+                                  Item={itm}
+                                  index={__idx}
+                                  readOnly={readOnly}
+                                  onItemChange={(upd) =>
+                                    !readOnly && handleItemChange(__idx, upd)
+                                  }
+                                  onDelete={() => !readOnly && onDelete(__idx)}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                      </div>
+                    ))}
 
                   {provided.placeholder}
                 </div>

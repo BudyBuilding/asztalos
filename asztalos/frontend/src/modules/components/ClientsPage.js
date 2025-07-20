@@ -9,7 +9,10 @@ import clientApi from "../../data/api/clientApi";
 import NewClientModal from "../modals/NewClientModal";
 import ClientUpdateModal from "../modals/ClientUpdateModal";
 import { useNavigate } from "react-router-dom";
-import { loadClients, selectClient } from "../../data/store/actions/clientStoreFunctions"; // Ellenőrizd az elérési utat
+import {
+  loadClients,
+  selectClient
+} from "../../data/store/actions/clientStoreFunctions"; // Ellenőrizd az elérési utat
 // Helper function for filtering (assumed to be similar to sorting)
 const filtering = (data, filterConfig) => {
   if (!filterConfig || !filterConfig.value) return data;
@@ -19,7 +22,6 @@ const filtering = (data, filterConfig) => {
       .includes(filterConfig.value.toLowerCase())
   );
 };
-
 
 function ClientsPage() {
   const dispatch = useDispatch();
@@ -35,31 +37,32 @@ function ClientsPage() {
   const [filterConfig, setFilterConfig] = useState({ key: "name", value: "" });
   const [loading, setLoading] = useState(false);
   const [clients, setClients] = useState([]); // Tegyük fel, hogy itt tárolod az ügyfeleket
-  
+
   function rendering() {
     setRender(!render);
   }
-  
-  const tableContainerRef = useRef(null);
-      useEffect(() => {
-          const orig = document.body.style.overflow;
-          document.body.style.overflow = "hidden";
-  
-          const handleWheel = e => {
-           if (tableContainerRef.current && !tableContainerRef.current.contains(e.target)) {
-             e.preventDefault();
-           }
-          };
-  
-          window.addEventListener("wheel", handleWheel, { passive: false });
-  
-          return () => {
-            document.body.style.overflow = orig;
-            window.removeEventListener("wheel", handleWheel);
-          };
-        }, []);
-  
 
+  const tableContainerRef = useRef(null);
+  useEffect(() => {
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleWheel = (e) => {
+      if (
+        tableContainerRef.current &&
+        !tableContainerRef.current.contains(e.target)
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   const handleRowClick = async (clientId) => {
     setLoading(true);
@@ -72,7 +75,6 @@ function ClientsPage() {
       setLoading(false);
     }
   };
-
 
   // Load clients on mount or re-render
   useEffect(() => {
@@ -104,8 +106,8 @@ function ClientsPage() {
   const handleNewClientClose = () => {
     setClients(loadClients());
     setShowNewClient(false);
-    rendering();  
-  }
+    rendering();
+  };
   const handleModifyClient = (event, clientId) => {
     event.preventDefault();
     event.stopPropagation();
@@ -119,7 +121,9 @@ function ClientsPage() {
   };
 
   const handleClientUpdate = async (updatedClientData) => {
-    await dispatch(clientApi.updateClientApi(clientIdToModify, updatedClientData));
+    await dispatch(
+      clientApi.updateClientApi(clientIdToModify, updatedClientData)
+    );
     setShowClientUpdateModal(false);
     rendering();
   };
@@ -169,15 +173,19 @@ function ClientsPage() {
   };
 
   return (
-      <div className="container d-xl-block h-50">
+    <div className="container d-xl-block h-50">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h1>Clients Page</h1>
+        <h1>Kliensek</h1>
         <div>
           {/*<Button variant="light" className="me-2" onClick={handleReloadClients}>
             <i className="bi bi-arrow-clockwise"></i>
           </Button>*/}
-          <Button variant="secondary" className="me-2" onClick={handleNewClientClick}>
-            New Client
+          <Button
+            variant="secondary"
+            className="me-2"
+            onClick={handleNewClientClick}
+          >
+            Új kliens
           </Button>
         </div>
       </div>
@@ -185,15 +193,18 @@ function ClientsPage() {
       {/* Filtering and Sorting Controls */}
       <div className="mb-3 d-flex gap-3">
         <Form.Group>
-          <Form.Label>Filter by</Form.Label>
-          <Form.Select onChange={handleFilterKeyChange} value={filterConfig.key}>
-            <option value="name">Name</option>
+          <Form.Label>Szűrés</Form.Label>
+          <Form.Select
+            onChange={handleFilterKeyChange}
+            value={filterConfig.key}
+          >
+            <option value="name">Név</option>
             <option value="clientSold">Sold</option>
-            <option value="address">Address</option>
+            <option value="address">Cím</option>
           </Form.Select>
-          </Form.Group>
-          <Form.Group>
-          <Form.Label>Filter value</Form.Label>
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Szűrés érték</Form.Label>
           <Form.Control
             type="text"
             placeholder="Enter filter value"
@@ -202,9 +213,9 @@ function ClientsPage() {
           />
         </Form.Group>
         <Form.Group>
-          <Form.Label>Sort by</Form.Label>
+          <Form.Label>Rendezés</Form.Label>
           <Form.Select onChange={handleSortChange}>
-            <option value="">Select sorting</option>
+            <option value="">Válassz értéket</option>
             <option value="name:1">Name (A-Z)</option>
             <option value="name:-1">Name (Z-A)</option>
             <option value="clientSold:1">Sold (Low to High)</option>
@@ -218,82 +229,103 @@ function ClientsPage() {
           maxHeight: "90vh",
           overflowY: "auto",
           border: "thin solid lightgrey",
-          borderRadius: "0.5rem",
+          borderRadius: "0.5rem"
         }}
         ref={tableContainerRef}
       >
         {loading ? (
           <Loading />
         ) : clients.length === 0 ? (
-                <div
-                  style={{
-                    padding: "1rem",
-                    textAlign: "center",
-                    color: "#666",
-                    fontStyle: "italic",
-                  }}
-                >
-                  Nincs még kliens, kérlek hozz létre egyet.
-                </div>
-              ) 
-        :
-        (<div style={{ maxHeight: "70vh", }} >
-          <Table striped bordered hover responsive>
-            <thead
-              style={{
-                position: "sticky",
-                top: 0,
-                backgroundColor: "#f8f9fa",
-                zIndex: 1,
-              }}
-            >
-              <tr>
-                <th onClick={() => requestSort("clientId")} style={{ cursor: "pointer" }}>
-                  ID
-                </th>
-                <th onClick={() => requestSort("name")} style={{ cursor: "pointer" }}>
-                  Name
-                </th>
-                <th onClick={() => requestSort("clientSold")} style={{ cursor: "pointer" }}>
-                  Sold
-                </th>
-                <th>Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClients.map((client) => (
-                <tr 
-                key={client.clientId}
-              onClick={() => handleRowClick(client.clientId)}
-              style={{ cursor: "pointer", borderBottom: "1px solid #ddd" }}
-                >
-                  <td>{client.clientId}</td>
-                  <td>{client.name}</td>
-                  <td>{client.clientSold}</td>
-                  <td className="d-flex justify-content-between">
-                    {client.address}
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <Button
-                        variant="link"
-                        onClick={(event) => handleModifyClient(event, client.clientId)}
-                        style={{ padding: 0 }}
-                      >
-                        <i className="bi bi-pencil" style={{ fontSize: "0.8rem" }}></i>
-                      </Button>
-                      <Button
-                        variant="link"
-                        onClick={(event) => handleDeleteClient(event, client.clientId)}
-                        style={{ padding: 0 }}
-                        className="ms-2"
-                      >
-                        <i className="bi bi-trash" style={{ fontSize: "0.8rem" }}></i>
-                      </Button>
-                    </div>
-                  </td>
+          <div
+            style={{
+              padding: "1rem",
+              textAlign: "center",
+              color: "#666",
+              fontStyle: "italic"
+            }}
+          >
+            Nincs még kliens, kérlek hozz létre egyet.
+          </div>
+        ) : (
+          <div style={{ maxHeight: "70vh" }}>
+            <Table striped bordered hover responsive>
+              <thead
+                style={{
+                  position: "sticky",
+                  top: 0,
+                  backgroundColor: "#f8f9fa",
+                  zIndex: 1
+                }}
+              >
+                <tr>
+                  <th
+                    onClick={() => requestSort("clientId")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Azonosító
+                  </th>
+                  <th
+                    onClick={() => requestSort("name")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Név
+                  </th>
+                  <th
+                    onClick={() => requestSort("clientSold")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Egyenleg
+                  </th>
+                  <th>Cím</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {filteredClients.map((client) => (
+                  <tr
+                    key={client.clientId}
+                    onClick={() => handleRowClick(client.clientId)}
+                    style={{
+                      cursor: "pointer",
+                      borderBottom: "1px solid #ddd"
+                    }}
+                  >
+                    <td>{client.clientId}</td>
+                    <td>{client.name}</td>
+                    <td>{client.clientSold}</td>
+                    <td className="d-flex justify-content-between">
+                      {client.address}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Button
+                          variant="link"
+                          onClick={(event) =>
+                            handleModifyClient(event, client.clientId)
+                          }
+                          style={{ padding: 0 }}
+                        >
+                          <i
+                            className="bi bi-pencil"
+                            style={{ fontSize: "0.8rem" }}
+                          ></i>
+                        </Button>
+                        <Button
+                          variant="link"
+                          onClick={(event) =>
+                            handleDeleteClient(event, client.clientId)
+                          }
+                          style={{ padding: 0 }}
+                          className="ms-2"
+                        >
+                          <i
+                            className="bi bi-trash"
+                            style={{ fontSize: "0.8rem" }}
+                          ></i>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           </div>
         )}
       </div>
@@ -301,7 +333,7 @@ function ClientsPage() {
       {/* Modals */}
       <Modal show={showNewClient} onHide={handleNewClientClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Add New Client</Modal.Title>
+          <Modal.Title>Új kliens hozzáadása</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <NewClientModal onClose={handleNewClientClose} />
@@ -309,7 +341,7 @@ function ClientsPage() {
       </Modal>
       <Modal show={showClientUpdateModal} onHide={handleClientUpdateClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Update Client</Modal.Title>
+          <Modal.Title>Kliens módosítása</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <ClientUpdateModal
@@ -321,15 +353,15 @@ function ClientsPage() {
       </Modal>
       <Modal show={showDeleteConfirmation} onHide={handleCancelDelete}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
+          <Modal.Title>Törlés megerősítés</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this client?</Modal.Body>
+        <Modal.Body>Biztosan törölni szeretnéd ezt a klienst?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancelDelete}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="danger" onClick={handleConfirmDelete}>
-            Delete
+            Törlés
           </Button>
         </Modal.Footer>
       </Modal>

@@ -66,7 +66,7 @@ function ColorsPage() {
     <div className="pb-5 overflow-hidden">
       <div className="container d-xl-block">
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h1 className="mb-0">Colors Page</h1>
+          <h1 className="mb-0">Színek</h1>
           {canModify && (
             <Button
               variant="primary"
@@ -75,7 +75,7 @@ function ColorsPage() {
                 setShowColorModal(true);
               }}
             >
-              Add Color
+              Szín hozzáadása
             </Button>
           )}
         </div>
@@ -107,13 +107,14 @@ function ColorsPage() {
                 }}
               >
                 <tr>
-                  <th>ID</th>
-                  <th>Image</th>
-                  <th>Name</th>
-                  <th>Dimension</th>
-                  <th>Material type</th>
-                  <th>Active</th>
-                  <th>Rotable</th>
+                  <th>Azonosító</th>
+                  <th>Kép</th>
+                  <th>Név</th>
+                  <th>Méret</th>
+                  <th>Anyag</th>
+                  <th>Elérhető</th>
+                  <th>Forgatható</th>
+                  <th>Darabolható</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,8 +156,11 @@ function ColorsPage() {
                       <td>{color.name}</td>
                       <td>{color.dimension}</td>
                       <td>{color.materialType}</td>
-                      <td>{color.active ? "Active" : "Inactive"}</td>
-                      <td>{color.rotable ? "Rotable" : "Non rotable"}</td>
+                      <td>{color.active ? "Elérhető" : "Nem elérthető"}</td>
+                      <td>{color.rotable ? "Forgatható" : "Nem forgatható"}</td>
+                      <td>
+                        {color.rotable ? "Darabolható" : "Nem darabolható"}
+                      </td>
                     </tr>
                   );
                 })}

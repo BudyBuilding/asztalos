@@ -5,11 +5,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import authApi from "../../data/api/authApi";
 
 const Login = () => {
-  let navigate = useNavigate(); 
+  let navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);  
-  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [isTokenChecked, setIsTokenChecked] = useState(false);
@@ -18,7 +18,9 @@ const Login = () => {
     e.preventDefault();
 
     if (isOffline) {
-      setErrorMessage("No network connection. Please check your internet.");
+      setErrorMessage(
+        "Nincs hálózati kapcsolat, kérlek ellenőrizd az internetkapcsolatod."
+      );
       return;
     }
 
@@ -26,7 +28,7 @@ const Login = () => {
       await authApi.loginApi(username, password, rememberMe);
       setErrorMessage("");
       // ha az alap jelszóval lépett be, irány a reset-password
-      console.log("password:", password );  
+      console.log("password:", password);
       console.log(password === "Welcome1");
       if (password === "Welcome1") {
         navigate("/reset-password", { replace: true });
@@ -35,13 +37,10 @@ const Login = () => {
       setIsLoggedIn(true);
       navigate("/dashboard", { replace: true });
     } catch (error) {
-      setErrorMessage("Invalid username or password.");
+      setErrorMessage("Rossz felhasználónév vagy jelszó.");
       console.error("Login failed:", error.message);
     }
   };
-
-
-
 
   const handleRememberMe = () => {
     setRememberMe(!rememberMe);
@@ -97,53 +96,55 @@ const Login = () => {
     <Container className="mt-5 pt-5 w-25">
       <div className="p-5 border rounded Auth-form-container">
         {!isTokenChecked ? (
-          <div>Loading...</div> // Türelmesen várunk a token ellenőrzés befejezéséig
+          <div>Betöltés...</div> // Türelmesen várunk a token ellenőrzés befejezéséig
         ) : (
           <form onSubmit={handleLogin}>
-            <h3 className="mb-4">Sign In</h3>
+            <h3 className="mb-4">Bejelentkezés</h3>
 
-            { !isLoggedIn && errorMessage && (
+            {!isLoggedIn && errorMessage && (
               <div className="alert alert-danger">{errorMessage}</div>
             )}
 
             <div className="mb-3">
-              <label className="form-label">Username</label>
+              <label className="form-label">Felhasználónév</label>
               <FormControl
                 type="text"
-                placeholder="Enter username"
+                placeholder="Írd be a felasználóneved"
                 value={username}
-                onChange={e => setUsername(e.target.value)}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
 
             <div className="mb-3">
-                <label className="form-label">Password</label>
-      <div className="position-relative">
-        <FormControl
-          type={showPassword ? "text" : "password"}
-          placeholder="Enter password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          style={{ paddingRight: "2.5rem" }} // hely az ikon számára
-        />
-        <Button
-          variant="link"
-          onClick={() => setShowPassword(v => !v)}
-          style={{
-            position: "absolute",
-            top: "50%",
-            right: "0.75rem",
-            transform: "translateY(-50%)",
-            padding: 0,
-            color: "#6c757d",
-          }}
-          tabIndex={-1}
-        >
-          <i className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`} />
-        </Button>
-      </div>
+              <label className="form-label">Jelszó</label>
+              <div className="position-relative">
+                <FormControl
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Írd be a jelszót"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{ paddingRight: "2.5rem" }} // hely az ikon számára
+                />
+                <Button
+                  variant="link"
+                  onClick={() => setShowPassword((v) => !v)}
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    right: "0.75rem",
+                    transform: "translateY(-50%)",
+                    padding: 0,
+                    color: "#6c757d"
+                  }}
+                  tabIndex={-1}
+                >
+                  <i
+                    className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
+                  />
+                </Button>
+              </div>
             </div>
 
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -153,27 +154,30 @@ const Login = () => {
                   id="rememberMe"
                   className="form-check-input"
                   checked={rememberMe}
-                  onChange={() => setRememberMe(r => !r)}
+                  onChange={() => setRememberMe((r) => !r)}
                 />
                 <label className="form-check-label" htmlFor="rememberMe">
-                  Remember me
+                  Emlékezz rám
                 </label>
               </div>
-              <Button variant="link" onClick={() => navigate("/forgot-password")}>
-                Forgot Password?
-              </Button>
             </div>
 
             {isOffline && (
               <div className="alert alert-warning">
-                You are offline. Please check your internet connection.
+                Offilne vagy, kérlek ellenőrizd az internetkapcsolatod.
               </div>
             )}
 
             <div className="d-grid gap-2">
-              <Button type="submit">Sign In</Button>
+              <Button type="submit">Bejelentkezés</Button>
               <Button variant="link" onClick={() => navigate("/register")}>
-                Register
+                Regisztráció
+              </Button>
+              <Button
+                variant="link"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Elfelejtetted a jelszavad?
               </Button>
             </div>
           </form>

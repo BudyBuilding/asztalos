@@ -949,12 +949,12 @@ export default function ScriptsPage() {
 
   return (
     <div className="container">
-      <h1>Scriptek</h1>
+      <h1>Tervek</h1>
 
       {!showEditor ? (
         <>
           <Button className="mb-3" onClick={() => setShowEditor(true)}>
-            Új Script Létrehozása
+            Új terv Létrehozása
           </Button>
           <div
             style={{
@@ -968,16 +968,16 @@ export default function ScriptsPage() {
             <Table striped hover responsive>
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Azonosító</th>
                   <th>Név</th>
-                  <th>Room</th>
+                  <th>Szoba</th>
                   <th>Műveletek</th>
                 </tr>
               </thead>
               <tbody>
                 {scriptList.length === 0 ? (
                   <tr>
-                    <td colSpan="4">Nincsenek scriptek</td>
+                    <td colSpan="4">Nincsenek tervek</td>
                   </tr>
                 ) : (
                   scriptList
@@ -1021,35 +1021,35 @@ export default function ScriptsPage() {
         <>
           <Row className="align-items-center mb-3">
             <Col>
-              <h2>{isEditing ? "Edit script" : "Új script"}</h2>
+              <h2>{isEditing ? "Terv szerkesztése" : "Új terv"}</h2>
             </Col>
             <Col md={4}>
               <InputGroup>
-                <InputGroup.Text>Name</InputGroup.Text>
+                <InputGroup.Text>Név</InputGroup.Text>
                 <Form.Control
                   name="name"
                   value={script.name}
                   onChange={handleScriptChange}
-                  placeholder="Script Név"
+                  placeholder="Terv neve"
                   required
                 />
               </InputGroup>
             </Col>
             <Col md={4}>
               <InputGroup>
-                <InputGroup.Text>Room</InputGroup.Text>
+                <InputGroup.Text>Szoba</InputGroup.Text>
                 <Form.Control
                   name="room"
                   value={script.room}
                   onChange={handleScriptChange}
-                  placeholder="Room"
+                  placeholder="Szoba"
                   required
                 />
               </InputGroup>
             </Col>
             <Col md="auto">
               <Button variant="secondary" onClick={() => setShowEditor(false)}>
-                Mégse
+                Mégsem
               </Button>
             </Col>
             <Col md="auto">
@@ -1066,7 +1066,7 @@ export default function ScriptsPage() {
                 className="mb-3"
               >
                 <Accordion.Item eventKey="0">
-                  <Accordion.Header>Script Kép</Accordion.Header>
+                  <Accordion.Header>Terv kép</Accordion.Header>
                   <Accordion.Body style={{ textAlign: "center" }}>
                     {previewImage ? (
                       <img
@@ -1089,7 +1089,7 @@ export default function ScriptsPage() {
                       />
                     ) : (
                       <span className="text-muted">
-                        Szerkesztéskor itt fog megjelenni a kép
+                        Hozzáadás után itt fog megjelenni a kép
                       </span>
                     )}
                     {isEditing && (
@@ -1100,7 +1100,7 @@ export default function ScriptsPage() {
                             variant="outline-secondary"
                             onClick={() => scriptFileInputRef.current.click()}
                           >
-                            Change Image
+                            Kép változtatás
                           </Button>
                           <input
                             type="file"
@@ -1123,7 +1123,11 @@ export default function ScriptsPage() {
               <Col key={dim}>
                 <InputGroup>
                   <InputGroup.Text>
-                    {dim.charAt(0).toUpperCase() + dim.slice(1)}
+                    {{
+                      width: "Szélesség",
+                      height: "Magasság",
+                      depth: "Mélység"
+                    }[dim] ?? dim.charAt(0).toUpperCase() + dim.slice(1)}
                   </InputGroup.Text>
                   <Form.Control
                     type="number"
@@ -1185,7 +1189,7 @@ export default function ScriptsPage() {
                 controlId="newItemRefScript"
               >
                 <Form.Label column sm={3}>
-                  Ref Script
+                  Más terv
                 </Form.Label>
                 <Col sm={9}>
                   <Form.Select
@@ -1260,7 +1264,7 @@ export default function ScriptsPage() {
                   controlId="newItemRefSettingsList"
                 >
                   <Form.Label column sm={3}>
-                    Ref Settings
+                    Hivatkozott terv beállításai
                   </Form.Label>
                   <Col sm={9}>
                     {refParsedSettings.length === 0 ? (
@@ -1274,7 +1278,7 @@ export default function ScriptsPage() {
                         );
                         return (
                           <InputGroup className="mb-2" key={ps.settingId}>
-                            <InputGroup.Text>{ps.settingId}</InputGroup.Text>
+                            <InputGroup.Text>{ps.name}</InputGroup.Text>
                             <Form.Control
                               type="text"
                               value={override?.value ?? ps.value}
@@ -1313,7 +1317,7 @@ export default function ScriptsPage() {
                     <Col xs="auto">
                       <Form.Check
                         type="checkbox"
-                        label="Rotable"
+                        label="Forgathatóság"
                         className="mb-0"
                         checked={newItem.rotable}
                         onChange={(e) =>
@@ -1327,23 +1331,10 @@ export default function ScriptsPage() {
                     <Col xs="auto">
                       <Form.Check
                         type="checkbox"
-                        label="Auto-iterate"
+                        label="Iterálás"
                         className="mb-0"
                         checked={autoIterate}
                         onChange={(e) => setAutoIterate(e.target.checked)}
-                      />
-                    </Col>
-                    <Col>
-                      <Form.Control
-                        type="text"
-                        placeholder="Material"
-                        value={newItem.material}
-                        onChange={(e) =>
-                          setNewItem((prev) => ({
-                            ...prev,
-                            material: e.target.value
-                          }))
-                        }
                       />
                     </Col>
                   </Row>
@@ -1418,9 +1409,39 @@ export default function ScriptsPage() {
                   </Form.Group>
                 </div>
               )}
+
+              <Form.Group as={Row} className="mb-3" controlId="newItemQty">
+                <Col>
+                  <Form.Control
+                    type="text"
+                    placeholder="Részletek"
+                    value={newItem.details}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({
+                        ...prev,
+                        material: e.target.value
+                      }))
+                    }
+                  />
+                </Col>
+                <Col>
+                  <Form.Control
+                    type="text"
+                    placeholder="Anyag"
+                    value={newItem.material}
+                    onChange={(e) =>
+                      setNewItem((prev) => ({
+                        ...prev,
+                        material: e.target.value
+                      }))
+                    }
+                  />
+                </Col>
+              </Form.Group>
+
               <Form.Group as={Row} className="mb-3" controlId="newItemQty">
                 <Form.Label column sm={3}>
-                  Qty
+                  Darabszám
                 </Form.Label>
 
                 <Col sm={5}>
@@ -1473,9 +1494,10 @@ export default function ScriptsPage() {
                   </InputGroup>
                 </Col>
               </Form.Group>
+
               <Form.Group as={Row} className="mb-3" controlId="newItemSize">
                 <Form.Label column sm={3}>
-                  Size
+                  Méretek
                 </Form.Label>
                 <Col sm={9}>
                   <InputGroup>
@@ -1500,7 +1522,7 @@ export default function ScriptsPage() {
                               }))
                             }
                           >
-                            Setting {s.settingId}
+                            Beállítás {s.settingId}
                           </Dropdown.Item>
                         ))}
                         {["width", "height", "depth", "qty"].map((k) => (
@@ -1536,7 +1558,7 @@ export default function ScriptsPage() {
                         controlId={`pos${idx}`}
                       >
                         <Form.Label column sm={3}>
-                          Position #{idx + 1}
+                          Pozíció #{idx + 1}
                         </Form.Label>
                         <Col sm={9}>
                           <InputGroup>
@@ -1599,7 +1621,7 @@ export default function ScriptsPage() {
                         controlId={`rot${idx}`}
                       >
                         <Form.Label column sm={3}>
-                          Rotation #{idx + 1}
+                          Forgatás #{idx + 1}
                         </Form.Label>
                         <Col sm={9}>
                           <Row>
@@ -1641,7 +1663,7 @@ export default function ScriptsPage() {
                   {/* i(start,end), konstans tengelyek egyszerű beviteli mezői */}
                   <Form.Group as={Row} className="mb-3">
                     <Form.Label column sm={3}>
-                      Position
+                      Pozíció
                     </Form.Label>
                     <Col sm={9}>
                       <Form.Control
@@ -1653,7 +1675,7 @@ export default function ScriptsPage() {
                   </Form.Group>
                   <Form.Group as={Row} className="mb-3">
                     <Form.Label column sm={3}>
-                      Rotation
+                      Forgatás
                     </Form.Label>
                     <Col sm={9}>
                       <Form.Control
@@ -1668,27 +1690,27 @@ export default function ScriptsPage() {
             </div>
           </div>
 
-          <h4>Setting párok</h4>
+          <h4>Beállítások</h4>
           <Button
             variant="secondary"
             className="mb-3"
             onClick={() => setShowSettingModal(true)}
           >
-            Add Setting
+            Beállítás hozzáadása
           </Button>
           <Table bordered striped className="mb-3">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Azonosító</th>
                 <th>Név</th>
-                <th>Default Érték</th>
+                <th>Alapértelmezett Érték</th>
                 <th>Törlés</th>
               </tr>
             </thead>
             <tbody>
               {parsedSettings.length === 0 ? (
                 <tr>
-                  <td colSpan="4">Nincsenek settingek</td>
+                  <td colSpan="4">Nincsenek beállítások</td>
                 </tr>
               ) : (
                 parsedSettings.map((s) => {
@@ -1724,17 +1746,17 @@ export default function ScriptsPage() {
           </Table>
 
           <Form onSubmit={handleSubmit}>
-            <h4 className="mt-4">Script Elemek</h4>
+            <h4 className="mt-4">Terv elemei</h4>
             <Table bordered striped className="mb-3">
               <thead>
                 <tr>
-                  <th>Qty</th>
-                  <th>Size</th>
-                  <th>Position</th>
-                  <th>Rotation</th>
-                  <th>Rotable</th>
+                  <th>Darabszám</th>
+                  <th>Méretek</th>
+                  <th>Pozíció</th>
+                  <th>Forgatás</th>
+                  <th>Forgathatóság</th>
                   <th>Kant</th>
-                  <th>Material</th>
+                  <th>Anyag</th>
                   <th>Szerkesztés</th>
                   <th>Törlés</th>
                   <th>Látható</th>
@@ -1752,7 +1774,7 @@ export default function ScriptsPage() {
                       <td>{it.rawSize}</td>
                       <td>{it.rawPosition.map((p) => `[${p}]`).join(", ")}</td>
                       <td>{it.rawRotation.map((r) => `[${r}]`).join(", ")}</td>
-                      <td>{it.rotable ? "Yes" : "No"}</td>
+                      <td>{it.rotable ? "Fprgatható" : "Nem forgatható"}</td>
                       <td>{it.kant}</td>
                       <td>{it.material || ""}</td>
                       <td>
@@ -1831,14 +1853,16 @@ export default function ScriptsPage() {
           >
             <Modal.Header closeButton>
               <Modal.Title>
-                {editingSettingId ? "Edit Setting" : "Add Setting"}
+                {editingSettingId
+                  ? "Beállítás szerkesztése"
+                  : "Beállítás hozzáadása"}
               </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               {/* ID mező szerkesztésnél tiltva */}
               <Form.Group as={Row} className="mb-3">
                 <Form.Label column sm={3}>
-                  ID
+                  Azonosító
                 </Form.Label>
                 <Col sm={9}>
                   <Form.Select
@@ -1848,7 +1872,7 @@ export default function ScriptsPage() {
                       setNewSettingPair((p) => ({ ...p, id: e.target.value }))
                     }
                   >
-                    <option value="">Válassz ID-t</option>
+                    <option value="">Válassz Azonosítót</option>
                     {availableSettings.map((s) => (
                       <option key={s.settingId} value={s.settingId}>
                         {s.settingId} – {s.name}

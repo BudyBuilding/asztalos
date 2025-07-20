@@ -17,7 +17,7 @@ const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
   const [updatedClientData, setUpdatedClientData] = useState({
     name: "",
     telephone: "",
-    address: "",
+    address: ""
   });
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
         setUpdatedClientData({
           name: data.name,
           telephone: data.telephone,
-          address: data.address,
+          address: data.address
         });
         setLoading(false);
         clearTimeout(timeout);
@@ -63,7 +63,7 @@ const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
       ...clientData,
       name: updatedClientData.name,
       telephone: updatedClientData.telephone,
-      address: updatedClientData.address,
+      address: updatedClientData.address
     };
 
     // check if the user changed anything, if not then gives an error
@@ -85,47 +85,47 @@ const ClientUpdateModal = ({ handleClose, clientId, onUpdate }) => {
   return (
     <>
       {showError ? (
-        <ErrorMessage message="Error: Unable to fetch client data." />
+        <ErrorMessage message="Hiba: nem sikerült lekérni a kliens adatait" />
       ) : isLoading ? (
         <Loading />
       ) : (
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3" controlId="formClientName">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Név</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter client name"
+              placeholder="Add meg a nevét"
               name="name"
               value={updatedClientData.name || ""}
               onChange={handleChange}
             />
           </Form.Group>
           <Form.Group className="mb-3" controlId="formClientTel">
-            <Form.Label>Telephone</Form.Label>
+            <Form.Label>Telefon</Form.Label>
             <Form.Control
               type="tel"
-              placeholder="Enter client telephone"
+              placeholder="Add meg a telefonszámot"
               name="telephone"
               value={updatedClientData.telephone || ""}
               onChange={handleChange}
             />
           </Form.Group>
           <Form.Group className="mb-3" controlId="formClientAddress">
-            <Form.Label>Address</Form.Label>
+            <Form.Label>Cím</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter client address"
+              placeholder="Add meg a címet"
               name="address"
               value={updatedClientData.address || ""}
               onChange={handleChange}
             />
           </Form.Group>
           <Button variant="primary" type="submit" style={{ cursor: "pointer" }}>
-            Update Client
+            Kliens módosítása
           </Button>
         </Form>
       )}{" "}
-      {errorOnSubmit && <ErrorMessage message="Error: No changes were made." />}
+      {errorOnSubmit && <ErrorMessage message="Hiba: Nem történt módosítás" />}
     </>
   );
 };

@@ -32,14 +32,14 @@ function NewClientModal({ onClose }) {
 
     // we are checking is the attributes are empty or not, if yes it must give an error
     if (!clientName || !clientTel || !clientAddress) {
-      setError("Please fill out all fields.");
+      setError("Kérlek töltsd ki az összes mezőt.");
       return;
     }
 
     const newClientData = {
       name: clientName,
       telephone: clientTel,
-      address: clientAddress,
+      address: clientAddress
     };
 
     // trying to save the new client, if there is any error it should write it out
@@ -47,7 +47,7 @@ function NewClientModal({ onClose }) {
       await dispatch(clientApi.createClientApi(newClientData));
       onClose();
     } catch (error) {
-      setError("Internal server error, please try again later.");
+      setError("Belső szerver hiba, kérlek próbáld újra.");
     }
   };
 
@@ -55,35 +55,35 @@ function NewClientModal({ onClose }) {
     <div className="modal-body">
       <Form onSubmit={handleSubmit}>
         <Form.Group className="mb-3" controlId="formClientName">
-          <Form.Label>Name</Form.Label>
+          <Form.Label>Név</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter client name"
+            placeholder="Kliens neve"
             value={clientName}
             onChange={handleNameChange}
           />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formClientTel">
-          <Form.Label>Telephone</Form.Label>
+          <Form.Label>Telefonszám</Form.Label>
           <Form.Control
             type="tel"
-            placeholder="Enter client telephone"
+            placeholder="Kliens telefonszáma"
             value={clientTel}
             onChange={handleTelChange}
           />
         </Form.Group>
         <Form.Group className="mb-3" controlId="formClientAddress">
-          <Form.Label>Address</Form.Label>
+          <Form.Label>Cím</Form.Label>
           <Form.Control
             type="text"
-            placeholder="Enter client address"
+            placeholder="Kliens címe"
             value={clientAddress}
             onChange={handleAddressChange}
           />
         </Form.Group>
         {error && <ErrorMessage message={error} />}
         <Button variant="primary" type="submit">
-          Add Client
+          Kliens hozzáadása
         </Button>
       </Form>
     </div>

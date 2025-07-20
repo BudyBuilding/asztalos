@@ -62,7 +62,7 @@ function SideNavigation({ onToggle }) {
           ) : (
             <i className="bi bi-house me-2"></i>
           )}
-          {showNav ? "Dashboard" : ""}
+          {showNav ? "Kezdőlap" : ""}
         </Nav.Link>
         {userRole == "admin" || userRole == "user" ? (
           <Nav.Link
@@ -75,12 +75,12 @@ function SideNavigation({ onToggle }) {
               <i className="bi bi-people me-2"></i>
             )}
 
-            {showNav ? "Clients" : ""}
+            {showNav ? "Kliensek" : ""}
           </Nav.Link>
         ) : (
           <></>
         )}
-        {userRole == "companyAdmin" ? (
+        {userRole == "companyAdmin" || userRole == "admin" ? (
           <Nav.Link
             onClick={() => handleSelectTab("employee")}
             style={navLinkStyle("employee")}
@@ -91,7 +91,7 @@ function SideNavigation({ onToggle }) {
               <i className="bi bi-people me-2"></i>
             )}
 
-            {showNav ? "Employee" : ""}
+            {showNav ? "Alkalmazottak" : ""}
           </Nav.Link>
         ) : (
           <></>
@@ -109,7 +109,7 @@ function SideNavigation({ onToggle }) {
               <i className="bi bi-people me-2"></i>
             )}
 
-            {showNav ? "Users" : ""}
+            {showNav ? "Felhasználók" : ""}
           </Nav.Link>
         ) : (
           <></>
@@ -123,7 +123,7 @@ function SideNavigation({ onToggle }) {
           ) : (
             <i className="bi bi-archive me-2"></i>
           )}
-          {showNav ? "Works" : ""}
+          {showNav ? "Munkák" : ""}
         </Nav.Link>
         {userRole == "admin" || userRole == "user" ? (
           <Nav.Link
@@ -135,7 +135,7 @@ function SideNavigation({ onToggle }) {
             ) : (
               <i className="bi bi-file-earmark-code me-2"></i>
             )}
-            {showNav ? "Scripts" : ""}
+            {showNav ? "Tervek" : ""}
           </Nav.Link>
         ) : (
           <></>
@@ -149,7 +149,7 @@ function SideNavigation({ onToggle }) {
           ) : (
             <i className="bi bi-palette me-2"></i>
           )}
-          {showNav ? "Colors" : ""}
+          {showNav ? "Színek" : ""}
         </Nav.Link>
         {userRole == "admin" ? (
           <Nav.Link
@@ -162,7 +162,7 @@ function SideNavigation({ onToggle }) {
               <i className="bi bi-gear me-2"></i>
             )}
 
-            {showNav ? "Settings" : ""}
+            {showNav ? "Beállítások" : ""}
           </Nav.Link>
         ) : (
           <></>

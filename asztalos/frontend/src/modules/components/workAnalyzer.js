@@ -278,13 +278,33 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Work Status:</strong> {selectedWork?.status}
+            <strong>Munka állapota:</strong>{" "}
+            {selectedWork?.status
+              ? {
+                  MEASURED: "Felmért",
+                  PENDING: "Függőben",
+                  ORDERED: "Rendelve",
+                  ACTIVE: "Aktív",
+                  COMPLETED: "Teljesítve",
+                  CANCELLED: "Törölve"
+                }[selectedWork.status.toUpperCase()] ?? selectedWork.status
+              : ""}
           </p>
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Order Status:</strong>{" "}
-            {selectedWork?.companyStatus || "Not Ordered"}
+            <strong>Rendelés állapota:</strong>{" "}
+            {selectedWork?.companyStatus
+              ? {
+                  MEASURED: "Felmért",
+                  PENDING: "Függőben",
+                  ORDERED: "Rendelve",
+                  ACTIVE: "Aktív",
+                  COMPLETED: "Teljesítve",
+                  CANCELLED: "Törölve"
+                }[selectedWork?.companyStatus.toUpperCase()] ??
+                selectedWork?.companyStatus
+              : "Nincs lerendelve"}
           </p>
         </div>
       </div>
@@ -293,12 +313,13 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Total Price:</strong> {totalPrice} RON
+            <strong>Teljes ár:</strong> {totalPrice} RON
           </p>
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Order Price:</strong> {selectedWork?.companyPrice || 0} RON
+            <strong>Rendelés összege:</strong> {selectedWork?.companyPrice || 0}{" "}
+            RON
           </p>
         </div>
       </div>
@@ -312,12 +333,14 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Client Paid:</strong> {selectedWork?.clientPaid || 0} RON
+            <strong>Kliens fizetett:</strong> {selectedWork?.clientPaid || 0}{" "}
+            RON
           </p>
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>User Paid:</strong> {selectedWork?.userPaid || 0} RON
+            <strong>Felhasználó fizetett:</strong> {selectedWork?.userPaid || 0}{" "}
+            RON
           </p>
         </div>
       </div>
@@ -326,7 +349,7 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Client Has to Pay:</strong>{" "}
+            <strong>Kliens kell még fizessen:</strong>{" "}
             {(+selectedWork?.clientPrice ?? 0) -
               (+selectedWork?.clientPaid ?? 0)}{" "}
             RON
@@ -334,7 +357,7 @@ function WorkAnalyzer() {
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>User Has to Pay:</strong>{" "}
+            <strong>Felhasználó kell még fizessen:</strong>{" "}
             {selectedWork?.companyPrice - selectedWork?.userPaid || 0} RON
           </p>
         </div>
@@ -344,7 +367,7 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Wood Price:</strong>{" "}
+            <strong>Anyagár:</strong>{" "}
             {(selectedWork?.woodPrice ?? 0) > 0
               ? selectedWork.woodPrice
               : totalWoodPrice}{" "}
@@ -353,7 +376,7 @@ function WorkAnalyzer() {
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Company Wood Price:</strong>{" "}
+            <strong>Lapszabászat anyagár:</strong>{" "}
             {selectedWork?.companyWoodPrice} RON
           </p>
         </div>
@@ -363,12 +386,13 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Label:</strong> {selectedWork?.label} RON
+            <strong>Asztalos munkadíj:</strong> {selectedWork?.label} RON
           </p>
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Company Label:</strong> {selectedWork?.companyLabel} RON
+            <strong>Lapszabászat munkadíj:</strong> {selectedWork?.companyLabel}{" "}
+            RON
           </p>
         </div>
       </div>
@@ -377,7 +401,7 @@ function WorkAnalyzer() {
       <div style={{ display: "flex", marginBottom: "0.75rem" }}>
         <div style={{ flex: 1, marginRight: "1rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Measured Date:</strong>{" "}
+            <strong>Felmérés dátuma:</strong>{" "}
             {selectedWork?.measureDate
               ? formatDate(selectedWork.measureDate)
               : "—"}
@@ -385,7 +409,7 @@ function WorkAnalyzer() {
         </div>
         <div style={{ flex: 1 }}>
           <p className="fs-5 mb-0">
-            <strong>Order Date:</strong>{" "}
+            <strong>Rendelés dátuma:</strong>{" "}
             {selectedWork?.orderDate ? formatDate(selectedWork.orderDate) : "—"}
           </p>
         </div>
@@ -393,7 +417,7 @@ function WorkAnalyzer() {
       {selectedWork?.status === "completed" && (
         <div style={{ marginBottom: "0.75rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Complete Date:</strong>{" "}
+            <strong>Befejezés dátuma:</strong>{" "}
             {selectedWork?.finishDate
               ? formatDate(selectedWork.finishDate)
               : "—"}
@@ -403,7 +427,7 @@ function WorkAnalyzer() {
       {selectedWork?.status === "cancelled" && (
         <div style={{ marginBottom: "0.75rem" }}>
           <p className="fs-5 mb-0">
-            <strong>Cancel Date:</strong>{" "}
+            <strong>Törlés dátuma:</strong>{" "}
             {selectedWork?.cancelDate
               ? formatDate(selectedWork.cancelDate)
               : "—"}
@@ -420,18 +444,18 @@ function WorkAnalyzer() {
       ======================= */}
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Update Work #{workId}</Modal.Title>
+          <Modal.Title>#{workId} munka frissítése</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
               <Row className="align-items-center">
                 <Col>
-                  <Form.Label className="mb-0">Price</Form.Label>
+                  <Form.Label className="mb-0">Ár</Form.Label>
                 </Col>
                 <Col className="text-end">
                   <Form.Text className="text-muted mb-0">
-                    Company Price: {selectedWork?.companyPrice ?? "—"} RON
+                    Lapszabászat ár: {selectedWork?.companyPrice ?? "—"} RON
                   </Form.Text>
                 </Col>
               </Row>
@@ -444,11 +468,11 @@ function WorkAnalyzer() {
             <Form.Group className="mb-3">
               <Row className="align-items-center">
                 <Col>
-                  <Form.Label className="mb-0">Paid</Form.Label>
+                  <Form.Label className="mb-0">Kliens fizetett</Form.Label>
                 </Col>
                 <Col className="text-end">
                   <Form.Text className="text-muted mb-0">
-                    User Paid: {selectedWork?.userPaid ?? "—"} RON
+                    Asztalos fizetett: {selectedWork?.userPaid ?? "—"} RON
                   </Form.Text>
                 </Col>
               </Row>
@@ -462,11 +486,12 @@ function WorkAnalyzer() {
             <Form.Group className="mb-3">
               <Row className="align-items-center">
                 <Col>
-                  <Form.Label className="mb-0">Label</Form.Label>
+                  <Form.Label className="mb-0">Munkadíj</Form.Label>
                 </Col>
                 <Col className="text-end">
                   <Form.Text className="text-muted mb-0">
-                    Company Label: {selectedWork?.companyLabel ?? "—"} RON
+                    Lapszabászat munkadíj: {selectedWork?.companyLabel ?? "—"}{" "}
+                    RON
                   </Form.Text>
                 </Col>
               </Row>
@@ -480,12 +505,12 @@ function WorkAnalyzer() {
             <Form.Group className="mb-3">
               <Row className="align-items-center">
                 <Col>
-                  <Form.Label className="mb-0">Wood Price</Form.Label>
+                  <Form.Label className="mb-0">Anyagár</Form.Label>
                 </Col>
                 <Col className="text-end">
                   <Form.Text className="text-muted mb-0">
-                    Company Wood Price: {selectedWork?.companyWoodPrice ?? "—"}{" "}
-                    RON
+                    Lapszabászat anyagár:{" "}
+                    {selectedWork?.companyWoodPrice ?? "—"} RON
                   </Form.Text>
                 </Col>
               </Row>
@@ -502,21 +527,21 @@ function WorkAnalyzer() {
               <></>
             ) : (
               <Form.Group className="mb-3">
-                <Form.Label>Status</Form.Label>
+                <Form.Label>Állapot</Form.Label>
                 <Form.Select
                   value={statusInput}
                   onChange={(e) => setStatusInput(e.target.value)}
                 >
                   {selectedWork?.status === "Active" && (
                     <>
-                      <option value="Active">Active</option>
-                      <option value="Completed">Completed</option>
+                      <option value="Active">Aktív</option>
+                      <option value="Completed">Befejezett</option>
                     </>
                   )}
                   {selectedWork?.status === "Measured" && (
                     <>
-                      <option value="Measured">Measured</option>
-                      <option value="Cancelled">Cancelled</option>
+                      <option value="Measured">Felmért</option>
+                      <option value="Cancelled">Törölt</option>
                     </>
                   )}
                   {/* Ha szeretnéd, itt lehetne egy mindig elérhető alap opció */}
@@ -527,7 +552,7 @@ function WorkAnalyzer() {
                 >
                   {selectedWork?.status === "Active"
                     ? "A munkát most törölheted."
-                    : "A „Completed” csak akkor elérhető, ha a státusz már „Active”."}
+                    : "A „Befejezett” csak akkor elérhető, ha a státusz már „Aktív”."}
                 </Form.Text>
               </Form.Group>
             )}
@@ -535,10 +560,10 @@ function WorkAnalyzer() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Save
+            Mentés
           </Button>
         </Modal.Footer>
       </Modal>
@@ -548,17 +573,17 @@ function WorkAnalyzer() {
       ============================== */}
       <Modal show={showConfirmModal} onHide={handleCancelOrder}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Order</Modal.Title>
+          <Modal.Title>Rendelés megerősítése</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>Biztos, hogy meg szeretnéd rendelni ezt a munkát?</p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancelOrder}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="primary" onClick={handleConfirmOrder}>
-            Confirm
+            Megerősítés
           </Button>
         </Modal.Footer>
       </Modal>
@@ -578,7 +603,7 @@ function WorkAnalyzer() {
                 <span className="fs-1 fw-bold me-2">
                   | {selectedWork.workId}
                 </span>
-                <span className="fs-5">workId</span>
+                <span className="fs-5">azonosító</span>
               </p>
               <div className="button-box">
                 {selectedWork.status !== "Completed" &&
@@ -588,7 +613,7 @@ function WorkAnalyzer() {
                       onClick={handleShowModal}
                       className="me-1"
                     >
-                      Update
+                      Frissítés
                     </Button>
                   )}
                 <Button
@@ -596,14 +621,14 @@ function WorkAnalyzer() {
                   onClick={handleShowTables}
                   className="me-1"
                 >
-                  Show Table
+                  Táblák
                 </Button>
                 <Button
                   variant="success"
                   onClick={handleEditWork}
                   className="me-1"
                 >
-                  Edit Work
+                  Szerkesztés
                 </Button>
                 {!selectedWork.isOrdered && (
                   <Button
@@ -612,7 +637,7 @@ function WorkAnalyzer() {
                     className="ms-auto"
                     disabled={selectedWork.isOrdered === true}
                   >
-                    Order Now
+                    Rendelés
                   </Button>
                 )}
               </div>
@@ -627,7 +652,7 @@ function WorkAnalyzer() {
             style={{ marginTop: "1rem", marginBottom: "1.5rem" }}
           >
             {/* Cím */}
-            <p className="fs-2 fw-bold mb-3">Work Details</p>
+            <p className="fs-2 fw-bold mb-3">Munka részletek</p>
 
             {/* Keret és padding a „Work Details” mezőkhöz */}
             <div
@@ -670,16 +695,16 @@ function WorkAnalyzer() {
               „Wood” blokk: csoportosított táblák
             ================================ */}
           <div className="container d-xl-block">
-            <p className="fs-3 fw-bold text-start">Wood</p>
+            <p className="fs-3 fw-bold text-start">Alapanyag</p>
             <div className="row">
               <div className="table-responsive">
                 <Table striped bordered hover>
                   <thead>
                     <tr>
-                      <th>Color</th>
-                      <th>Quantity</th>
-                      <th>Total Price</th>
-                      <th>Price Per Quantity</th>
+                      <th>Szín</th>
+                      <th>Mennyiség</th>
+                      <th>Teljes ár</th>
+                      <th>Darab ár</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -695,7 +720,7 @@ function WorkAnalyzer() {
                 </Table>
                 <Row className="justify-content-end">
                   <Col xs="auto">
-                    <h5>Total Wood Price: {totalWoodPrice} RON</h5>
+                    <h5>Teljes alapanyagár: {totalWoodPrice} RON</h5>
                   </Col>
                 </Row>
               </div>

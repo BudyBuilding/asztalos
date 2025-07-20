@@ -29,31 +29,9 @@ import {
 import { selectObject } from "../../data/store/actions/objectStoreFunctions";
 import { updateWork } from "../../data/store/actions/workStoreFunctions";
 import objectApi from "../../data/api/objectApi";
+import "./editWork.css";
 
 function EditWork() {
-  /* useEffect(() => {
-    const orig = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleWheel = (e) => {
-      // ha a cél egy scrollable input / dropdown / canvas, akkor engedjük
-      const tag = e.target.tagName.toLowerCase();
-      const isInteractive = ["input", "textarea", "select", "canvas"].includes(
-        tag
-      );
-      if (!isInteractive) {
-        e.preventDefault(); // tiltjuk a scrollt
-      }
-    };
-
-    window.addEventListener("wheel", handleWheel, { passive: false });
-
-    return () => {
-      document.body.style.overflow = orig;
-      window.removeEventListener("wheel", handleWheel);
-    };
-  }, []);*/
-
   const dispatch = useDispatch();
   const works = useSelector((state) => state.works);
   const { workId } = useParams();
@@ -442,7 +420,9 @@ function EditWork() {
                     style={{ objectFit: "cover" }}
                   />
                   <Card.Body className="p-2 text-center">
-                    <Card.Text className="mb-0">{c.name}</Card.Text>
+                    <div className="color-name-container" data-name={c.name}>
+                      <span className="color-name">{c.name}</span>
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>
@@ -454,15 +434,15 @@ function EditWork() {
       {/* Delete Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
+          <Modal.Title>Törlés megerősítése</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this object?</Modal.Body>
+        <Modal.Body>Biztosan törölni szeretnéd?</Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="danger" onClick={confirmDeleteObject}>
-            Delete
+            Törlés
           </Button>
         </Modal.Footer>
       </Modal>
@@ -489,16 +469,16 @@ function EditWork() {
         )}
         <Nav.Item>
           <Nav.Link eventKey="0" onClick={() => setShowForm(false)}>
-            Full model
+            Teljes modell
           </Nav.Link>
         </Nav.Item>
         <NavDropdown
           style={{ width: "100px" }}
           title={
             selectedTab === "0"
-              ? "Objects"
+              ? "Bútorok"
               : objects.find((o) => o.objectId.toString() === selectedTab)
-                  ?.name || "Object"
+                  ?.name || "Bútor"
           }
           id="objects-dropdown"
         >
@@ -510,7 +490,7 @@ function EditWork() {
                 setShowModel(false);
               }}
             >
-              New Object
+              Új bútor
             </NavDropdown.Item>
           )}
           <NavDropdown.Divider />
@@ -576,7 +556,7 @@ function EditWork() {
           )}
         </div>
         <Button onClick={handleSaveWork} className="ms-2">
-          Save Work
+          Munka mentése
         </Button>
       </Nav>
 
@@ -678,7 +658,7 @@ function EditWork() {
                 <>
                   {selectedTab !== "0" && (
                     <>
-                      <h3>Settings</h3>
+                      <h3>Beállítások</h3>
                       {currentObject.map((o) => (
                         <div key={o.objectId}>
                           <h4
@@ -706,7 +686,7 @@ function EditWork() {
                     </>
                   )}
                   <h3 className="mt-4 d-flex align-items-center">
-                    Items
+                    Elemek
                     {selectedTab !== "0" &&
                       selectedTab !== "newObject" &&
                       !isOrdered && (
@@ -716,7 +696,7 @@ function EditWork() {
                           className="ms-2"
                           onClick={handleAddItem}
                         >
-                          Add Item
+                          Elem hozzáadása
                         </Button>
                       )}
                   </h3>
@@ -747,6 +727,7 @@ function EditWork() {
                         handleCreatedItemChange(idx, { colorId: newCid });
                       }}
                       onDelete={handleDeleteItem}
+                      objects={objects}
                     />
                   </div>
                 </>

@@ -450,7 +450,7 @@ const TableViewer = () => {
           }}
         >
           <h3 className="mt-4 d-flex align-items-center">
-            Items
+            Elemek
             {canEdit && (
               <Button
                 size="sm"
@@ -458,7 +458,7 @@ const TableViewer = () => {
                 className="ms-2"
                 onClick={handleAddItem}
               >
-                Add Item
+                Elem hozzáadása
               </Button>
             )}
           </h3>
@@ -651,10 +651,10 @@ const TableViewerComponent = ({
           pdf.setTextColor(0);
           pdf.text(
             [
-              `User: ${user}`,
-              `Work: ${workId}`,
-              `Color: ${colorName}`,
-              `Table: ${tbl.id}`
+              `Felhasználó: ${user}`,
+              `Munka: ${workId}`,
+              `Szín: ${colorName}`,
+              `Azonosító: ${tbl.id}`
             ],
             10,
             12
@@ -1090,7 +1090,8 @@ const TableViewerComponent = ({
           </button>
         )}
         <h2 style={{ margin: "0 20px" }}>
-          Table: {table ? table.id || "Unknown ID" : "No Table Selected"}
+          Tábla azonosító:{" "}
+          {table ? table.id || "Unknown ID" : "No Table Selected"}
         </h2>
         {showNav && (
           <button onClick={onNext} style={buttonStyle}>
@@ -1113,7 +1114,7 @@ const TableViewerComponent = ({
             border: "1px solid #ccc"
           }}
         >
-          <option value="0">All colors</option>
+          <option value="0">Összes szín</option>
           {[
             ...new Set(
               createdTables.map((t) => t.color?.colorId).filter(Boolean)
@@ -1145,7 +1146,7 @@ const TableViewerComponent = ({
                 marginRight: "8px"
               }}
             >
-              Export to PDF
+              Exportálás PDF-ként
             </button>
             {!cannotEdit ? (
               <button
@@ -1161,7 +1162,7 @@ const TableViewerComponent = ({
                   marginRight: "8px"
                 }}
               >
-                Edit Table
+                Tábla szerkesztése
               </button>
             ) : (
               <></>
@@ -1181,7 +1182,7 @@ const TableViewerComponent = ({
               borderRadius: "12px"
             }}
           >
-            Generate Tables
+            Generálás
           </button>
         ) : (
           <></>
@@ -1213,7 +1214,7 @@ const TableViewerComponent = ({
               borderRadius: "12px"
             }}
           >
-            Add Table
+            Tábla hozzáadás
           </button>
           <button
             onClick={handleDeleteTable}
@@ -1227,7 +1228,7 @@ const TableViewerComponent = ({
               borderRadius: "12px"
             }}
           >
-            Delete Table
+            Tábla törlése
           </button>
           <button
             onClick={handleSave}
@@ -1241,7 +1242,7 @@ const TableViewerComponent = ({
               borderRadius: "12px"
             }}
           >
-            Save
+            Mentés
           </button>
           <button
             onClick={handleCancel}
@@ -1255,7 +1256,7 @@ const TableViewerComponent = ({
               borderRadius: "12px"
             }}
           >
-            Cancel
+            Mégsem
           </button>
           {selectedItemPosition && (
             <>
@@ -1271,7 +1272,7 @@ const TableViewerComponent = ({
                   borderRadius: "12px"
                 }}
               >
-                Rotate
+                Forgatás
               </button>
               <div style={{ position: "relative" }}>
                 <button
@@ -1286,7 +1287,7 @@ const TableViewerComponent = ({
                     borderRadius: "12px"
                   }}
                 >
-                  Move to Table {table.id}
+                  Áthelyezés a: {table.id} táblára
                 </button>
                 {showDropdown && (
                   <div
@@ -1311,7 +1312,7 @@ const TableViewerComponent = ({
                           borderBottom: "1px solid #eee"
                         }}
                       >
-                        Table {t.id}
+                        Tábla: {t.id}
                       </div>
                     ))}
                   </div>
