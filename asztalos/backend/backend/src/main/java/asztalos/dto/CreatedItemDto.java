@@ -16,10 +16,10 @@ public class CreatedItemDto {
     private String tableRotation;
 
     // csak ID‐k a beágyazott objecteknél
-    private IdOnly color;
-    private IdOnly object;
-    private IdOnly table;
-    private IdOnly work;
+    private ColorOnly color;
+    private ObjectOnly object;
+    private TableOnly table;
+    private WorkOnly work;
 
     // ———————————— Getterek és setterek ————————————
 
@@ -119,52 +119,60 @@ public class CreatedItemDto {
         this.tableRotation = tableRotation;
     }
 
-    public IdOnly getColor() {
+    public ColorOnly getColor() {
         return color;
     }
 
-    public void setColor(IdOnly color) {
+    public void setColor(ColorOnly color) {
         this.color = color;
     }
 
-    public IdOnly getObject() {
+    public ObjectOnly getObject() {
         return object;
     }
 
-    public void setObject(IdOnly object) {
+    public void setObject(ObjectOnly object) {
         this.object = object;
     }
 
-    public IdOnly getTable() {
+    public TableOnly getTable() {
         return table;
     }
 
-    public void setTable(IdOnly table) {
+    public void setTable(TableOnly table) {
         this.table = table;
     }
 
-    public IdOnly getWork() {
+    public WorkOnly getWork() {
         return work;
     }
 
-    public void setWork(IdOnly work) {
+    public void setWork(WorkOnly work) {
         this.work = work;
     }
 
-    // ———————————— Belső IdOnly osztály ————————————
-    public static class IdOnly {
-        private Long id;
-
-        public IdOnly(Long id) {
-            this.id = id;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
+    public static class ColorOnly {
+        private Long colorId;
+        public ColorOnly(Long colorId) { this.colorId = colorId; }
+        public Long getColorId() { return colorId; }
+        public void setColorId(Long colorId) { this.colorId = colorId; }
+    }
+    public static class ObjectOnly {
+        private Long objectId;
+        public ObjectOnly(Long objectId) { this.objectId = objectId; }
+        public Long getObjectId() { return objectId; }
+        public void setObjectId(Long objectId) { this.objectId = objectId; }
+    }
+    public static class TableOnly {
+        private Long tableId;
+        public TableOnly(Long tableId) { this.tableId = tableId; }
+        public Long getTableId() { return tableId; }
+        public void setTableId(Long tableId) { this.tableId = tableId; }
+    }
+    public static class WorkOnly {
+        private Long workId;
+        public WorkOnly(Long workId) { this.workId = workId; }
+        public Long getWorkId() { return workId; }
+        public void setWorkId(Long workId) { this.workId = workId; }
     }
 }

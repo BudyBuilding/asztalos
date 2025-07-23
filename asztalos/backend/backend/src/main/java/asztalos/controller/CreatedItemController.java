@@ -352,18 +352,18 @@ private CreatedItemDto toDto(CreatedItem ci) {
   d.setTablePosition(ci.getTablePosition());
   d.setTableRotation(ci.getTableRotation());
 
-  d.setColor(new CreatedItemDto.IdOnly(
-    ci.getColor()  != null ? ci.getColor().getColorId()  : null
-  ));
-  d.setObject(new CreatedItemDto.IdOnly(
-    ci.getObject() != null ? ci.getObject().getObjectId() : null
-  ));
-  d.setTable(new CreatedItemDto.IdOnly(
-    ci.gettable()  != null ? ci.gettable().getId()        : null
-  ));
-  d.setWork(new CreatedItemDto.IdOnly(
-    ci.getWork()   != null ? ci.getWork().getWorkId()     : null
-  ));
+    d.setColor(new CreatedItemDto.ColorOnly(
+        ci.getColor() != null ? ci.getColor().getColorId() : null
+    ));
+    d.setObject(new CreatedItemDto.ObjectOnly(
+        ci.getObject() != null ? ci.getObject().getObjectId() : null
+    ));
+    d.setTable(new CreatedItemDto.TableOnly(
+        ci.gettable() != null ? ci.gettable().getId() : null
+    ));
+    d.setWork(new CreatedItemDto.WorkOnly(
+        ci.getWork() != null ? ci.getWork().getWorkId() : null
+    ));
   return d;
 }
 
