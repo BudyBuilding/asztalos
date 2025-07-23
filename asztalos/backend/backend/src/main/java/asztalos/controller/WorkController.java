@@ -252,7 +252,7 @@ public ResponseEntity<?> createWork(@RequestBody Work work) {
     work.setStatus("measured");
     work.setLabel(0d);
     work.setMeasureDate(new Date());
-
+    work.setRoom("[2500,5000,5000]");
 
     Work createdWork = workService.save(work);
     return ResponseEntity.ok(createdWork);

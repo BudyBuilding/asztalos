@@ -29,7 +29,9 @@ export default function ModelViewer({
   createdItems,
   usedColors,
   onItemUpdate,
-  onObjectUpdate
+  onObjectUpdate,
+  roomSize,
+  onRoomSizeChange
 }) {
   const dispatch = useDispatch();
 
@@ -214,9 +216,7 @@ export default function ModelViewer({
     wallsRef.current = {};
 
     // room dims in meters
-    const roomW = 5,
-      roomD = 5,
-      roomH = 3;
+    const { h: roomH, w: roomW, d: roomD } = roomSize;
     const thin = 0.00001;
 
     // floor
@@ -415,43 +415,14 @@ export default function ModelViewer({
 
     camera.setTarget(new Vector3(roomW / 2, roomH / 2, roomD / 2));
     camera.radius = 10;
-  }, [objects, createdItems, usedColors, dispatch]);
+  }, [objects, createdItems, usedColors, dispatch, roomSize]);
 
-  // 3) handle position updates with clamping
   const handlePositionChange = (ax, value) => {
     if (!selectedObjectId) return;
-    const item = createdItems.find(
-      (i) => i.object.objectId === selectedObjectId
-    );
-    if (!item) return;
-
-    const roomWmm = 5 * 1000,
-      roomDmm = 5 * 1000,
-      roomHmm = 2 * 1000;
-    const allSizes = createdItems.map((i) => parseSizeString(i.size));
-    const maxDim = Math.max(...allSizes.flat(), 1);
-    //const objectScale = Math.min(5,5,2) / (maxDim * 3);
-    const objectScale = 0.001;
-
-    const [rw, rh, rd] = parseSizeString(item.size);
-    const wmm = rw * objectScale * 1000;
-    const hmm = rh * objectScale * 1000;
-    const dmm = rd * objectScale * 1000;
-
-    let newX = objPosition.x,
-      newY = objPosition.y,
-      newZ = objPosition.z;
-    if (ax === "x") {
-      const half = wmm / 2;
-      newX = Math.max(half, Math.min(value, roomWmm - half));
-    } else if (ax === "y") {
-      const half = hmm / 2;
-      newY = Math.max(half, Math.min(value, roomHmm - half));
-    } else if (ax === "z") {
-      const half = dmm / 2;
-      newZ = Math.max(half, Math.min(value, roomDmm - half));
-    }
-    setObjPosition({ x: newX, y: newY, z: newZ });
+    setObjPosition((prev) => ({
+      ...prev,
+      [ax]: value
+    }));
   };
 
   // 4) apply position transformations
@@ -527,6 +498,31 @@ export default function ModelViewer({
   };
   return (
     <>
+      <div
+        style={{
+          position: "absolute",
+          top: 10,
+          left: 10,
+          backgroundColor: "rgba(255,255,255,0.8)",
+          padding: "0.3rem",
+          borderRadius: "0.3rem",
+          display: "flex",
+          gap: "0.5rem",
+          zIndex: 10
+        }}
+      >
+        {["h", "w", "d"].map((ax) => (
+          <Form.Control
+            key={ax}
+            type="number"
+            size="sm"
+            style={{ width: "4rem" }}
+            value={roomSize[ax]}
+            onChange={(e) => onRoomSizeChange(ax, e.target.value)}
+            placeholder={ax.toUpperCase()}
+          />
+        ))}
+      </div>
       <canvas
         ref={canvasRef}
         style={{ width: "100%", height: "100vh", display: "block" }}

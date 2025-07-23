@@ -2,14 +2,21 @@
 import React, { useState, useEffect } from "react";
 import { Form, Container, Row, Col } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
-import { reload, refreshCircle, removeCircleOutline, chevronDown, chevronForward, trash } from "ionicons/icons";
+import {
+  reload,
+  refreshCircle,
+  removeCircleOutline,
+  chevronDown,
+  chevronForward,
+  trash
+} from "ionicons/icons";
 import ErrorModal from "./ErrorModal";
 
 export default function Item({
   Item: initialItem,
   onItemChange,
   onDelete,
-  readOnly = false,
+  readOnly = false
 }) {
   // Helpers to parse stored strings
   function parseStringToArray(str) {
@@ -21,7 +28,10 @@ export default function Item({
   }
   function parseBracketString(str) {
     if (!str) return ["", "0", "0"];
-    const parts = str.slice(1, -1).split(",").map((s) => s.trim());
+    const parts = str
+      .slice(1, -1)
+      .split(",")
+      .map((s) => s.trim());
     return parts.length === 3 ? parts : ["", "0", "0"];
   }
 
@@ -37,7 +47,7 @@ export default function Item({
       size: initialItem.size,
       cantType,
       longCant,
-      shortCant,
+      shortCant
     };
   });
   const [showError, setShowError] = useState(false);
@@ -48,7 +58,7 @@ export default function Item({
     setItem((prev) => ({
       ...prev,
       sizeArr: parseStringToArray(initialItem.size),
-      size: initialItem.size,
+      size: initialItem.size
     }));
   }, [initialItem.size]);
   useEffect(() => {
@@ -57,7 +67,7 @@ export default function Item({
       ...prev,
       cantType: ct,
       longCant: lc,
-      shortCant: sc,
+      shortCant: sc
     }));
   }, [initialItem.kant]);
 
@@ -76,7 +86,7 @@ export default function Item({
 
   // Unified change handler
   const handleChange = (field, value) => {
-    console.log(readOnly)
+    console.log(readOnly);
     if (readOnly) return;
     let updated = { ...item };
 
@@ -122,7 +132,12 @@ export default function Item({
     }
   };
 
-  const inputStyle = { width: "3rem", padding: "2px 4px", border: "1px solid #ccc", backgroundColor: readOnly ? "#f8f9fa" : "white" };
+  const inputStyle = {
+    width: "3rem",
+    padding: "2px 4px",
+    border: "1px solid #ccc",
+    backgroundColor: readOnly ? "#f8f9fa" : "white"
+  };
 
   return (
     <Container className="p-2 ">
@@ -137,7 +152,7 @@ export default function Item({
               handleChange("sizeArr", [
                 e.target.value,
                 item.sizeArr[1],
-                item.sizeArr[2],
+                item.sizeArr[2]
               ])
             }
             disabled={readOnly}
@@ -151,7 +166,7 @@ export default function Item({
               handleChange("sizeArr", [
                 item.sizeArr[0],
                 e.target.value,
-                item.sizeArr[2],
+                item.sizeArr[2]
               ])
             }
             disabled={readOnly}
@@ -164,16 +179,24 @@ export default function Item({
             onChange={(e) => handleChange("qty", e.target.value)}
             disabled={readOnly}
           />
+          <Form.Control
+            className="ms-2"
+            style={{ ...inputStyle, width: "auto", flexGrow: "0" }}
+            placeholder="Name"
+            value={item.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            disabled={readOnly}
+          />
         </Col>
 
         {/* rotate button only if rotable; else show disabled style */}
-          <Col xs="auto">
+        <Col xs="auto">
           {!collapsed ? (
             <IonIcon
               icon={item.rotable ? reload : removeCircleOutline}
               style={{
                 cursor: "pointer",
-                fontSize: "1.5rem",
+                fontSize: "1.5rem"
               }}
               onClick={handleRotate}
             />

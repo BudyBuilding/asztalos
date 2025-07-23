@@ -95,6 +95,29 @@ function EditWork() {
     };
     loadObjects();
   }, [loading, workId, dispatch]);
+
+  // EditWork.js, a useEffect(…) után ahol setLocalWork‑ot hívod:
+  // (vagy akár közvetlenül a helyén)
+  const parseRoom = (roomStr) => {
+    if (!roomStr) return { h: 3, w: 5, d: 5 };
+    const [h, w, d] = roomStr
+      .slice(1, -1)
+      .split(",")
+      .map((n) => parseFloat(n) || 0);
+    return { h, w, d };
+  };
+
+  const handleRoomChange = (axis, value) => {
+    const num = parseFloat(value) || 0;
+    const old = parseRoom(localWork.room);
+    const next = { ...old, [axis]: num };
+    const roomStr = `[${next.h},${next.w},${next.d}]`;
+    // 1) frissítsd a helyi stétet
+    setLocalWork((w) => ({ ...w, room: roomStr }));
+    // 2) küldjed el a backendre
+    dispatch(updateWork({ ...localWork, room: roomStr }));
+  };
+
   /*
   // build createdItems from selectedTab
   useEffect(() => {
@@ -586,6 +609,8 @@ function EditWork() {
                 usedColors={palette}
                 onItemUpdate={handleModelViewerUpdate} // ha egy box‑ot mozgatsz
                 onObjectUpdate={handleObjectUpdate}
+                roomSize={parseRoom(localWork.room)}
+                onRoomSizeChange={handleRoomChange}
               />
             )}
           {selectedTab === "newObject" && showForm && (

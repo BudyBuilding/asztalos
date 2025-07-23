@@ -60,6 +60,7 @@ public class Work {
     private Date companyFinishDate;
     private Date cancelDate;
     private String companyStatus;
+    private String room;
 
 @PrePersist
     protected void onCreate() {
@@ -164,6 +165,14 @@ public class Work {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 
     public Double getClientPrice() {
