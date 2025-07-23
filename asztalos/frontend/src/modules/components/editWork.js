@@ -70,6 +70,7 @@ function EditWork() {
   useEffect(() => {
     const initWork = async () => {
       const orig = works.find((w) => w.workId === +workId);
+      console.log("orig: ", orig);
       if (!orig) {
         setLoading(false);
         return;
@@ -99,12 +100,20 @@ function EditWork() {
   // EditWork.js, a useEffect(…) után ahol setLocalWork‑ot hívod:
   // (vagy akár közvetlenül a helyén)
   const parseRoom = (roomStr) => {
-    if (!roomStr) return { h: 3, w: 5, d: 5 };
-    const [h, w, d] = roomStr
+    if (!roomStr) {
+      // ha nincs megadva, akkor a default [2500,5000,5000] mm → [2.5,5,5] m
+      return { h: 2.5, w: 5, d: 5 };
+    }
+    const [hMm, wMm, dMm] = roomStr
       .slice(1, -1)
       .split(",")
       .map((n) => parseFloat(n) || 0);
-    return { h, w, d };
+    // oszd el 1000‐rel, hogy méterben kapd vissza
+    return {
+      h: hMm / 1000,
+      w: wMm / 1000,
+      d: dMm / 1000
+    };
   };
 
   const handleRoomChange = (axis, value) => {
@@ -609,7 +618,7 @@ function EditWork() {
                 usedColors={palette}
                 onItemUpdate={handleModelViewerUpdate} // ha egy box‑ot mozgatsz
                 onObjectUpdate={handleObjectUpdate}
-                roomSize={parseRoom(localWork.room)}
+                roomSize={parseRoom(localWork?.room || "[2500, 5000, 5000]")}
                 onRoomSizeChange={handleRoomChange}
               />
             )}

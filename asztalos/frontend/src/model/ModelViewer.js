@@ -497,7 +497,7 @@ export default function ModelViewer({
     setIsModalOpen(false);
   };
   return (
-    <>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div
         style={{
           position: "absolute",
@@ -724,7 +724,7 @@ export default function ModelViewer({
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 }
 
