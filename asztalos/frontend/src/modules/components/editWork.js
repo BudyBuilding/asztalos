@@ -42,12 +42,13 @@ function EditWork() {
   const [showModel, setShowModel] = useState(true);
   const [tablesGenerated, setTablesGenerated] = useState(false);
   const [objects, setObjects] = useState([]);
-  const [createdItems, setCreatedItems] = useState(
+  /*const [createdItems, setCreatedItems] = useState(
     useSelector((state) => state.createdItems) || []
-  );
+  );*/
   /*const createdItems =
     useSelector((state) => state.createdItems) || createdItems1 || [];
 */
+  const createdItems = useSelector((state) => state.createdItems);
 
   const [palette, setPalette] = useState([]);
   const [collapsedColors, setCollapsedColors] = useState({});
@@ -127,7 +128,7 @@ function EditWork() {
 
     const loadItems = async () => {
       if (selectedTab === "newObject") {
-        setCreatedItems([]);
+        //  setCreatedItems([]);
         return;
       }
 
@@ -143,10 +144,10 @@ function EditWork() {
           const items = await dispatch(getCreatedItemsByObject(oid));
           all = items.filter((it) => it.work?.workId === wid);
         }
-
+        /*
         setCreatedItems(
           all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
-        );
+        );*/
       } catch (err) {
         console.error("Failed to load createdItems:", err);
       }
@@ -183,7 +184,7 @@ function EditWork() {
   }, [createdItems, colors]);
 
   // handle external item changes
-  const handleCreatedItemChange = (index, fields) => {
+  /*  const handleCreatedItemChange = (index, fields) => {
     setCreatedItems((prev) => {
       const arr = [...prev];
       arr[index] = { ...arr[index], ...fields };
@@ -205,7 +206,18 @@ function EditWork() {
       }
       return arr;
     });
+  };*/
+
+  const handleCreatedItemChange = (index, fields) => {
+    // közvetlenül a store‑on keresztül updateljük a tételt
+    dispatch(
+      createdItemApi.updateCreatedItemApi(createdItems[index].itemId, {
+        ...createdItems[index],
+        ...fields
+      })
+    ).catch((err) => console.error("Error updating createdItem:", err));
   };
+
   // ── Új item hozzáadása ───────────────────────────────────
   const handleAddItem = () => {
     if (isOrdered) return;
@@ -225,7 +237,7 @@ function EditWork() {
         work: { workId: +workId }, // ← ide kell a munka
         itemId: Date.now() * -1
       };
-      setCreatedItems((old) => [...old, defaultItem]);
+      //  setCreatedItems((old) => [...old, defaultItem]);
     }
   };
 
@@ -314,7 +326,7 @@ function EditWork() {
       const refreshed = await Promise.all(
         objects.map((o) => dispatch(getCreatedItemsByObject(o.objectId)))
       );
-      setCreatedItems([].concat(...refreshed));
+      //     setCreatedItems([].concat(...refreshed));
 
       // 4) Visszalépünk
       window.history.back();
@@ -358,12 +370,12 @@ function EditWork() {
       // törlés API-n keresztül
       dispatch(createdItemApi.deleteCreatedItemApi(item.itemId))
         .then(() => {
-          setCreatedItems((prev) => prev.filter((_, i) => i !== index));
+          //  setCreatedItems((prev) => prev.filter((_, i) => i !== index));
         })
         .catch((err) => console.error("Error deleting createdItem:", err));
     } else {
       // csak lokális, még nem mentett tétel
-      setCreatedItems((prev) => prev.filter((_, i) => i !== index));
+      //   setCreatedItems((prev) => prev.filter((_, i) => i !== index));
     }
   };
 

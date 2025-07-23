@@ -293,7 +293,7 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         }
 
         CreatedItem existingItem = existingItemopt.get();
-        try {
+  /*      try {
             Field[] fields = CreatedItem.class.getDeclaredFields();
             for (Field field : fields) {
                 field.setAccessible(true);
@@ -304,7 +304,24 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
             }
         } catch (IllegalAccessException e) {
                     throw new RuntimeException("An error occurred while updating created item", e);
+        }*/
+
+        try {
+            for (Field field : CreatedItem.class.getDeclaredFields()) {
+                String name = field.getName();
+                if ("object".equals(name) || "work".equals(name) || "itemId".equals(name)) {
+                    continue;
+                }
+                field.setAccessible(true);
+                Object value = field.get(updatedItem);
+                if (value != null) {
+                    field.set(existingItem, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("An error occurred while updating created item", e);
         }
+
 
         CreatedItem savedItem = createdItemService.save(existingItem);
         // módosítás után is újrageneráljuk a táblákat

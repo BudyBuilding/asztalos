@@ -93,10 +93,18 @@ export default function GeneratedItemsList({
                 Object.entries(itemsByColor["no-color"] || {}).map(
                   ([oid, items]) => (
                     <div key={oid} style={{ marginTop: 8 }}>
-                      <strong>
-                        {objects.find((o) => String(o.objectId) === oid)
-                          ?.name || `Obj #${oid}`}
-                      </strong>
+                      {(() => {
+                        const obj = objects.find(
+                          (o) => String(o.objectId) === oid
+                        );
+                        return (
+                          <strong>
+                            {obj
+                              ? `#${oid} ${obj.name}` // ha van név, előtte az ID
+                              : `Obj #${oid}`}{" "}
+                          </strong>
+                        );
+                      })()}
 
                       {items.map(({ __idx, ...itm }, idx) => (
                         <Draggable
