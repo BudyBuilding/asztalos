@@ -3,6 +3,7 @@ package asztalos.controller;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import asztalos.dto.CreatedItemDto;
 import asztalos.model.CreatedItem;
 import asztalos.model.CreatedTables;
 import asztalos.model.User;
@@ -79,7 +81,7 @@ public ResponseEntity<?> createCreatedItem(@RequestBody CreatedItem createdItem)
         //  generáljuk és mentsük a kapcsolódó táblákat
         List<CreatedTables> tables = tableOptimizationService.generateTables(savedItem.getObject().getWork());
         tables.forEach(createdTablesService::save);
-        return ResponseEntity.ok(savedItem);
+        return ResponseEntity.ok(toDto(savedItem));
 }
 
 
@@ -162,7 +164,7 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
             return ResponseEntity.status(403).build();
         }
 
-        return ResponseEntity.ok(item);
+        return ResponseEntity.ok(toDto(item));
     }
 
     @GetMapping("object/{objectId}")
@@ -187,8 +189,10 @@ public ResponseEntity<?> createMultipleCreatedItems(@RequestBody List<CreatedIte
             return ResponseEntity.status(403).build();
 
         }
-
-        return ResponseEntity.ok(items);
+    List<CreatedItemDto> dtos = items.stream()
+      .map(this::toDto)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(dtos);
     }
 
 @GetMapping("work/{workId}")
@@ -221,7 +225,10 @@ public ResponseEntity<?> getCreatedItemByWork(@PathVariable Long workId) {
     }
 
     List<CreatedItem> items = createdItemService.findByWork(work);
-    return ResponseEntity.ok(items);
+        List<CreatedItemDto> dtos = createdItemService.findByWork(work).stream()
+      .map(this::toDto)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(dtos);
 }
 
 
@@ -328,7 +335,37 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         Work work = savedItem.getObject().getWork();
         List<CreatedTables> tables = tableOptimizationService.generateTables(work);
         tables.forEach(createdTablesService::save);
-        return ResponseEntity.ok(savedItem);
+        return ResponseEntity.ok(toDto(savedItem));
     }
+private CreatedItemDto toDto(CreatedItem ci) {
+  CreatedItemDto d = new CreatedItemDto();
+  d.setItemId(ci.getItemId());
+  d.setName(ci.getName());
+  d.setDetails(ci.getDetails());
+  d.setMaterial(ci.getMaterial());
+  d.setKant(ci.getKant());
+  d.setQty(ci.getQty());
+  d.setRotation(ci.getRotation());
+  d.setSize(ci.getSize());
+  d.setPosition(ci.getPosition());
+  d.setRotation(ci.getRotation());
+  d.setTablePosition(ci.getTablePosition());
+  d.setTableRotation(ci.getTableRotation());
+
+  d.setColor(new CreatedItemDto.IdOnly(
+    ci.getColor()  != null ? ci.getColor().getColorId()  : null
+  ));
+  d.setObject(new CreatedItemDto.IdOnly(
+    ci.getObject() != null ? ci.getObject().getObjectId() : null
+  ));
+  d.setTable(new CreatedItemDto.IdOnly(
+    ci.gettable()  != null ? ci.gettable().getId()        : null
+  ));
+  d.setWork(new CreatedItemDto.IdOnly(
+    ci.getWork()   != null ? ci.getWork().getWorkId()     : null
+  ));
+  return d;
+}
+
 
 }
