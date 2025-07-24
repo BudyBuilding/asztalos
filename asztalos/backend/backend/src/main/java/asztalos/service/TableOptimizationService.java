@@ -92,8 +92,8 @@ public class TableOptimizationService {
             }
 
             // 3c) Full‑sheet logika (ismétlődően amíg van el nem helyezett)
-            double sheetW = parseDim(color.getDimension(), 0);
-            double sheetH = parseDim(color.getDimension(), 1);
+            double sheetW = parseDim(color.getDimension(), 1);
+            double sheetH = parseDim(color.getDimension(), 0);
             if (sheetW <= 0 || sheetH <= 0) {
                 throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
             }
