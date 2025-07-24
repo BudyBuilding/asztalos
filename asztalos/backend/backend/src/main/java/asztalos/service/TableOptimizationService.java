@@ -85,13 +85,12 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         }
 
         // 3b) Split‑tábla (max 1 darab)
-        // 3b) Split‑tábla (max. 1 darab használható)
         boolean usedSplit = false;
         String splitDim = color.getSplitDimension();
         log.debug("Color {}: splitDimension = {}", color.getColorId(), splitDim);
         if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-            double splitW = parseDim(splitDim, 0);
-            double splitH = parseDim(splitDim, 1);
+            double splitW = parseDim(splitDim, 1);
+            double splitH = parseDim(splitDim, 0);
             log.debug("Parsed splitW={} splitH={} for color {}", splitW, splitH, color.getColorId());
             if (splitW > 0 && splitH > 0 && !toPlace.isEmpty()) {
                 // létrehozunk egy split‑táblát
