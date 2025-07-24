@@ -61,38 +61,26 @@ public class MaxRectsBinPack {
             }
 
             if (bestRect != null) {
-    // 1) Bound check: ne kerüljön kilógás
-    double placeX = bestRect.x;
-    double placeY = bestRect.y;
-    double placeW = bestRotated ? rect.height : rect.width;
-    double placeH = bestRotated ? rect.width  : rect.height;
-    if (placeX + placeW  > binWidth || placeY + placeH > binHeight) {
-        // kilógna, skip
-        System.out.println("Placement would exceed bin bounds for rect ID " + rect.id);
-        continue;
-    }
-
-    // 2) Ha határoláson belül van, állítsuk be ténylegesen
-    rect.x = placeX;
-    rect.y = placeY;
-    if (bestRotated) {
-        // swap szélesség és magasság
-        double tmp = rect.width;
-        rect.width  = rect.height;
-        rect.height = tmp;
-    }
-    rect.rotated = bestRotated;
-
-    // 3) Overlap‐ellenőrzés (lásd lent)
-    if (overlapsAny(rect)) {
-        System.out.println("Overlap detected at final placement for rect ID " + rect.id);
-        continue;
-    }
-
-    // 4) Ha minden OK, akkor split‐eljük a free listet
-    splitFreeRect(bestRect, rect);
-    pruneFreeList();
-} else {
+                // Place the rectangle
+                rect.x = bestRect.x;
+                rect.y = bestRect.y;
+                rect.rotated = bestRotated;
+                if (bestRotated) {
+                    double temp = rect.width;
+                    rect.width = rect.height;
+                    rect.height = temp;
+                }
+                // Dupla ellenőrzés az átfedésre
+                if (overlapsWithPlaced(rect)) {
+                    System.out.println("Unexpected overlap after placement for rect ID " + rect.id);
+                    continue;
+                }
+                System.out.println("Placed rect ID " + rect.id + " at [" + rect.x + "," + rect.y + "], size=[" + rect.width + "x" + rect.height + "], rotated=" + rect.rotated);
+                placed.add(rect);
+                placedRectangles.add(rect);
+                splitFreeRect(bestRect, rect);
+                pruneFreeList();
+            } else {
                 System.out.println("Could not place rect ID " + rect.id + ", size=[" + rect.width + "x" + rect.height + "]");
             }
         }
@@ -202,16 +190,4 @@ public class MaxRectsBinPack {
             && a.x + a.width <= b.x + b.width
             && a.y + a.height <= b.y + b.height;
     }
-
-    private boolean overlapsAny(Rect candidate) {
-    for (Rect placed : placedRectangles) {
-        if (candidate.x < placed.x + placed.width
-         && candidate.x + candidate.width  > placed.x
-         && candidate.y < placed.y + placed.height
-         && candidate.y + candidate.height > placed.y) {
-            return true;
-        }
-    }
-    return false;
-}
 }
