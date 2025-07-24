@@ -257,10 +257,10 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         Color color = e.getKey();
         List<CreatedItem> group = e.getValue();
 
-        // 3a) Rendezés terület szerint csökkenőben
+        // 3a) Rendezés terület szerint csökkenőben (parseDim(idx=1)=width, idx=0=height)
         group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
-            double w = parseDim(ci.getSize(), 0);
-            double h = parseDim(ci.getSize(), 1);
+            double w = parseDim(ci.getSize(), 1);
+            double h = parseDim(ci.getSize(), 0);
             return w * h;
         }).reversed());
 
@@ -270,8 +270,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         int rid = 0;
         for (CreatedItem ci : group) {
             int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-            double rawW = parseDim(ci.getSize(), 0) + 2*padding;
-            double rawH = parseDim(ci.getSize(), 1) + 2*padding;
+            double rawW = parseDim(ci.getSize(), 1) + 2 * padding;
+            double rawH = parseDim(ci.getSize(), 0) + 2 * padding;
             boolean canRotate = Boolean.TRUE.equals(color.getRotable()) 
                              || Boolean.TRUE.equals(ci.isRotable());
             for (int i = 0; i < qty; i++) {
@@ -281,9 +281,9 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
             }
         }
 
-        // 3c) Full‑sheet pakolás MaxRectsBinPack‑pel
-        double sheetW = parseDim(color.getDimension(), 0);
-        double sheetH = parseDim(color.getDimension(), 1);
+        // 3c) Full‑sheet pakolás MaxRectsBinPack‑pel (sheetW=parseDim(idx=1), sheetH=parseDim(idx=0))
+        double sheetW = parseDim(color.getDimension(), 1);
+        double sheetH = parseDim(color.getDimension(), 0);
         MaxRectsBinPack packerFull = new MaxRectsBinPack(sheetW, sheetH, effectiveSeed);
         List<Rect> toPack = new ArrayList<>(rects);
         while (!toPack.isEmpty()) {
@@ -305,23 +305,19 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
                 ci.setTable(tbl);
                 createdItemRepository.save(ci);
             }
-            // maradék
             toPack.removeAll(placed);
-            // új packer minden laphoz (reset freeRectangles)
             packerFull = new MaxRectsBinPack(sheetW, sheetH, effectiveSeed);
         }
 
-        // 3d) Split‑sheet pakolás a teljes listára
+        // 3d) Split‑sheet pakolás a teljes listára (splitW=parseDim(idx=1), splitH=parseDim(idx=0))
         String splitDim = color.getSplitDimension();
         if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-            double splitW = parseDim(splitDim, 0);
-            double splitH = parseDim(splitDim, 1);
+            double splitW = parseDim(splitDim, 1);
+            double splitH = parseDim(splitDim, 0);
             MaxRectsBinPack packerSplit = new MaxRectsBinPack(splitW, splitH, effectiveSeed);
 
-            // ismételjük az eredeti rect-ekkel
             List<Rect> toSplit = new ArrayList<>();
             for (Rect orig : rects) {
-                // új példány kell, hogy ne módosuljon az orig
                 toSplit.add(new Rect(orig.id, 0, 0, orig.width, orig.height, orig.rotated));
             }
             while (!toSplit.isEmpty()) {
@@ -352,6 +348,7 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
     double total = resultTables.stream().mapToDouble(CreatedTables::getPrice).sum();
     work.setWoodPrice(total);
     workRepository.save(work);
+
     return resultTables;
 }
 
