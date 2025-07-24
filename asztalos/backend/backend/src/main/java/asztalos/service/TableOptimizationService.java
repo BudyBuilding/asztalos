@@ -167,8 +167,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         }
         if (!usedSplit) {
         // 3c) Full‑sheet logika (ismétlődő táblák)
-        double sheetW = parseDim(color.getDimension(), 0);
-        double sheetH = parseDim(color.getDimension(), 1);
+        double sheetW = parseDim(color.getDimension(), 1);
+        double sheetH = parseDim(color.getDimension(), 0);
         if (sheetW <= 0 || sheetH <= 0) {
             throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
         }
