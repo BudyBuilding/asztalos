@@ -6,7 +6,8 @@ import {
   getWorkById,
   getCreatedTablesByWork,
   getCreatedItemsByWork,
-  getAllCreatedItems
+  getAllCreatedItems,
+  getAllColors
 } from "../../data/getters";
 import Loading from "../helpers/Loading";
 import { updateWorkApi } from "../../data/api/workApi";
@@ -42,13 +43,36 @@ function WorkAnalyzer() {
   }, [allCreatedItems, workId]);
 
   // A store‐ból érkező „createdTables” lista
-  const allCreatedTables = useSelector((state) => state.createdTables || []);
-  const createdTables = allCreatedTables.filter((t) => t.work.workId == workId);
+  const allTablesRaw = useSelector((state) => state.createdTables || []);
+  const colors = useSelector((state) => state.colors || []);
+  useEffect(() => {
+    console.log("🔍 allTablesRaw:", allTablesRaw);
+  }, [allTablesRaw]);
+  // 1) csak az adott munkához tartozók
+  const tablesForThisWork = useMemo(
+    () => allTablesRaw.filter((t) => t.work.workId == workId),
+    [allTablesRaw, workId]
+  );
+  useEffect(() => {
+    console.log("🔍 tablesForThisWork:", tablesForThisWork);
+  }, [tablesForThisWork]);
+  // 2) minden táblához „kigyűjtjük” a teljes szín‐objektumot a colors listából
+  const createdTables = useMemo(
+    () =>
+      tablesForThisWork.map((t) => {
+        const fullColor = colors.find((c) => c.colorId === t.color.colorId) || {
+          colorId: t.color.colorId,
+          name: "Ismeretlen",
+          hex: "#ccc"
+        };
+        return { ...t, color: fullColor };
+      }),
+    [tablesForThisWork, colors]
+  );
   const fallbackTotal = useMemo(
     () => createdTables.reduce((sum, t) => sum + t.price, 0),
     [createdTables]
   );
-  // totalPrice: ha van clientPrice (>0), azt mutatjuk, különben fallback + label
   const totalPrice =
     (selectedWork?.clientPrice ?? 0) > 0
       ? selectedWork.clientPrice
@@ -83,32 +107,6 @@ function WorkAnalyzer() {
     loadAllWorkData();
   }, [dispatch, workId]);
 
-  /* useEffect(() => {
-    const loadWorkData = async () => {
-      setLoading(true);
-      try {
-        const work = await dispatch(getWorkById(workId));
-        setSelectedWork(work);
-        setSelectedClient(work.client);
-
-        // A modalban először csak a jelenlegi státuszt állítjuk be,
-        // de nem használjuk: mert a dropdown-ban mindig újraírjuk
-        setStatusInput(work.status);
-      } catch (error) {
-        console.error(
-          "Error fetching work:",
-          error,
-          error.response?.status,
-          error.response?.data
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadWorkData();
-  }, [dispatch, workId]);*/
-
-  // Betöltjük a work‐hoz tartozó createdTables‐eket
   useEffect(() => {
     const loadTables = async () => {
       try {
@@ -126,23 +124,19 @@ function WorkAnalyzer() {
   }, [dispatch, workId]);
 
   // Táblázatok csoportosítása szín szerint
-  const groupedTables = (createdTables || []).reduce((acc, table) => {
-    const color = table.color.name;
-    if (!acc[color]) {
-      acc[color] = {
-        color: color,
-        quantity: 0,
-        totalPrice: 0,
-        pricePerQty: 0
-      };
-    }
-    acc[color].quantity += 1;
-    acc[color].totalPrice += table.price;
-    if (acc[color].pricePerQty === 0 && table.price > 0) {
-      acc[color].pricePerQty = table.price;
-    }
-    return acc;
-  }, {});
+  const groupedTables = useMemo(() => {
+    return createdTables.reduce((acc, table) => {
+      const color = table.color.name;
+      if (!acc[color])
+        acc[color] = { color, quantity: 0, totalPrice: 0, pricePerQty: 0 };
+      acc[color].quantity += 1;
+      acc[color].totalPrice += table.price;
+      if (!acc[color].pricePerQty && table.price > 0) {
+        acc[color].pricePerQty = table.price;
+      }
+      return acc;
+    }, {});
+  }, [createdTables]);
 
   // „Update Work” modal megnyitása: előtöltjük a mezőket
   const handleShowModal = () => {

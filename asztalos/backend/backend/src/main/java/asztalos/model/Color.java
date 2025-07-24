@@ -25,6 +25,7 @@ public class Color {
     private Boolean active;
 
     private String dimension;
+    private String splitDimension;
 
     private Boolean rotable;
 
@@ -112,6 +113,14 @@ public class Color {
 
     public void setDimension(String dimension) {
         this.dimension = dimension;
+    }
+
+    public String getSplitDimension() {
+        return splitDimension;
+    }
+
+    public void setSplitDimension(String splitDimension) {
+        this.splitDimension = splitDimension;
     }
 
     public Boolean getRotable() {

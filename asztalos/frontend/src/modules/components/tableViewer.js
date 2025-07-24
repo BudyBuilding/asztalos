@@ -78,7 +78,6 @@ const TableViewer = () => {
         createdItems.map((it) => it.color?.colorId).filter((cid) => cid != null)
       )
     );
-
     setPalette((prev) => {
       const allIds = Array.from(
         new Set([...prev.map((c) => c.colorId), ...itemColorIds])
@@ -141,29 +140,13 @@ const TableViewer = () => {
     }
   };
 
-  const sourceItems = isEditing ? editedItems : processedItems;
-
-  const usedColorIds = useMemo(() => {
-    const ids = sourceItems
-      .map((it) => it.color?.colorId)
-      .filter((cid) => Number.isInteger(cid) && cid > 0);
-    return new Set(ids);
-  }, [sourceItems]);
-
-  const toggleColor = (cid) => {
-    setCollapsedColors((prev) => ({
-      ...prev,
-      [cid]: !prev[cid]
-    }));
-  };
-  useEffect(() => {}, [createdTables]);
-
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const tables = await createdTablesApi.getAllCreatedTablesForWorkApi(
+      const tables1 = await createdTablesApi.getAllCreatedTablesForWorkApi(
         workId
       );
+      const tables = tables1.map((t) => ({ ...t, id: t.tableId }));
       const rawItems = await createdItemApi.getAllCreatedItemsForWorkApi(
         workId
       );
@@ -204,37 +187,6 @@ const TableViewer = () => {
   useEffect(() => {
     setCurrentTableIndex(0);
   }, [selectedColorId]);
-
-  const handleItemChange = async (updated) => {
-    setEditedItems((cur) =>
-      cur.map((it) => (it.itemId === updated.itemId ? updated : it))
-    );
-    if (typeof updated.itemId === "number" && updated.itemId > 0) {
-      try {
-        await createdItemApi.updateCreatedItemApi(updated.itemId, {
-          size: updated.size,
-          qty: updated.qty,
-          kant: updated.kant,
-          details: updated.details,
-          rotable: updated.rotable,
-          colorId: updated.colorId
-        });
-      } catch (err) {
-        console.error("Error updating item:", err);
-        alert("Nem sikerült elmenteni a módosításokat.");
-      }
-    }
-  };
-  /*    const handleDeleteItem = async (itemId) => {
-      try {
-        await createdItemApi.deleteCreatedItemApi(itemId);
-        setEditedItems(cur => cur.filter(it => it.itemId !== itemId));
-        setProcessedItems(cur => cur.filter(it => it.itemId !== itemId));
-      } catch(err) {
-        console.error("Tétel törlése sikertelen:", err);
-        alert("Nem sikerült törölni a tételt.");
-      }
-    };*/
 
   const handleGenerateTables = async () => {
     const work_Id = parseInt(workId, 10);
@@ -316,22 +268,6 @@ const TableViewer = () => {
     filteredTables.length > 0
       ? filteredTables[currentTableIndex % filteredTables.length]
       : null;
-
-  const shownItems = (isEditing ? editedItems : processedItems).filter(
-    (item) => {
-      if (
-        !item?.tablePosition ||
-        typeof item.tablePosition !== "string" ||
-        !currentTable?.id
-      )
-        return false;
-      const positions = parsePositions(item.tablePosition);
-      return positions.some((position) => {
-        const [, , , tableId] = position;
-        return tableId == currentTable.id;
-      });
-    }
-  );
 
   const handleNextTable = () => {
     setCurrentTableIndex((prev) => (prev + 1) % filteredTables.length);
@@ -720,7 +656,6 @@ const TableViewerComponent = ({
   }
 
   if (isLoading) return <Loading />;
-  console.log("table: ", table);
   const [height = 0, width = 0, thickness = 0] = JSON.parse(
     table.size || "[0,0,0]"
   );
@@ -1560,7 +1495,7 @@ const TableViewerComponent = ({
                     >
                       {item.itemId}
                     </span>
-                    <tr />
+                    <br />
                     {item.details}
                   </div>
                   <div
@@ -1596,7 +1531,7 @@ const TableViewerComponent = ({
                     }}
                   >
                     {dispWidth}
-                    <tr />
+                    <br />
                     {widthSuffix}
                   </div>
                   <div
@@ -1626,7 +1561,7 @@ const TableViewerComponent = ({
                     }}
                   >
                     {dispHeight}
-                    <tr />
+                    <br />
                     {heightSuffix}
                   </div>
                 </div>
