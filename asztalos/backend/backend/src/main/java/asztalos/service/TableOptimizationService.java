@@ -259,7 +259,7 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         List<CreatedItem> group = e.getValue();
 
         // 3a) Rendezés terület szerint csökkenőben
-        group.sort(Comparator.comparingDouble(ci -> {
+        group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
             double w = parseDim(ci.getSize(), 0);
             double h = parseDim(ci.getSize(), 1);
             return w * h;
