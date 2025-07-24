@@ -167,8 +167,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         }
         if (!usedSplit) {
         // 3c) Full‑sheet logika (ismétlődő táblák)
-        double sheetW = parseDim(color.getDimension(), 0);
-        double sheetH = parseDim(color.getDimension(), 1);
+        double sheetW = parseDim(color.getDimension(), 1);
+        double sheetH = parseDim(color.getDimension(), 0);
         if (sheetW <= 0 || sheetH <= 0) {
             throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
         }
@@ -256,11 +256,13 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
             }
             toPlace = remaining;
         }
-                if (toPlace.isEmpty() && !resultTables.isEmpty()
-            && color.getSplitDimension() != null
-            && !usedSplit) {
+        if (!toPlace.isEmpty() && !resultTables.isEmpty()
+            && color.getSplitDimension() != null) {
             CreatedTables lastTable = resultTables.get(resultTables.size() - 1);
-            log.info("Attempting split optimization on last table ID {}", lastTable.getId());
+            log.info("Applying split packing on last FULL table ID {}", lastTable.getId());
+            List<Rect> remainingRects = new ArrayList<>(toPlace);
+            toPlace.clear();
+            applySplitPacking(lastTable, remainingRects, idMap, padding);
         }
     }}
 
@@ -273,6 +275,60 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
 
     return resultTables;
 }
+
+
+    private void applySplitPacking(CreatedTables table, List<Rect> rects, Map<Integer,CreatedItem> idMap, double padding) {
+        String splitDim = table.getSize();
+        double splitW = parseDim(splitDim, 1);
+        double splitH = parseDim(splitDim, 0);
+        double[] skyline = new double[(int)Math.ceil(splitW)];
+        Arrays.fill(skyline, 0);
+        List<Rect> placed = new ArrayList<>();
+        List<Rect> leftover = new ArrayList<>();
+        for (Rect r : rects) {
+            boolean placedFlag = false;
+            double bestY = Double.MAX_VALUE;
+            int bestX = -1;
+            boolean usedRot = false;
+            for (boolean tryRot : new boolean[]{false,true}) {
+                if (tryRot && !r.rotated) continue;
+                double ww = tryRot ? r.height : r.width;
+                double hh = tryRot ? r.width  : r.height;
+                for (int x = 0; x <= splitW - ww; x++) {
+                    double y = 0;
+                    for (int i = 0; i < (int)ww; i++) y = Math.max(y, skyline[x+i]);
+                    if (y+hh <= splitH && y < bestY && !overlaps(x,y,ww,hh,placed)) {
+                        bestY=y; bestX=x; usedRot=tryRot; placedFlag=true;
+                    }
+                }
+                if (placedFlag) break;
+            }
+            if (placedFlag) {
+                r.x=bestX; r.y=bestY;
+                if (usedRot) { double tmp=r.width; r.width=r.height; r.height=tmp; }
+                r.rotated=usedRot;
+                for (int i=0;i<(int)r.width;i++) skyline[bestX+i]=r.y+r.height;
+                placed.add(r);
+            } else {
+                leftover.add(r);
+           }
+       }
+        // pozíciók mentése a DB-be
+        for (Rect r : placed) {
+            CreatedItem ci = idMap.get(r.id);
+            String pos = String.format("[%.0f,%.0f,%d,%d]",
+                r.x, r.y, r.rotated?0:1, table.getId()
+            );
+            ci.setTablePosition(
+                ci.getTablePosition()==null||ci.getTablePosition().isEmpty()
+                ? pos : ci.getTablePosition()+","+pos
+            );
+            ci.setTableRotation(String.valueOf(r.rotated?0:1));
+            ci.setTable(table);
+            createdItemRepository.save(ci);
+        }
+        // ha maradtak elemek, új tábla(ka)t indíthatunk...
+    }
 
     private boolean overlaps(double x, double y, double w, double h, List<Rect> placed) {
         for (Rect r : placed) {
