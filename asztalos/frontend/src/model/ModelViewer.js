@@ -360,7 +360,7 @@ export default function ModelViewer({
         );
 
         const mat = new StandardMaterial(`mat_${name}`, scene);
-        const col = usedColors.find((c) => c.colorId === item.colorId);
+        const col = usedColors.find((c) => c.colorId === item.color.colorId);
         if (col) {
           const img = col.imageDataReduced || col.imageData;
           if (img)

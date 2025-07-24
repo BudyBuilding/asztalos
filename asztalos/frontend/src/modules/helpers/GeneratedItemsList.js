@@ -17,19 +17,10 @@ export default function GeneratedItemsList({
   readOnly = false,
   objects = []
 }) {
-  /*
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
-      const cid = item.colorId ?? "no-color";
-      if (!acc[cid]) acc[cid] = [];
-      acc[cid].push({ ...item, __idx: idx });
-      return acc;
-    }, {});
-  }, [generatedItems]);*/
-
-  const itemsByColor = React.useMemo(() => {
-    return generatedItems.reduce((acc, item, idx) => {
-      const cid = item.colorId != null ? String(item.colorId) : "no-color";
+      const cid =
+        item.color.colorId != null ? String(item.color.colorId) : "no-color";
       acc[cid] = acc[cid] || {};
 
       const oid =

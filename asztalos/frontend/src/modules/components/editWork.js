@@ -127,34 +127,6 @@ function EditWork() {
     dispatch(updateWork({ ...localWork, room: roomStr }));
   };
 
-  /*
-  // build createdItems from selectedTab
-  useEffect(() => {
-    const wid = +workId;
-    if (selectedTab === "newObject") {
-      setCreatedItems([]);
-      return;
-    }
-    let all = [];
-    if (selectedTab === "0") {
-      objects.forEach((o) => {
-        all = all.concat(
-          dispatch(getCreatedItemsByObject(o.objectId)).filter(
-            (it) => it.work?.workId === wid
-          )
-        );
-      });
-    } else {
-      const oid = +selectedTab;
-      all = dispatch(getCreatedItemsByObject(oid)).filter(
-        (it) => it.work?.workId === wid
-      );
-    }
-    setCreatedItems(
-      all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
-    );
-  }, [objects, selectedTab, workId, dispatch]);*/
-
   useEffect(() => {
     const wid = +workId;
 
@@ -176,10 +148,6 @@ function EditWork() {
           const items = await dispatch(getCreatedItemsByObject(oid));
           all = items.filter((it) => it.work?.workId === wid);
         }
-        /*
-        setCreatedItems(
-          all.map((it) => ({ ...it, colorId: it.color?.colorId ?? null }))
-        );*/
       } catch (err) {
         console.error("Failed to load createdItems:", err);
       }
@@ -192,53 +160,33 @@ function EditWork() {
 
   const PFL_COLOR = useSelector((state) =>
     state.colors.find((c) => c.colorId === -1)
-  ) || { colorId: -1, name: "PFL", hex: "#FFFFFF" };
+  ) || {
+    colorId: -1,
+    name: "PFL",
+    hex: "#FFFFFF",
+    imageDataReduced: "",
+    imageData: ""
+  };
 
   useEffect(() => {
-    // 1) kigyűjtjük, mely színek vannak ténylegesen használatban
     const itemColorIds = Array.from(
       new Set(
         createdItems
-          .map((it) => it.colorId)
-          .filter((cid) => cid != null && cid !== -1) // a PFL-t külön kezeljük
+          .map((it) => it.color.colorId)
+          .filter((cid) => cid != null && cid !== -1)
       )
     );
 
-    // 2) megvan a használt színek tömbje, lekérjük őket a 'colors'-ból
+    // 2) a valódi szín‐objektumokat hozzuk be
     const usedColors = itemColorIds
       .map((id) => colors.find((c) => c.colorId === id))
       .filter(Boolean);
 
-    // 3) mindig tegyük eléjük a PFL_COLOR-t
+    // 3) előre tesszük a PFL‐t
     const newPalette = [PFL_COLOR, ...usedColors];
-
+    console.log("itemColorIds: ", itemColorIds, ", newPalette: ", newPalette);
     setPalette(newPalette);
   }, [createdItems, colors]);
-
-  // handle external item changes
-  /*  const handleCreatedItemChange = (index, fields) => {
-    setCreatedItems((prev) => {
-      const arr = [...prev];
-      arr[index] = { ...arr[index], ...fields };
-      const updated = { ...arr[index], ...fields };
-      if (typeof updated.itemId === "number" && updated.itemId > 0) {
-        // a backend color-update-hez color objektumot vár
-        const payload = {
-          ...updated,
-          ...(fields.colorId !== undefined && {
-            color: fields.colorId === null ? null : { colorId: fields.colorId }
-          })
-        };
-        // ne küldjük fölöslegesen a colorId mezőt is
-        delete payload.colorId;
-
-        dispatch(
-          createdItemApi.updateCreatedItemApi(updated.itemId, payload)
-        ).catch((err) => console.error("Error updating createdItem:", err));
-      }
-      return arr;
-    });
-  };*/
 
   const handleCreatedItemChange = (index, fields) => {
     // közvetlenül a store‑on keresztül updateljük a tételt
@@ -564,11 +512,26 @@ function EditWork() {
               className="position-relative me-1"
               style={{ width: 40, height: 40 }}
             >
-              <RBImage
-                src={`data:image/jpeg;base64,${c.imageDataReduced}`}
-                thumbnail
-                style={{ width: "100%", height: "100%" }}
-              />
+              {c.imageDataReduced ? (
+                <RBImage
+                  src={
+                    c.imageDataReduced
+                      ? `data:image/jpeg;base64,${c.imageDataReduced}`
+                      : undefined
+                  }
+                  thumbnail
+                  style={{ width: "100%", height: "100%" }}
+                />
+              ) : (
+                // ha nincs kép, mutassunk egy színes négyzetet hex alapján
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: c.hex || "#ddd"
+                  }}
+                />
+              )}
               <span
                 onClick={() => removeColor(c.colorId)}
                 style={{
