@@ -167,8 +167,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         }
         if (!usedSplit) {
         // 3c) Full‑sheet logika (ismétlődő táblák)
-        double sheetW = parseDim(color.getDimension(), 1);
-        double sheetH = parseDim(color.getDimension(), 0);
+        double sheetW = parseDim(color.getDimension(), 0);
+        double sheetH = parseDim(color.getDimension(), 1);
         if (sheetW <= 0 || sheetH <= 0) {
             throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
         }
@@ -256,13 +256,14 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
             }
             toPlace = remaining;
         }
-        if (!toPlace.isEmpty() && !resultTables.isEmpty()
-            && color.getSplitDimension() != null) {
-            CreatedTables lastTable = resultTables.get(resultTables.size() - 1);
-            log.info("Applying split packing on last FULL table ID {}", lastTable.getId());
-            List<Rect> remainingRects = new ArrayList<>(toPlace);
+        if (!toPlace.isEmpty() && color.getSplitDimension() != null) {
+            CreatedTables splitTable = createdTablesRepository.save(
+                createNewTable(work, color, splitDim)
+            );
+            resultTables.add(splitTable);
+            log.info("Created SPLIT table ID {} for remaining items", splitTable.getId());
+            applySplitPacking(splitTable, toPlace, idMap, padding);
             toPlace.clear();
-            applySplitPacking(lastTable, remainingRects, idMap, padding);
         }
     }}
 
