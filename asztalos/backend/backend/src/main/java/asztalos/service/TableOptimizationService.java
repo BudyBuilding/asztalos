@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import asztalos.model.*;
 import asztalos.repository.*;
+import asztalos.service.optimalization.MaxRectsBinPack;
 import asztalos.service.optimalization.Rect;
 import java.util.function.Supplier;
 
@@ -28,7 +29,7 @@ public class TableOptimizationService {
     @Autowired
     private WorkRepository workRepository;
 
-    @Transactional
+ /*   @Transactional
     public List<CreatedTables> generateTables(Work workParam, Long seed) {
         log.info("Called generateTables for Work ID: {}, with seed: {}", workParam.getWorkId(), seed);
         Work work = workRepository.getWorkById(workParam.getWorkId());
@@ -220,6 +221,140 @@ public class TableOptimizationService {
 
         return resultTables;
     }
+*/
+
+@Transactional
+public List<CreatedTables> generateTables(Work workParam, Long seed) {
+    log.info("Called generateTables for Work ID: {}, with seed: {}", workParam.getWorkId(), seed);
+    Work work = workRepository.getWorkById(workParam.getWorkId());
+    long effectiveSeed = (seed != null) ? seed : System.currentTimeMillis();
+
+    // 1) Tisztítás
+    List<CreatedItem> items = createdItemRepository.findByWork(work);
+    for (CreatedItem item : items) {
+        item.setTablePosition("");
+        item.setTableRotation(null);
+        item.setTable(null);
+        createdItemRepository.save(item);
+    }
+
+    // 2) Csoportosítás szín szerint
+    Map<Color, List<CreatedItem>> itemsByColor = new LinkedHashMap<>();
+    for (CreatedItem item : items) {
+        if (item.getColor() == null
+         || invalidDim(item.getColor().getDimension())
+         || invalidDim(item.getSize())) {
+            continue;
+        }
+        itemsByColor.computeIfAbsent(item.getColor(), c -> new ArrayList<>()).add(item);
+    }
+
+    List<CreatedTables> resultTables = new ArrayList<>();
+    double padding = 3.0;
+
+    // 3) Színcsoportonként
+    for (Map.Entry<Color, List<CreatedItem>> e : itemsByColor.entrySet()) {
+        Color color = e.getKey();
+        List<CreatedItem> group = e.getValue();
+
+        // 3a) Rendezés terület szerint csökkenőben
+        group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
+            double w = parseDim(ci.getSize(), 0);
+            double h = parseDim(ci.getSize(), 1);
+            return w * h;
+        }).reversed());
+
+        // 3b) Rect-ek előállítása
+        List<Rect> rects = new ArrayList<>();
+        Map<Integer,CreatedItem> idMap = new HashMap<>();
+        int rid = 0;
+        for (CreatedItem ci : group) {
+            int qty = Optional.ofNullable(ci.getQty()).orElse(1);
+            double rawW = parseDim(ci.getSize(), 0) + 2*padding;
+            double rawH = parseDim(ci.getSize(), 1) + 2*padding;
+            boolean canRotate = Boolean.TRUE.equals(color.getRotable()) 
+                             || Boolean.TRUE.equals(ci.isRotable());
+            for (int i = 0; i < qty; i++) {
+                Rect r = new Rect(rid, 0, 0, rawW, rawH, canRotate);
+                rects.add(r);
+                idMap.put(rid++, ci);
+            }
+        }
+
+        // 3c) Full‑sheet pakolás MaxRectsBinPack‑pel
+        double sheetW = parseDim(color.getDimension(), 0);
+        double sheetH = parseDim(color.getDimension(), 1);
+        MaxRectsBinPack packerFull = new MaxRectsBinPack(sheetW, sheetH, effectiveSeed);
+        List<Rect> toPack = new ArrayList<>(rects);
+        while (!toPack.isEmpty()) {
+            CreatedTables tbl = createdTablesRepository.save(
+                createNewTable(work, color, color.getDimension())
+            );
+            resultTables.add(tbl);
+            log.info("Using FULL sheet ID {}", tbl.getId());
+
+            List<Rect> placed = packerFull.insert(toPack, "BestAreaFit");
+            // mentés
+            for (Rect r : placed) {
+                CreatedItem ci = idMap.get(r.id);
+                String pos = String.format("[%.0f,%.0f,%d,%d]",
+                    r.x, r.y, r.rotated?0:1, tbl.getId()
+                );
+                ci.setTablePosition(ci.getTablePosition().isEmpty() ? pos : ci.getTablePosition()+","+pos);
+                ci.setTableRotation(String.valueOf(r.rotated?0:1));
+                ci.setTable(tbl);
+                createdItemRepository.save(ci);
+            }
+            // maradék
+            toPack.removeAll(placed);
+            // új packer minden laphoz (reset freeRectangles)
+            packerFull = new MaxRectsBinPack(sheetW, sheetH, effectiveSeed);
+        }
+
+        // 3d) Split‑sheet pakolás a teljes listára
+        String splitDim = color.getSplitDimension();
+        if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
+            double splitW = parseDim(splitDim, 0);
+            double splitH = parseDim(splitDim, 1);
+            MaxRectsBinPack packerSplit = new MaxRectsBinPack(splitW, splitH, effectiveSeed);
+
+            // ismételjük az eredeti rect-ekkel
+            List<Rect> toSplit = new ArrayList<>();
+            for (Rect orig : rects) {
+                // új példány kell, hogy ne módosuljon az orig
+                toSplit.add(new Rect(orig.id, 0, 0, orig.width, orig.height, orig.rotated));
+            }
+            while (!toSplit.isEmpty()) {
+                CreatedTables st = createdTablesRepository.save(
+                    createNewTable(work, color, splitDim)
+                );
+                resultTables.add(st);
+                log.info("Using SPLIT sheet ID {}", st.getId());
+
+                List<Rect> placed = packerSplit.insert(toSplit, "BestAreaFit");
+                for (Rect r : placed) {
+                    CreatedItem ci = idMap.get(r.id);
+                    String pos = String.format("[%.0f,%.0f,%d,%d]",
+                        r.x, r.y, r.rotated?0:1, st.getId()
+                    );
+                    ci.setTablePosition(ci.getTablePosition().isEmpty() ? pos : ci.getTablePosition()+","+pos);
+                    ci.setTableRotation(String.valueOf(r.rotated?0:1));
+                    ci.setTable(st);
+                    createdItemRepository.save(ci);
+                }
+                toSplit.removeAll(placed);
+                packerSplit = new MaxRectsBinPack(splitW, splitH, effectiveSeed);
+            }
+        }
+    }
+
+    // 4) Árszámítás
+    double total = resultTables.stream().mapToDouble(CreatedTables::getPrice).sum();
+    work.setWoodPrice(total);
+    workRepository.save(work);
+    return resultTables;
+}
+
 
     private void applySplitPacking(CreatedTables table, List<Rect> rects, Map<Integer,CreatedItem> idMap, double padding) {
         String splitDim = table.getSize();
