@@ -66,8 +66,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         List<CreatedItem> group = entry.getValue();
 
        group.sort(Comparator.comparingDouble((CreatedItem item) -> {
-           double w = parseDim(item.getSize(), 0);
-           double h = parseDim(item.getSize(), 1);
+           double w = parseDim(item.getSize(), 1);
+           double h = parseDim(item.getSize(), 0);
            return w * h;
        }).reversed());
 
@@ -77,8 +77,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         int rid = 0;
         for (CreatedItem ci : group) {
             int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-            double rawW = parseDim(ci.getSize(), 0);
-            double rawH = parseDim(ci.getSize(), 1);
+            double rawW = parseDim(ci.getSize(), 1);
+            double rawH = parseDim(ci.getSize(), 0);
             double w = rawW + 2*padding;
             double h = rawH + 2*padding;
             boolean canRotate = Boolean.TRUE.equals(color.getRotable())
@@ -256,14 +256,14 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
             }
             toPlace = remaining;
         }
-        if (!toPlace.isEmpty() && color.getSplitDimension() != null) {
+        while (!toPlace.isEmpty() && color.getSplitDimension() != null) {
             CreatedTables splitTable = createdTablesRepository.save(
                 createNewTable(work, color, splitDim)
             );
             resultTables.add(splitTable);
             log.info("Created SPLIT table ID {} for remaining items", splitTable.getId());
+            // a applySplitPacking frissíti a toPlace-t a még el nem helyezett Rect-ekre
             applySplitPacking(splitTable, toPlace, idMap, padding);
-            toPlace.clear();
         }
     }}
 
@@ -329,6 +329,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
             createdItemRepository.save(ci);
         }
         // ha maradtak elemek, új tábla(ka)t indíthatunk...
+                rects.clear();
+        rects.addAll(leftover);
     }
 
     private boolean overlaps(double x, double y, double w, double h, List<Rect> placed) {
