@@ -260,8 +260,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
 
         // 3a) Rendezés terület szerint csökkenőben
         group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
-            double w = parseDim(ci.getSize(), 1);
-            double h = parseDim(ci.getSize(), 0);
+            double w = parseDim(ci.getSize(), 0);
+            double h = parseDim(ci.getSize(), 1);
             return w * h;
         }).reversed());
 
@@ -271,8 +271,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         int rid = 0;
         for (CreatedItem ci : group) {
             int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-            double rawW = parseDim(ci.getSize(), 1) + 2 * padding;
-            double rawH = parseDim(ci.getSize(), 0) + 2 * padding;
+            double rawW = parseDim(ci.getSize(), 0) + 2 * padding;
+            double rawH = parseDim(ci.getSize(), 1) + 2 * padding;
             boolean canRotate = Boolean.TRUE.equals(color.getRotable()) || Boolean.TRUE.equals(ci.isRotable());
             for (int i = 0; i < qty; i++) {
                 allRects.add(new Rect(rid, 0, 0, rawW, rawH, canRotate));
@@ -282,8 +282,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         }
 
         // 3c) Full‑sheet pakolás
-        double sheetW = parseDim(color.getDimension(), 0);
-        double sheetH = parseDim(color.getDimension(), 1);
+        double sheetW = parseDim(color.getDimension(), 1);
+        double sheetH = parseDim(color.getDimension(), 0);
         if (sheetW <= 0 || sheetH <= 0) {
             throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
         }
