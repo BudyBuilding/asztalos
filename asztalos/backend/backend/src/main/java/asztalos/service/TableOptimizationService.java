@@ -74,6 +74,7 @@ public class TableOptimizationService {
 
             // 3b) Előkészítjük a Rect-eket és idMap‑et
             List<Rect> toPlace = new ArrayList<>();
+            List<Rect> originalToPlace = new ArrayList<>(toPlace);
             Map<Integer, CreatedItem> idMap = new HashMap<>();
             int rid = 0;
             for (CreatedItem ci : group) {
@@ -190,17 +191,24 @@ public class TableOptimizationService {
             }
 
             // 3d) Split‑sheet logika a maradékokra
-            String splitDim = color.getSplitDimension();
-            if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-                while (!toPlace.isEmpty()) {
-                    CreatedTables splitTable = createdTablesRepository.save(
-                        createNewTable(work, color, splitDim)
-                    );
-                    resultTables.add(splitTable);
-                    log.info("Created SPLIT table ID {} for remaining items", splitTable.getId());
-                    applySplitPacking(splitTable, toPlace, idMap, padding);
-                }
-            }
+       String splitDim = color.getSplitDimension();
+       if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
+           // helyreállítjuk a teljes listát
+           toPlace.clear();
+           for (Rect r : originalToPlace) {
+               // ha Rect-ben nincs copy(), klónozd így:
+               toPlace.add(new Rect(r.id, 0, 0, r.width, r.height, r.rotated));
+           }
+           // és csomagolunk split‑táblákra, amíg üres nem lesz
+           while (!toPlace.isEmpty()) {
+               CreatedTables splitTable = createdTablesRepository.save(
+                   createNewTable(work, color, splitDim)
+               );
+               resultTables.add(splitTable);
+               log.info("Created SPLIT table ID {} for all items", splitTable.getId());
+               applySplitPacking(splitTable, toPlace, idMap, padding);
+           }
+       }
         }
 
         // 4) Végső árösszeg és mentés
