@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import asztalos.model.*;
 import asztalos.repository.*;
-import asztalos.service.optimalization.MaxRectsBinPack;
 import asztalos.service.optimalization.Rect;
 import java.util.function.Supplier;
 
@@ -29,15 +28,16 @@ public class TableOptimizationService {
     @Autowired
     private WorkRepository workRepository;
 
- /*   @Transactional
+    @Transactional
     public List<CreatedTables> generateTables(Work workParam, Long seed) {
         log.info("Called generateTables for Work ID: {}, with seed: {}", workParam.getWorkId(), seed);
         Work work = workRepository.getWorkById(workParam.getWorkId());
+                
         long effectiveSeed = (seed != null) ? seed : System.currentTimeMillis();
 
-        // 1) Tisztítás
         List<CreatedItem> items = createdItemRepository.findByWork(work);
         log.info("Fetched {} CreatedItems", items.size());
+
         for (CreatedItem item : items) {
             item.setTablePosition("");
             item.setTableRotation(null);
@@ -45,55 +45,21 @@ public class TableOptimizationService {
             createdItemRepository.save(item);
         }
 
-        // 2) Csoportosítás szín szerint
         Map<Color, List<CreatedItem>> itemsByColor = new LinkedHashMap<>();
         for (CreatedItem item : items) {
-            if (item.getColor() == null
-            || invalidDim(item.getColor().getDimension())
-            || invalidDim(item.getSize())) {
+            if (item.getColor() == null || invalidDim(item.getColor().getDimension()) || invalidDim(item.getSize())) {
                 log.warn("Skipping invalid item {}", item.getItemId());
                 continue;
             }
-            itemsByColor.computeIfAbsent(item.getColor(), c -> new ArrayList<>())
-                        .add(item);
+            itemsByColor.computeIfAbsent(item.getColor(), c -> new ArrayList<>()).add(item);
         }
 
         List<CreatedTables> resultTables = new ArrayList<>();
         double padding = 3.0;
 
-        // 3) Színcsoportonként:
         for (Map.Entry<Color, List<CreatedItem>> entry : itemsByColor.entrySet()) {
             Color color = entry.getKey();
             List<CreatedItem> group = entry.getValue();
-
-            // 3a) Rendezés terület szerint csökkenőben
-            group.sort(Comparator.comparingDouble((CreatedItem item) -> {
-                double w = parseDim(item.getSize(), 0);
-                double h = parseDim(item.getSize(), 1);
-                return w * h;
-            }).reversed());
-
-            // 3b) Előkészítjük a Rect-eket és idMap‑et
-            List<Rect> toPlace = new ArrayList<>();
-            List<Rect> originalToPlace = new ArrayList<>(toPlace);
-            Map<Integer, CreatedItem> idMap = new HashMap<>();
-            int rid = 0;
-            for (CreatedItem ci : group) {
-                int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-                double rawW = parseDim(ci.getSize(), 0);
-                double rawH = parseDim(ci.getSize(), 1);
-                double w = rawW + 2 * padding;
-                double h = rawH + 2 * padding;
-                boolean canRotate = Boolean.TRUE.equals(color.getRotable())
-                                || Boolean.TRUE.equals(ci.isRotable());
-                for (int i = 0; i < qty; i++) {
-                    toPlace.add(new Rect(rid, 0, 0, w, h, canRotate));
-                    idMap.put(rid, ci);
-                    rid++;
-                }
-            }
-
-            // 3c) Full‑sheet logika (ismétlődően amíg van el nem helyezett)
             double sheetW = parseDim(color.getDimension(), 1);
             double sheetH = parseDim(color.getDimension(), 0);
             if (sheetW <= 0 || sheetH <= 0) {
@@ -101,31 +67,51 @@ public class TableOptimizationService {
             }
 
             List<CreatedTables> tables = createdTablesRepository.findByWorkAndColor(work, color);
-            AtomicInteger tableIndex = new AtomicInteger(0);
+            final AtomicInteger tableIndex = new AtomicInteger(0);
             Supplier<CreatedTables> nextTable = () -> {
                 int idx = tableIndex.getAndIncrement();
                 if (idx < tables.size()) {
-                    CreatedTables ex = tables.get(idx);
-                    ex.setPrice(color.getPrice() != null ? color.getPrice() : 0.0);
-                    createdTablesRepository.save(ex);
-                    log.info("Reusing FULL table {} – updated price", ex.getId());
-                    return ex;
+                    CreatedTables existing = tables.get(idx);
+                    double updatedPrice = color.getPrice() != null ? color.getPrice() : 0.0;
+                    existing.setPrice(updatedPrice);
+                    createdTablesRepository.save(existing);
+                    log.info("Reusing table {} – updated price to {}", existing.getId(), updatedPrice);
+                    return existing;
                 } else {
-                    CreatedTables nt = createdTablesRepository.save(
-                        createNewTable(work, color, color.getDimension())
-                    );
-                    tables.add(nt);
-                    return nt;
+                    CreatedTables t = createNewTable(work, color, color.getDimension());
+                    t = createdTablesRepository.save(t);
+                    tables.add(t);
+                    return t;
                 }
             };
 
-            while (!toPlace.isEmpty()) {
-                CreatedTables ct = nextTable.get();
-                resultTables.add(ct);
-                log.info("Using FULL table ID {} for color {}", ct.getId(), color.getColorId());
+            List<Rect> toPlace = new ArrayList<>();
+            Map<Integer, CreatedItem> idMap = new HashMap<>();
+            int rid = 0;
+            for (CreatedItem item : group) {
+                int qty = Optional.ofNullable(item.getQty()).orElse(1);
+                double rawW = parseDim(item.getSize(), 0);
+                double rawH = parseDim(item.getSize(), 1);
+                double w = rawW + 2 * padding;
+                double h = rawH + 2 * padding;
+                boolean canRotate = Boolean.TRUE.equals(color.getRotable()) || Boolean.TRUE.equals(item.isRotable());
+                log.info("Item {}: size={}x{}, qty={}, canRotate={}", item.getItemId(), rawW, rawH, qty, canRotate);
+                for (int i = 0; i < qty; i++) {
+                    toPlace.add(new Rect(rid, 0, 0, w, h, canRotate));
+                    idMap.put(rid, item);
+                    rid++;
+                }
+            }
 
-                double[] skyline = new double[(int) Math.ceil(sheetW)];
+            while (!toPlace.isEmpty()) {
+                CreatedTables currentTable = nextTable.get();
+                resultTables.add(currentTable);
+                log.info("Using table ID {} for color {}", currentTable.getId(), color.getColorId());
+
+                int skylineWidth = (int) Math.ceil(sheetW);
+                double[] skyline = new double[skylineWidth];
                 Arrays.fill(skyline, 0);
+
                 List<Rect> placed = new ArrayList<>();
                 List<Rect> remaining = new ArrayList<>();
 
@@ -133,21 +119,23 @@ public class TableOptimizationService {
                     boolean placedFlag = false;
                     double bestY = Double.MAX_VALUE;
                     int bestX = -1;
-                    boolean usedRot = false;
+                    boolean usedRotation = false;
 
-                    for (boolean tryRot : new boolean[]{false, true}) {
-                        if (tryRot && !r.rotated) continue;
-                        double ww = tryRot ? r.height : r.width;
-                        double hh = tryRot ? r.width : r.height;
-                        for (int x = 0; x <= sheetW - ww; x++) {
+                    for (boolean tryRotated : new boolean[]{false, true}) {
+                        if (tryRotated && !r.rotated) continue;
+
+                        double w = tryRotated ? r.height : r.width;
+                        double h = tryRotated ? r.width : r.height;
+
+                        for (int x = 0; x <= sheetW - w; x++) {
                             double y = 0;
-                            for (int i = 0; i < (int) ww; i++) {
+                            for (int i = 0; i < (int) w; i++) {
                                 y = Math.max(y, skyline[x + i]);
                             }
-                            if (y + hh <= sheetH && y < bestY && !overlaps(x, y, ww, hh, placed)) {
+                            if (y + h <= sheetH && y < bestY && !overlaps(x, y, w, h, placed)) {
                                 bestY = y;
                                 bestX = x;
-                                usedRot = tryRot;
+                                usedRotation = tryRotated;
                                 placedFlag = true;
                             }
                         }
@@ -157,12 +145,12 @@ public class TableOptimizationService {
                     if (placedFlag) {
                         r.x = bestX;
                         r.y = bestY;
-                        if (usedRot) {
+                        if (usedRotation) {
                             double tmp = r.width;
                             r.width = r.height;
                             r.height = tmp;
                         }
-                        r.rotated = usedRot;
+                        r.rotated = usedRotation;
                         for (int i = 0; i < (int) r.width; i++) {
                             skyline[bestX + i] = r.y + r.height;
                         }
@@ -172,237 +160,23 @@ public class TableOptimizationService {
                     }
                 }
 
-                // mentjük a pozíciókat a DB‑be
                 for (Rect r : placed) {
-                    CreatedItem ci = idMap.get(r.id);
-                    String pos = String.format("[%.0f,%.0f,%d,%d]",
-                        r.x, r.y, r.rotated ? 0 : 1, ct.getId()
-                    );
-                    ci.setTablePosition(
-                        (ci.getTablePosition() == null || ci.getTablePosition().isEmpty())
-                        ? pos
-                        : ci.getTablePosition() + "," + pos
-                    );
-                    ci.setTableRotation(String.valueOf(r.rotated ? 0 : 1));
-                    ci.setTable(ct);
-                    createdItemRepository.save(ci);
+                    CreatedItem it = idMap.get(r.id);
+                    String pos = String.format("[%.0f,%.0f,%d,%d]", r.x, r.y, r.rotated ? 0 : 1, currentTable.getId());
+                    String prev = it.getTablePosition();
+                    it.setTablePosition((prev == null || prev.isEmpty()) ? pos : prev + "," + pos);
+                    it.setTableRotation(String.valueOf(r.rotated ? 0 : 1));
+                    it.setTable(currentTable);
+                    createdItemRepository.save(it);
                 }
-
                 toPlace = remaining;
             }
-
-            // 3d) Split‑sheet logika a maradékokra
-       String splitDim = color.getSplitDimension();
-       if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-           // helyreállítjuk a teljes listát
-           toPlace.clear();
-           for (Rect r : originalToPlace) {
-               // ha Rect-ben nincs copy(), klónozd így:
-               toPlace.add(new Rect(r.id, 0, 0, r.width, r.height, r.rotated));
-           }
-           // és csomagolunk split‑táblákra, amíg üres nem lesz
-           while (!toPlace.isEmpty()) {
-               CreatedTables splitTable = createdTablesRepository.save(
-                   createNewTable(work, color, splitDim)
-               );
-               resultTables.add(splitTable);
-               log.info("Created SPLIT table ID {} for all items", splitTable.getId());
-               applySplitPacking(splitTable, toPlace, idMap, padding);
-           }
-       }
         }
 
-        // 4) Végső árösszeg és mentés
-        double totalWoodPrice = resultTables.stream()
-            .mapToDouble(CreatedTables::getPrice)
-            .sum();
+        double totalWoodPrice = resultTables.stream().mapToDouble(CreatedTables::getPrice).sum();
         work.setWoodPrice(totalWoodPrice);
         workRepository.save(work);
-
         return resultTables;
-    }
-*/
-
-@Transactional
-public List<CreatedTables> generateTables(Work workParam, Long seed) {
-    log.info("Called generateTables for Work ID: {}, with seed: {}", workParam.getWorkId(), seed);
-    Work work = workRepository.getWorkById(workParam.getWorkId());
-    long effectiveSeed = (seed != null) ? seed : System.currentTimeMillis();
-
-    // 1) Tisztítás
-    List<CreatedItem> items = createdItemRepository.findByWork(work);
-    for (CreatedItem item : items) {
-        item.setTablePosition("");
-        item.setTableRotation(null);
-        item.setTable(null);
-        createdItemRepository.save(item);
-    }
-
-    // 2) Csoportosítás szín szerint
-    Map<Color, List<CreatedItem>> itemsByColor = new LinkedHashMap<>();
-    for (CreatedItem item : items) {
-        if (item.getColor() == null
-         || invalidDim(item.getColor().getDimension())
-         || invalidDim(item.getSize())) {
-            log.warn("Skipping invalid item {}", item.getItemId());
-            continue;
-        }
-        itemsByColor.computeIfAbsent(item.getColor(), c -> new ArrayList<>()).add(item);
-    }
-
-    List<CreatedTables> resultTables = new ArrayList<>();
-    double padding = 3.0;
-
-    // 3) Színcsoportonként
-    for (Map.Entry<Color, List<CreatedItem>> e : itemsByColor.entrySet()) {
-        Color color = e.getKey();
-        List<CreatedItem> group = e.getValue();
-
-        // 3a) Rendezés terület szerint csökkenőben
-        group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
-            double w = parseDim(ci.getSize(), 1);
-            double h = parseDim(ci.getSize(), 0);
-            return w * h;
-        }).reversed());
-
-        // 3b) Rect-ek előállítása
-        List<Rect> allRects = new ArrayList<>();
-        Map<Integer,CreatedItem> idMap = new HashMap<>();
-        int rid = 0;
-        for (CreatedItem ci : group) {
-            int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-            double rawW = parseDim(ci.getSize(), 1) + 2 * padding;
-            double rawH = parseDim(ci.getSize(), 0) + 2 * padding;
-            boolean canRotate = Boolean.TRUE.equals(color.getRotable()) || Boolean.TRUE.equals(ci.isRotable());
-            for (int i = 0; i < qty; i++) {
-                allRects.add(new Rect(rid, 0, 0, rawW, rawH, canRotate));
-                idMap.put(rid, ci);
-                rid++;
-            }
-        }
-
-        // 3c) Full‑sheet pakolás
-        double sheetW = parseDim(color.getDimension(), 0);
-        double sheetH = parseDim(color.getDimension(), 1);
-        if (sheetW <= 0 || sheetH <= 0) {
-            throw new IllegalArgumentException("Invalid sheet dims: " + color.getDimension());
-        }
-        List<Rect> toPack = new ArrayList<>(allRects);
-        while (!toPack.isEmpty()) {
-            // minden táblához új packer
-            MaxRectsBinPack packer = new MaxRectsBinPack(sheetW, sheetH, effectiveSeed);
-            CreatedTables tbl = createdTablesRepository.save(
-                createNewTable(work, color, color.getDimension())
-            );
-            resultTables.add(tbl);
-            log.info("Using FULL sheet ID {}", tbl.getId());
-
-            // packolás és mentés
-            List<Rect> placed = packer.insert(toPack, "BestAreaFit");
-            for (Rect r : placed) {
-                CreatedItem ci = idMap.get(r.id);
-                String pos = String.format("[%.0f,%.0f,%d,%d]", r.x, r.y, r.rotated?0:1, tbl.getId());
-                ci.setTablePosition(ci.getTablePosition().isEmpty() ? pos : ci.getTablePosition()+","+pos);
-                ci.setTableRotation(String.valueOf(r.rotated?0:1));
-                ci.setTable(tbl);
-                createdItemRepository.save(ci);
-            }
-            toPack.removeAll(placed);
-        }
-
-        // 3d) Split‑sheet pakolás (ha van splitDim)
-        String splitDim = color.getSplitDimension();
-        if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-            double splitW = parseDim(splitDim, 1);
-            double splitH = parseDim(splitDim, 0);
-            List<Rect> toSplit = new ArrayList<>(allRects);
-            while (!toSplit.isEmpty()) {
-                MaxRectsBinPack packer = new MaxRectsBinPack(splitW, splitH, effectiveSeed);
-                CreatedTables st = createdTablesRepository.save(
-                    createNewTable(work, color, splitDim)
-                );
-                resultTables.add(st);
-                log.info("Using SPLIT sheet ID {}", st.getId());
-
-                List<Rect> placed = packer.insert(toSplit, "BestAreaFit");
-                for (Rect r : placed) {
-                    CreatedItem ci = idMap.get(r.id);
-                    String pos = String.format("[%.0f,%.0f,%d,%d]", r.x, r.y, r.rotated?0:1, st.getId());
-                    ci.setTablePosition(ci.getTablePosition().isEmpty() ? pos : ci.getTablePosition()+","+pos);
-                    ci.setTableRotation(String.valueOf(r.rotated?0:1));
-                    ci.setTable(st);
-                    createdItemRepository.save(ci);
-                }
-                toSplit.removeAll(placed);
-            }
-        }
-    }
-
-    // 4) Árösszeg és mentés
-    double total = resultTables.stream().mapToDouble(CreatedTables::getPrice).sum();
-    work.setWoodPrice(total);
-    workRepository.save(work);
-    return resultTables;
-}
-
-
-
-
-
-
-    private void applySplitPacking(CreatedTables table, List<Rect> rects, Map<Integer,CreatedItem> idMap, double padding) {
-        String splitDim = table.getSize();
-        double splitW = parseDim(splitDim, 1);
-        double splitH = parseDim(splitDim, 0);
-        double[] skyline = new double[(int)Math.ceil(splitW)];
-        Arrays.fill(skyline, 0);
-        List<Rect> placed = new ArrayList<>();
-        List<Rect> leftover = new ArrayList<>();
-        for (Rect r : rects) {
-            boolean placedFlag = false;
-            double bestY = Double.MAX_VALUE;
-            int bestX = -1;
-            boolean usedRot = false;
-            for (boolean tryRot : new boolean[]{false,true}) {
-                if (tryRot && !r.rotated) continue;
-                double ww = tryRot ? r.height : r.width;
-                double hh = tryRot ? r.width  : r.height;
-                for (int x = 0; x <= splitW - ww; x++) {
-                    double y = 0;
-                    for (int i = 0; i < (int)ww; i++) y = Math.max(y, skyline[x+i]);
-                    if (y+hh <= splitH && y < bestY && !overlaps(x,y,ww,hh,placed)) {
-                        bestY=y; bestX=x; usedRot=tryRot; placedFlag=true;
-                    }
-                }
-                if (placedFlag) break;
-            }
-            if (placedFlag) {
-                r.x=bestX; r.y=bestY;
-                if (usedRot) { double tmp=r.width; r.width=r.height; r.height=tmp; }
-                r.rotated=usedRot;
-                for (int i=0;i<(int)r.width;i++) skyline[bestX+i]=r.y+r.height;
-                placed.add(r);
-            } else {
-                leftover.add(r);
-           }
-       }
-        // pozíciók mentése a DB-be
-        for (Rect r : placed) {
-            CreatedItem ci = idMap.get(r.id);
-            String pos = String.format("[%.0f,%.0f,%d,%d]",
-                r.x, r.y, r.rotated?0:1, table.getId()
-            );
-            ci.setTablePosition(
-                ci.getTablePosition()==null||ci.getTablePosition().isEmpty()
-                ? pos : ci.getTablePosition()+","+pos
-            );
-            ci.setTableRotation(String.valueOf(r.rotated?0:1));
-            ci.setTable(table);
-            createdItemRepository.save(ci);
-        }
-        // ha maradtak elemek, új tábla(ka)t indíthatunk...
-                rects.clear();
-        rects.addAll(leftover);
     }
 
     private boolean overlaps(double x, double y, double w, double h, List<Rect> placed) {
