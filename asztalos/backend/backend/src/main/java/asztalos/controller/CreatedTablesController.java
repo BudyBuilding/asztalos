@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import asztalos.dto.CreatedTablesDto;
 import asztalos.model.CreatedTables;
 import asztalos.model.User;
 import asztalos.model.Work;
@@ -52,17 +53,18 @@ public class CreatedTablesController {
     }
 
     @GetMapping
-    public List<CreatedTables> findAll() {
+    public List<CreatedTablesDto> findAll() {
         return CreatedtableService.findAll().stream()
                                 .filter(this::hasItems)
+                                .map(this::toDto)
                                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CreatedTables> getCreatedTablesById(@PathVariable Long id) {
+    public ResponseEntity<CreatedTablesDto> getCreatedTablesById(@PathVariable Long id) {
         Optional<CreatedTables> tableOpt = CreatedtableService.findById(id);
         if (tableOpt.isPresent() && hasItems(tableOpt.get())) {
-            return ResponseEntity.ok(tableOpt.get());
+            return ResponseEntity.ok(toDto(tableOpt.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -136,7 +138,7 @@ public class CreatedTablesController {
             return ResponseEntity.status(404).build();
         }
 
-        List<CreatedTables> Createdtables;
+        List<CreatedTablesDto> Createdtables;
         if (currentUser.getRole().equals("admin") || 
             currentUser.getRole().equals("companyAdmin") ||
             currentUser.getRole().equals("companyUser") ||
@@ -144,6 +146,7 @@ public class CreatedTablesController {
                 ) {
             Createdtables = CreatedtableService.findByWork(work).stream()
                                 .filter(this::hasItems)
+                                .map(this::toDto)
                                 .collect(Collectors.toList());
         } else {
                  return ResponseEntity.status(403).build();
@@ -152,4 +155,17 @@ public class CreatedTablesController {
 
         return ResponseEntity.ok(Createdtables);
     }
+
+    private CreatedTablesDto toDto(CreatedTables ct) {
+    CreatedTablesDto d = new CreatedTablesDto();
+    d.setTableId(ct.getId());
+    d.setPrice(ct.getPrice());
+    d.setSize(ct.getSize());
+    d.setLastUpdateDate(ct.getLastUpdateDate());
+    d.setWork(new CreatedTablesDto.WorkOnly(ct.getWork().getWorkId()));
+    d.setColor(new CreatedTablesDto.ColorOnly(ct.getColor().getColorId()));
+    return d;
 }
+
+}
+
