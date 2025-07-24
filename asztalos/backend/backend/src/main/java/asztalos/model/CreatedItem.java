@@ -152,7 +152,7 @@ public String toString() {
     }
 
     public String getSize() {
-        return size;
+        return this.size;
     }
 
     public void setSize(String size) {

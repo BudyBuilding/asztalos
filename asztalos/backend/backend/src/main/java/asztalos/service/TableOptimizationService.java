@@ -65,6 +65,12 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         Color color = entry.getKey();
         List<CreatedItem> group = entry.getValue();
 
+       group.sort(Comparator.comparingDouble((CreatedItem item) -> {
+           double w = parseDim(item.getSize(), 0);
+           double h = parseDim(item.getSize(), 1);
+           return w * h;
+       }).reversed());
+
         // 3a) Előkészítjük a Rect-eket és idMap‑et
         List<Rect> toPlace = new ArrayList<>();
         Map<Integer, CreatedItem> idMap = new HashMap<>();
@@ -249,6 +255,12 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
                 createdItemRepository.save(ci);
             }
             toPlace = remaining;
+        }
+                if (toPlace.isEmpty() && !resultTables.isEmpty()
+            && color.getSplitDimension() != null
+            && !usedSplit) {
+            CreatedTables lastTable = resultTables.get(resultTables.size() - 1);
+            log.info("Attempting split optimization on last table ID {}", lastTable.getId());
         }
     }}
 
