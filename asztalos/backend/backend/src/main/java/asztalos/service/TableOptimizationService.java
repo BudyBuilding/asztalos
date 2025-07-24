@@ -260,8 +260,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
 
         // 3a) Rendezés terület szerint csökkenőben
         group.sort(Comparator.comparingDouble((CreatedItem ci) -> {
-            double w = parseDim(ci.getSize(), 0);
-            double h = parseDim(ci.getSize(), 1);
+            double w = parseDim(ci.getSize(), 1);
+            double h = parseDim(ci.getSize(), 0);
             return w * h;
         }).reversed());
 
@@ -271,8 +271,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         int rid = 0;
         for (CreatedItem ci : group) {
             int qty = Optional.ofNullable(ci.getQty()).orElse(1);
-            double rawW = parseDim(ci.getSize(), 0) + 2 * padding;
-            double rawH = parseDim(ci.getSize(), 1) + 2 * padding;
+            double rawW = parseDim(ci.getSize(), 1) + 2 * padding;
+            double rawH = parseDim(ci.getSize(), 0) + 2 * padding;
             boolean canRotate = Boolean.TRUE.equals(color.getRotable()) || Boolean.TRUE.equals(ci.isRotable());
             for (int i = 0; i < qty; i++) {
                 allRects.add(new Rect(rid, 0, 0, rawW, rawH, canRotate));
@@ -313,8 +313,8 @@ public List<CreatedTables> generateTables(Work workParam, Long seed) {
         // 3d) Split‑sheet pakolás (ha van splitDim)
         String splitDim = color.getSplitDimension();
         if (splitDim != null && splitDim.startsWith("[") && splitDim.contains(",")) {
-            double splitW = parseDim(splitDim, 0);
-            double splitH = parseDim(splitDim, 1);
+            double splitW = parseDim(splitDim, 1);
+            double splitH = parseDim(splitDim, 0);
             List<Rect> toSplit = new ArrayList<>(allRects);
             while (!toSplit.isEmpty()) {
                 MaxRectsBinPack packer = new MaxRectsBinPack(splitW, splitH, effectiveSeed);
