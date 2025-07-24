@@ -14,5 +14,4 @@ import asztalos.model.WorkObject;
 public interface CreatedItemRepository extends JpaRepository<CreatedItem, Long> {
     public List<CreatedItem> findByObject(WorkObject object);
     public List<CreatedItem> findByWork(Work work);
-    long countByTable(CreatedTables table);
 }
