@@ -60,28 +60,30 @@ public class MaxRectsBinPack {
                 }
             }
 
-            if (bestRect != null) {
-                // Place the rectangle
-                rect.x = bestRect.x;
-                rect.y = bestRect.y;
-                rect.rotated = bestRotated;
-                if (bestRotated) {
-                    double temp = rect.width;
-                    rect.width = rect.height;
-                    rect.height = temp;
-                }
-                // Dupla ellenőrzés az átfedésre
-                if (overlapsWithPlaced(rect)) {
-                    System.out.println("Unexpected overlap after placement for rect ID " + rect.id);
+  if (bestRect != null) {
+                // 1) Candidate előkészítése
+                Rect candidate = new Rect(
+                    rect.id,
+                    bestRect.x, bestRect.y,
+                    bestRotated ? rect.height : rect.width,
+                    bestRotated ? rect.width  : rect.height,
+                    bestRotated
+                );
+                // 2) Dupla overlap‑ellenőrzés
+                if (overlapsWithPlaced(candidate)) {
                     continue;
                 }
-                System.out.println("Placed rect ID " + rect.id + " at [" + rect.x + "," + rect.y + "], size=[" + rect.width + "x" + rect.height + "], rotated=" + rect.rotated);
+                // 3) Véglegesítés
+                rect.x = candidate.x;
+                rect.y = candidate.y;
+                rect.width  = candidate.width;
+                rect.height = candidate.height;
+                rect.rotated= candidate.rotated;
                 placed.add(rect);
                 placedRectangles.add(rect);
                 splitFreeRect(bestRect, rect);
                 pruneFreeList();
             } else {
-                System.out.println("Could not place rect ID " + rect.id + ", size=[" + rect.width + "x" + rect.height + "]");
             }
         }
         return placed;
@@ -134,38 +136,41 @@ public class MaxRectsBinPack {
     }
 
     private void splitFreeRect(Rect free, Rect placed) {
+        if (!isContainedIn(placed, free)) {
+            return;
+        }
         freeRectangles.remove(free);
 
-        double freeRight = free.x + free.width;
-        double freeBottom = free.y + free.height;
-        double placedRight = placed.x + placed.width;
-        double placedBottom = placed.y + placed.height;
+    double freeRight   = free.x + free.width;
+    double freeBottom  = free.y + free.height;
+    double placedRight = placed.x + placed.width;
+    double placedBottom= placed.y + placed.height;
 
-        if (placedRight < freeRight) {
-            Rect rightRect = new Rect(0, placedRight, free.y, freeRight - placedRight, free.height, false);
-            if (rightRect.width > 0 && rightRect.height > 0) {
-                freeRectangles.add(rightRect);
-            }
-        }
-        if (placed.x > free.x) {
-            Rect leftRect = new Rect(0, free.x, free.y, placed.x - free.x, free.height, false);
-            if (leftRect.width > 0 && leftRect.height > 0) {
-                freeRectangles.add(leftRect);
-            }
-        }
-        if (placedBottom < freeBottom) {
-            Rect bottomRect = new Rect(0, free.x, placedBottom, free.width, freeBottom - placedBottom, false);
-            if (bottomRect.width > 0 && bottomRect.height > 0) {
-                freeRectangles.add(bottomRect);
-            }
-        }
-        if (placed.y > free.y) {
-            Rect topRect = new Rect(0, free.x, free.y, free.width, placed.y - free.y, false);
-            if (topRect.width > 0 && topRect.height > 0) {
-                freeRectangles.add(topRect);
-            }
-        }
+    // jobboldali fragment
+    if (placedRight < freeRight) {
+        double w = freeRight - placedRight;
+        Rect rightRect = new Rect(0, placedRight, free.y, w, free.height, false);
+        if (w > 0 && free.height > 0) freeRectangles.add(rightRect);
     }
+    // baloldali fragment
+    if (placed.x > free.x) {
+        double w = placed.x - free.x;
+        Rect leftRect = new Rect(0, free.x, free.y, w, free.height, false);
+        if (w > 0 && free.height > 0) freeRectangles.add(leftRect);
+    }
+    // alsó fragment
+    if (placedBottom < freeBottom) {
+        double h = freeBottom - placedBottom;
+        Rect bottomRect = new Rect(0, free.x, placedBottom, free.width, h, false);
+        if (free.width > 0 && h > 0) freeRectangles.add(bottomRect);
+    }
+    // felső fragment
+    if (placed.y > free.y) {
+        double h = placed.y - free.y;
+        Rect topRect = new Rect(0, free.x, free.y, free.width, h, false);
+        if (free.width > 0 && h > 0) freeRectangles.add(topRect);
+    }
+}
 
     private void pruneFreeList() {
         for (int i = 0; i < freeRectangles.size(); i++) {
