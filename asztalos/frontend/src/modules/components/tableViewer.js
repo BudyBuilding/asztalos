@@ -62,6 +62,10 @@ const TableViewer = () => {
   const [objects, setObjects] = useState([]);
   useEffect(() => {
     const allObjects = dispatch(getAllObjects());
+    console.log(
+      "allObjects: ",
+      allObjects.filter((o) => o.work?.workId === +workId)
+    );
     setObjects(allObjects.filter((o) => o.work?.workId === +workId));
   }, [workId]);
 
@@ -260,9 +264,10 @@ const TableViewer = () => {
     }
   };
 
-  const filteredTables = selectedColorId
-    ? createdTables.filter((t) => t.color?.colorId === selectedColorId)
-    : createdTables;
+  const filteredTables =
+    selectedColorId !== null
+      ? createdTables.filter((t) => t.color?.colorId === selectedColorId)
+      : createdTables;
 
   const currentTable =
     filteredTables.length > 0
@@ -429,6 +434,7 @@ const TableViewer = () => {
                 handleCreatedItemChange(idx, { colorId: newCid });
               }}
               onDelete={handleDeleteItem}
+              objects={objects}
             />
           </div>
         </div>
@@ -480,12 +486,32 @@ const TableViewerComponent = ({
   )?.imageData;
   const [tableInstances, setTableInstances] = useState([]);
   const { workIdParam } = useParams();
-  const showNav = createdTables.length > 1;
+  const filteredTables = selectedColorId
+    ? createdTables.filter((t) => t.color?.colorId === selectedColorId)
+    : createdTables;
+
+  const showNav = filteredTables.length > 1;
   const allWorks = dispatch(getAllWorks());
   const selectedWork = allWorks.find((w) => w.workId == workId);
   const isOrdered = selectedWork?.isOrdered;
-
+  const allColors = useSelector((state) =>
+    Array.isArray(state.colors) ? state.colors : Object.values(state.colors)
+  );
   const currentUser = useSelector((state) => state.auth.user);
+  // a komponens elején, az effectek fölött
+  const tablePalette = useMemo(() => {
+    const map = new Map();
+    createdTables.forEach((t) => {
+      const cid = t.color?.colorId;
+      if (cid != null) {
+        // megkeressük a store‑ból a teljes color objektumot
+        const fullColor = allColors.find((c) => c.colorId === cid);
+        if (fullColor) map.set(cid, fullColor);
+      }
+    });
+    return Array.from(map.values());
+  }, [createdTables, allColors]);
+  console.log("tablePalette: ", tablePalette);
 
   const cannotEdit =
     (currentUser.role === "user" && isOrdered) ||
@@ -944,13 +970,14 @@ const TableViewerComponent = ({
     if (posIdx < 0) return;
 
     // ebből a pozícióból olvassuk ki a koordinátákat
-    const positionToMove = selectedItem.processedPositions[posIdx];
-    const { x, y, rotation } = positionToMove;
-    const isHorizontal = rotation === 1;
-
+    const pos = selectedItem.processedPositions.find(
+      (p) => p.instanceId === instanceId
+    );
+    if (!pos) return;
+    const { rotation } = pos;
     const [origW, origH] = JSON.parse(selectedItem.size || "[0,0]");
-    const itemWidth = isHorizontal ? origH : origW;
-    const itemHeight = isHorizontal ? origW : origH;
+    const itemWidth = rotation === 1 ? origH : origW;
+    const itemHeight = rotation === 1 ? origW : origH;
 
     // cél tábla mérete
     const targetTable = editedTables.find((t) => t.id === targetTableId);
@@ -1049,20 +1076,12 @@ const TableViewerComponent = ({
             border: "1px solid #ccc"
           }}
         >
-          <option value="0">Összes szín</option>
-          {[
-            ...new Set(
-              createdTables.map((t) => t.color?.colorId).filter(Boolean)
-            )
-          ].map((cid) => {
-            const name = createdTables.find((t) => t.color?.colorId === cid)
-              .color.name;
-            return (
-              <option key={cid} value={cid}>
-                {name}
-              </option>
-            );
-          })}
+          <option value="">Összes szín</option>
+          {tablePalette.map((c) => (
+            <option key={c.colorId} value={c.colorId}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </div>
       <div style={{ position: "absolute", top: "10px", right: "10px" }}>
@@ -1237,19 +1256,21 @@ const TableViewerComponent = ({
                       zIndex: 100
                     }}
                   >
-                    {editedTables.map((t) => (
-                      <div
-                        key={t.id}
-                        onClick={() => handleMoveToTable(t.id)}
-                        style={{
-                          padding: "8px 16px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #eee"
-                        }}
-                      >
-                        Tábla: {t.id}
-                      </div>
-                    ))}
+                    {editedTables
+                      .filter((t) => t.color?.colorId === table.color?.colorId) // csak azonos szín
+                      .map((t) => (
+                        <div
+                          key={t.id}
+                          onClick={() => handleMoveToTable(t.id)}
+                          style={{
+                            padding: "8px 16px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #eee"
+                          }}
+                        >
+                          Tábla: {t.id}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>

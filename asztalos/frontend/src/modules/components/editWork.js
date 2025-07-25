@@ -105,25 +105,22 @@ function EditWork() {
   // (vagy akár közvetlenül a helyén)
   const parseRoom = (roomStr) => {
     if (!roomStr) {
-      // ha nincs megadva, akkor a default [2500,5000,5000] mm → [2.5,5,5] m
-      return { h: 2.5, w: 5, d: 5 };
+      // ha nincs megadva, tartsuk meg mm-ben a defaultot:
+      return { h: 2500, w: 5000, d: 5000 };
     }
-    const [hMm, wMm, dMm] = roomStr
+    const [h, w, d] = roomStr
       .slice(1, -1)
       .split(",")
       .map((n) => parseFloat(n) || 0);
-    // oszd el 1000‐rel, hogy méterben kapd vissza
-    return {
-      h: hMm / 1000,
-      w: wMm / 1000,
-      d: dMm / 1000
-    };
+    // megmarad mm-ben:
+    return { h, w, d };
   };
 
   const handleRoomChange = (axis, value) => {
     const num = parseFloat(value) || 0;
     const old = parseRoom(localWork.room);
     const next = { ...old, [axis]: num };
+    // összeállítjuk a mm‑es stringet
     const roomStr = `[${next.h},${next.w},${next.d}]`;
     // 1) frissítsd a helyi stétet
     setLocalWork((w) => ({ ...w, room: roomStr }));
@@ -176,7 +173,7 @@ function EditWork() {
     const itemColorIds = Array.from(
       new Set(
         createdItems
-          .map((it) => it.color.colorId)
+          .map((it) => it.color?.colorId)
           .filter((cid) => cid != null && cid !== -1)
       )
     );

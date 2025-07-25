@@ -40,6 +40,20 @@ export default function ModelViewer({
   const [objPosition, setObjPosition] = useState({ x: 0, y: 0, z: 0 }); // in mm
   const [objRotation, setObjRotation] = useState({ x: 0, y: 0, z: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [measureMode, setMeasureMode] = useState(false);
+  const [firstPick, setFirstPick] = useState(null);
+  const SNAP_THRESHOLD_MM = 50;
+  const [isSnappingEnabled, setIsSnappingEnabled] = useState(false);
+  const measureModeRef = useRef(measureMode);
+  const firstPickRef = useRef(firstPick);
+
+  // ha változik a state, tartsuk frissen a ref-eket:
+  useEffect(() => {
+    measureModeRef.current = measureMode;
+  }, [measureMode]);
+  useEffect(() => {
+    firstPickRef.current = firstPick;
+  }, [firstPick]);
 
   // store original position/rotation when opening modal
   const originalRef = useRef({
@@ -83,6 +97,71 @@ export default function ModelViewer({
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [dragging]);
+
+  function getCombinedBoundingInfo(root) {
+    const meshes = root.getChildMeshes();
+    if (meshes.length === 0) return null;
+
+    let combinedMin = meshes[0].getBoundingInfo().boundingBox.minimumWorld;
+    let combinedMax = meshes[0].getBoundingInfo().boundingBox.maximumWorld;
+
+    meshes.forEach((mesh) => {
+      const bounding = mesh.getBoundingInfo().boundingBox;
+      combinedMin = Vector3.Minimize(combinedMin, bounding.minimumWorld);
+      combinedMax = Vector3.Maximize(combinedMax, bounding.maximumWorld);
+    });
+
+    return {
+      minimum: combinedMin,
+      maximum: combinedMax
+    };
+  }
+
+  function snapObjectPosition(objPosition, selectedObjectId) {
+    const snapThreshold = SNAP_THRESHOLD_MM; // mm-ben marad
+    let snappedPosition = { ...objPosition };
+
+    const selectedRoot = groupRootsRef.current[selectedObjectId];
+    if (!selectedRoot) return snappedPosition;
+
+    const selectedBounding = getCombinedBoundingInfo(selectedRoot);
+    if (!selectedBounding) return snappedPosition;
+
+    const selectedSize = selectedBounding.maximum
+      .subtract(selectedBounding.minimum)
+      .scale(1000); // méter -> mm
+
+    const otherObjects = Object.entries(groupRootsRef.current).filter(
+      ([oid]) => parseInt(oid, 10) !== selectedObjectId
+    );
+
+    for (const [oid, root] of otherObjects) {
+      const bounding = getCombinedBoundingInfo(root);
+      if (!bounding) continue;
+
+      const size = bounding.maximum.subtract(bounding.minimum).scale(1000); // méter -> mm
+      const otherPosition = root.position.scale(1000); // méter -> mm
+
+      ["x", "y", "z"].forEach((axis) => {
+        // Szélek kiszámítása:
+        const selectedMin = objPosition[axis] - selectedSize[axis] / 2;
+        const selectedMax = objPosition[axis] + selectedSize[axis] / 2;
+        const otherMin = otherPosition[axis] - size[axis] / 2;
+        const otherMax = otherPosition[axis] + size[axis] / 2;
+
+        // Snap min-edge
+        if (Math.abs(selectedMin - otherMax) <= snapThreshold) {
+          snappedPosition[axis] = otherMax + selectedSize[axis] / 2;
+        }
+        // Snap max-edge
+        else if (Math.abs(selectedMax - otherMin) <= snapThreshold) {
+          snappedPosition[axis] = otherMin - selectedSize[axis] / 2;
+        }
+      });
+    }
+
+    return snappedPosition;
+  }
 
   // soften backdrop blur
   useEffect(() => {
@@ -129,7 +208,7 @@ export default function ModelViewer({
     );
     camera.attachControl(canvas, true);
     camera.minZ = 0.01;
-    camera.lowerRadiusLimit = 2;
+    camera.lowerRadiusLimit = 0;
     camera.upperRadiusLimit = 15;
     camera.wheelPrecision = 50;
     cameraRef.current = camera;
@@ -145,22 +224,83 @@ export default function ModelViewer({
       scene
     ).intensity = 0.3;
 
-    // a scene létrejötte után, például az engine.runRenderLoop() hívása elé:
-    scene.onPointerObservable.add((pointerInfo) => {
-      if (pointerInfo.type === PointerEventTypes.POINTERDOWN) {
-        const pick = pointerInfo.pickInfo;
-        // ha vagy nem ütöttünk el semmit, vagy nem box_ mesh-re kattintottunk:
-        if (!pick.hit || !pick.pickedMesh.name.startsWith("box_")) {
-          // töröljük az összes outline-t
-          Object.values(groupRootsRef.current).forEach((root) =>
-            root.getChildMeshes().forEach((m) => (m.renderOutline = false))
-          );
-          // töröljük a kiválasztást
-          setSelectedObjectId(null);
-          // ha nyitva a modal, zárjuk be visszaállítás nélkül
-          setIsModalOpen(false);
+    scene.onPointerObservable.add((pi) => {
+      if (pi.type !== PointerEventTypes.POINTERDOWN) return;
+      const pick = pi.pickInfo;
+      if (!pick.hit) return;
+
+      // ref-eket használva mindig a legfrissebb állapotot látjuk:
+      if (measureModeRef.current) {
+        const worldPos = pick.pickedPoint;
+        if (!worldPos) return;
+
+        const mmPos = {
+          x: worldPos.x * 1000,
+          y: worldPos.y * 1000,
+          z: worldPos.z * 1000
+        };
+
+        if (!firstPickRef.current) {
+          setFirstPick({ mesh: pick.pickedMesh.name, pos: mmPos });
+          return;
         }
+        // második pont → távolság
+        const { pos: p0 } = firstPickRef.current;
+        const dx = mmPos.x - p0.x;
+        const dy = mmPos.y - p0.y; // függőleges különbség
+        const dz = mmPos.z - p0.z;
+
+        // abszolút értékek
+        const absX = Math.abs(dx).toFixed(1);
+        const absY = Math.abs(dy).toFixed(1); // függőleges
+        const absZ = Math.abs(dz).toFixed(1);
+
+        // opcionálisan megadhatod a két pont közti teljes 3D-távolságot is:
+        const full3D = Math.sqrt(dx * dx + dy * dy + dz * dz).toFixed(1);
+
+        alert(
+          `Szélességen (X) a távolság: ${absX} mm\n` +
+            `Magasságban (Y) a távolság: ${absY} mm\n` +
+            `Mélységen (Z) a távolság: ${absZ} mm\n`
+        );
+        setFirstPick(null);
+        setMeasureMode(false);
+        return;
       }
+
+      // normál kattintás:
+      const name = pick.pickedMesh.name;
+      if (!name.startsWith("box_")) {
+        // törlés
+        Object.values(groupRootsRef.current).forEach((root) =>
+          root.getChildMeshes().forEach((m) => (m.renderOutline = false))
+        );
+        setSelectedObjectId(null);
+        setIsModalOpen(false);
+        return;
+      }
+      // box_ → modal
+      const oid = parseInt(name.split("_")[1], 10);
+      const root = groupRootsRef.current[oid];
+      if (!root) return;
+
+      // Használd az objektum jelenlegi valódi pozícióját és rotációját
+      originalRef.current = {
+        position: {
+          x: root.position.x * 1000,
+          y: root.position.y * 1000,
+          z: root.position.z * 1000
+        },
+        rotation: {
+          x: Math.round(Tools.ToDegrees(root.rotation.x)),
+          y: Math.round(Tools.ToDegrees(root.rotation.y)),
+          z: Math.round(Tools.ToDegrees(root.rotation.z))
+        }
+      };
+      // rotationt is feltöltöd …
+      setObjPosition(originalRef.current.position);
+      setObjRotation(originalRef.current.rotation);
+      setIsModalOpen(true);
     });
 
     /*
@@ -216,7 +356,14 @@ export default function ModelViewer({
     wallsRef.current = {};
 
     // room dims in meters
-    const { h: roomH, w: roomW, d: roomD } = roomSize;
+    //   const { h: roomH, w: roomW, d: roomD } = roomSize;
+
+    const MM_TO_M = 0.001;
+    const { h: roomH_mm, w: roomW_mm, d: roomD_mm } = roomSize;
+    const roomH = roomH_mm * MM_TO_M;
+    const roomW = roomW_mm * MM_TO_M;
+    const roomD = roomD_mm * MM_TO_M;
+
     const thin = 0.00001;
 
     // floor
@@ -360,7 +507,7 @@ export default function ModelViewer({
         );
 
         const mat = new StandardMaterial(`mat_${name}`, scene);
-        const col = usedColors.find((c) => c.colorId === item.color.colorId);
+        const col = usedColors.find((c) => c.colorId === item.color?.colorId);
         if (col) {
           const img = col.imageDataReduced || col.imageData;
           if (img)
@@ -379,6 +526,9 @@ export default function ModelViewer({
         mesh.actionManager.registerAction(
           new ExecuteCodeAction(ActionManager.OnLeftPickTrigger, () => {
             // clear existing outlines
+            if (measureModeRef.current) {
+              return;
+            }
             Object.values(groupRootsRef.current).forEach((rn) =>
               rn.getChildMeshes().forEach((m) => (m.renderOutline = false))
             );
@@ -430,12 +580,17 @@ export default function ModelViewer({
     if (!selectedObjectId) return;
     const root = groupRootsRef.current[selectedObjectId];
     if (!root) return;
+
+    const finalPosition = isSnappingEnabled
+      ? snapObjectPosition(objPosition, selectedObjectId)
+      : objPosition;
+
     root.position.set(
-      objPosition.x / 1000,
-      objPosition.y / 1000,
-      objPosition.z / 1000
+      finalPosition.x / 1000,
+      finalPosition.y / 1000,
+      finalPosition.z / 1000
     );
-  }, [objPosition, selectedObjectId]);
+  }, [objPosition, selectedObjectId, isSnappingEnabled]);
 
   // 5) apply rotation
   useEffect(() => {
@@ -515,13 +670,31 @@ export default function ModelViewer({
           <Form.Control
             key={ax}
             type="number"
+            step={1} /* explicit 1‑es lépésköz */
+            min={0} /* ha szeretnéd nullánál lejjebb semmiképp */
             size="sm"
             style={{ width: "4rem" }}
             value={roomSize[ax]}
-            onChange={(e) => onRoomSizeChange(ax, e.target.value)}
+            onChange={(e) => {
+              /* e.target.valueAsNumber közvetlenül Number‑t ad */
+              const v = e.target.valueAsNumber;
+              onRoomSizeChange(ax, isNaN(v) ? 0 : v);
+            }}
             placeholder={ax.toUpperCase()}
           />
         ))}
+        <div>
+          <Button
+            size="sm"
+            variant={measureMode ? "danger" : "secondary"}
+            onClick={() => {
+              setMeasureMode(!measureMode);
+              setFirstPick(null);
+            }}
+          >
+            {measureMode ? "Kilépés mérőmódból" : "Mérés"}
+          </Button>
+        </div>
       </div>
       <canvas
         ref={canvasRef}

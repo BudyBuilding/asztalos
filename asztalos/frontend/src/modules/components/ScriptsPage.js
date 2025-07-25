@@ -237,6 +237,24 @@ export default function ScriptsPage() {
     }
   };
 
+  const handleNameChange = (item, newName) => {
+    setPendingItems((prev) => {
+      const key = item.itemId > 0 ? item.itemId : item.tempId;
+      const idx = prev.findIndex(
+        (p) => (p.itemId > 0 ? p.itemId : p.tempId) === key
+      );
+      if (idx > -1) {
+        // már van pending módosítás erre az itemre → frissítjük
+        const copy = [...prev];
+        copy[idx] = { ...copy[idx], name: newName };
+        return copy;
+      } else {
+        // új pending módosítás
+        return [...prev, { ...item, name: newName }];
+      }
+    });
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -345,6 +363,7 @@ export default function ScriptsPage() {
       ...it,
       isPending: it.tempId != null,
       rawSize: it.size,
+      name: it.name,
       rawPosition: it.position.includes("?")
         ? [it.position]
         : extractRawList(it.position),
@@ -1751,6 +1770,7 @@ export default function ScriptsPage() {
               <thead>
                 <tr>
                   <th>Darabszám</th>
+                  <th>Név</th>
                   <th>Méretek</th>
                   <th>Pozíció</th>
                   <th>Forgatás</th>
@@ -1771,6 +1791,7 @@ export default function ScriptsPage() {
                   rawItems.map((it, i) => (
                     <tr key={i}>
                       <td>{it.qty}</td>
+                      <td>{it.name}</td>
                       <td>{it.rawSize}</td>
                       <td>{it.rawPosition.map((p) => `[${p}]`).join(", ")}</td>
                       <td>{it.rawRotation.map((r) => `[${r}]`).join(", ")}</td>

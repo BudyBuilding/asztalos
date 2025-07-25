@@ -20,7 +20,7 @@ export default function GeneratedItemsList({
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
       const cid =
-        item.color.colorId != null ? String(item.color.colorId) : "no-color";
+        item.color?.colorId != null ? String(item.color.colorId) : "no-color";
       acc[cid] = acc[cid] || {};
 
       const oid =

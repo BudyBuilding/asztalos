@@ -297,8 +297,8 @@ export default function ObjectViewer({
         );
 
         const mat = new StandardMaterial(`mat_${groupIdx}_${instIdx}`, scene);
-        if (item.colorId != null) {
-          const col = colors.find((c) => c.colorId === item.colorId);
+        if (item.color?.colorId != null) {
+          const col = colors.find((c) => c.colorId === item.color?.colorId);
           if (col) {
             const img = col.imageData;
             // self‑lit textúra, nem árnyékolódik:
