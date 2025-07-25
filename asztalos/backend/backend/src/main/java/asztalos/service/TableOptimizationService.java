@@ -60,7 +60,7 @@ public class TableOptimizationService {
             Color color = e.getKey();
             double sheetW = parseDim(color.getDimension(),1);
             double sheetH = parseDim(color.getDimension(),0);
-
+            log.info("Packing color={} on sheet {}×{}", color.getName(), sheetW, sheetH);
             // előre mentett táblák
             List<CreatedTables> saved = createdTablesRepository.findByWorkAndColor(work,color);
             AtomicInteger ti = new AtomicInteger(0);
@@ -98,8 +98,18 @@ public class TableOptimizationService {
             for (Rect r : rects) {
                 boolean placed=false;
                 for (TablePlacement tp : packs) {
-                    if (place(r,tp,sheetW,sheetH)) { placed=true; break; }
-                }
+                    List<Rect> list = tp.placed;
+                    for (int i = 0; i < list.size(); i++) {
+                        Rect a = list.get(i);
+                        for (int j = i + 1; j < list.size(); j++) {
+                        Rect b = list.get(j);
+                        if (overlaps(a.x, a.y, (int)Math.ceil(a.getW()), (int)Math.ceil(a.getH()), List.of(b))) {
+                            log.error("!!! OVERLAP DETECTED on table {} between rect {} and rect {}",
+                                    tp.table.getId(), a.id, b.id);
+                        }
+                        }
+                    }
+                    }
                 if (!placed) {
                     CreatedTables ct = nextTable.get();
                     result.add(ct);
@@ -138,8 +148,10 @@ public class TableOptimizationService {
         double[] skyline;
         List<Rect> placed = new ArrayList<>();
         TablePlacement(CreatedTables t, double sheetW) {
-            this.table = t;
+            this.table   = t;
             this.skyline = new double[(int)Math.ceil(sheetW)];
+            Arrays.fill(this.skyline, 0);
+            log.debug("New TablePlacement id={} skyline-width={}", t.getId(), skyline.length);
         }
     }
 
@@ -161,7 +173,9 @@ public class TableOptimizationService {
         }
         if(bestX<0) return false;
         r.x=bestX; r.y=bestY; r.rotated=bestRot;
-        for(int i=0;i<bestW;i++) tp.skyline[bestX+i]=bestY+bestH;
+        for (int i = 0; i < bestW; i++) {
+            tp.skyline[bestX + i] = bestY + bestH;
+        }
         tp.placed.add(r);
 
                 log.debug("Placed Rect id={} at ({},{}), rotated={}, size={}x{} on Table {}",
