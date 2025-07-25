@@ -99,22 +99,23 @@ public class TableOptimizationService {
             List<TablePlacement> packs = new ArrayList<>();
             for (Rect r : rects) {
                 boolean placed = false;
-                // először meglévő táblák
+                // először végigpróbáljuk a már létező táblákat
                 for (TablePlacement tp : packs) {
-                    if (placeMaxRects(r, tp)) {
+                    if (place(r, tp, sheetW, sheetH)) {
                         placed = true;
                         break;
                     }
                 }
-                // ha egyik sem tudta elhelyezni, új tábla
+                // ha egyik sem vette fel, akkor új táblát hozunk létre
                 if (!placed) {
                     CreatedTables ct = nextTable.get();
                     result.add(ct);
-                    TablePlacement tp = new TablePlacement(ct, sheetW, sheetH);
-                    placeMaxRects(r, tp);
+                    TablePlacement tp = new TablePlacement(ct, sheetW);
+                    place(r, tp, sheetW, sheetH);
                     packs.add(tp);
                 }
             }
+
                         String splitDim = color.getSplitDimension();
             if (splitDim != null && !invalidDim(splitDim)) {
                 double splitW = parseDim(splitDim, 1);
@@ -130,20 +131,23 @@ public class TableOptimizationService {
                 }
 
                 // Próbáljuk bepakolni őket a split méretű táblába
-                TablePlacement smallTp = new TablePlacement(lastTp.table, splitW, splitH);
+                TablePlacement smallTp = new TablePlacement(lastTp.table, splitW);
                 boolean allFit = true;
                 for (Rect r : testRects) {
-                    if (!placeMaxRects(r, smallTp)) {
+                    if (!place(r, smallTp, splitW, splitH)) {
                         allFit = false;
                         break;
                     }
                 }
+
                 if (allFit) {
+                    // Sikerült: cseréljük az utolsó TablePlacement tartalmát
+                    lastTp.skyline = smallTp.skyline;
                     lastTp.placed  = smallTp.placed;
+                    // Frissítsük a táblát splitDimension-re
                     lastTp.table.setSize(splitDim);
                     createdTablesRepository.save(lastTp.table);
                 }
-
             }
 
             // 3.3) Mentés DB-be
@@ -188,100 +192,95 @@ public class TableOptimizationService {
 
     // --- segédfüggvények és osztályok ---
 
-private static class FreeRect {
-    double x, y, w, h;
-    FreeRect(double x, double y, double w, double h) {
-        this.x=x; this.y=y; this.w=w; this.h=h;
-    }
-}
-
-private static class TablePlacement {
-    CreatedTables table;
-    List<FreeRect> freeRects = new ArrayList<>();
-    List<Rect> placed     = new ArrayList<>();
-    TablePlacement(CreatedTables t, double sheetW, double sheetH) {
-        this.table = t;
-        freeRects.add(new FreeRect(0, 0, sheetW, sheetH));
-    }
-}
-
-// új helyfoglaló
-private boolean placeMaxRects(Rect r, TablePlacement tp) {
-    class Choice { FreeRect fr; boolean rot; double waste; }
-    List<Choice> choices = new ArrayList<>();
-
-    for (FreeRect fr : tp.freeRects) {
-      for (boolean rot : new boolean[]{false, true}) {
-        if (rot && !r.canRotate) continue;
-        double rw = rot ? r.origH : r.origW;
-        double rh = rot ? r.origW : r.origH;
-        if (rw <= fr.w && rh <= fr.h) {
-          double wst = fr.w*fr.h - rw*rh;
-          choices.add(new Choice(){{
-            this.fr    = fr;
-            this.rot   = rot;
-            this.waste = wst;
-          }});
+    private static class TablePlacement {
+        CreatedTables table;
+        double[] skyline;
+        List<Rect> placed = new ArrayList<>();
+        TablePlacement(CreatedTables t, double sheetW) {
+            this.table   = t;
+            this.skyline = new double[(int)Math.ceil(sheetW)];
+            Arrays.fill(this.skyline, 0);
+            log.debug("New TablePlacement id={} skyline-width={}", t.getId(), skyline.length);
         }
-      }
     }
-    if (choices.isEmpty()) return false;
-    choices.sort(Comparator.comparingDouble(c -> c.waste));
-    Choice best = choices.get(0);
 
-    r.x       = best.fr.x;
-    r.y       = best.fr.y;
+// egy kis segédosztály a jelöltekhez
+private static class Candidate {
+    int x, w, h;
+    double y, waste;
+    boolean rot;
+    Candidate(int x, double y, int w, int h, boolean rot, double waste) {
+        this.x = x; this.y = y; this.w = w; this.h = h; this.rot = rot; this.waste = waste;
+    }
+}
+
+private boolean place(Rect r, TablePlacement tp, double sheetW, double sheetH) {
+    int maxX = (int)Math.floor(sheetW);
+    List<Candidate> candidates = new ArrayList<>();
+
+    // 1) gyűjtsük össze az összes elfogadható helyet
+    for (boolean rot : new boolean[]{false,true}) {
+        if (rot && !r.canRotate) continue;
+        int w = (int)Math.ceil(rot ? r.origH : r.origW);
+        int h = (int)Math.ceil(rot ? r.origW : r.origH);
+
+        for (int x = 0; x <= maxX - w; x++) {
+            double y = 0;
+            for (int i = 0; i < w; i++) {
+                y = Math.max(y, tp.skyline[x + i]);
+            }
+            if (y + h <= sheetH && !overlaps(x, y, w, h, tp.placed)) {
+                // kiszámoljuk, mennyi a hulladék: a teljes cella-terület minusz az eredeti terület
+                double waste = w * h - r.origW * r.origH;
+                candidates.add(new Candidate(x, y, w, h, rot, waste));
+            }
+        }
+    }
+
+    // 2) nincs egyetlen jó hely sem? akkor false
+    if (candidates.isEmpty()) return false;
+
+    // 3) válasszuk ki a legkisebb waste-pel bíró jelöltet
+    candidates.sort(Comparator.comparingDouble(c -> c.waste));
+    Candidate best = candidates.get(0);
+
+    // 4) helyezd el ténylegesen
+    r.x = best.x;
+    r.y = best.y;
     r.rotated = best.rot;
+    for (int i = 0; i < best.w; i++) {
+        tp.skyline[best.x + i] = best.y + best.h;
+    }
     tp.placed.add(r);
 
-    // split-eljárás
-    List<FreeRect> newFree = new ArrayList<>();
-    for (FreeRect fr : tp.freeRects) {
-      if (!intersect(fr, r)) {
-        newFree.add(fr);
-      } else {
-        // jobbra eső maradék
-        if (r.x + r.getW() < fr.x + fr.w) {
-          newFree.add(new FreeRect(
-            r.x + r.getW(), fr.y,
-            fr.x + fr.w - (r.x + r.getW()), fr.h));
-        }
-        // alatta eső maradék
-        if (r.y + r.getH() < fr.y + fr.h) {
-          newFree.add(new FreeRect(
-            fr.x, r.y + r.getH(),
-            fr.w, fr.y + fr.h - (r.y + r.getH())));
-        }
-      }
-    }
-    tp.freeRects = pruneFreeList(newFree);
+    log.debug("Placed Rect id={} at ({},{}), rotated={}, size={}x{} waste={}",
+        r.id, r.x, r.y, r.rotated, best.w, best.h, best.waste);
+
     return true;
 }
 
-
-
-
-private boolean intersect(FreeRect fr, Rect r) {
-    return !(r.x >= fr.x + fr.w || r.x + r.getW() <= fr.x || 
-             r.y >= fr.y + fr.h || r.y + r.getH() <= fr.y);
-}
-
-// kiszűri az egymást tartalmazó vagy átfedő freeRecteket, nehogy robbanjon a lista
-private List<FreeRect> pruneFreeList(List<FreeRect> list) {
-    List<FreeRect> out = new ArrayList<>(list);
-    for (int i = 0; i < out.size(); i++) {
-        for (int j = i+1; j < out.size(); j++) {
-            FreeRect a = out.get(i), b = out.get(j);
-            if (contains(a,b)) { out.remove(j--); }
-            else if (contains(b,a)) { out.remove(i--); break; }
+private boolean overlaps(int x, double y, int w, int h, List<Rect> placed) {
+    for (Rect p : placed) {
+        if (x < p.x + p.getW() &&
+            x + w > p.x &&
+            y < p.y + p.getH() &&
+            y + h > p.y) {
+            return true;
         }
     }
-    return out;
+    return false;
 }
-private boolean contains(FreeRect a, FreeRect b) {
-    return a.x <= b.x && a.y <= b.y && a.x + a.w >= b.x + b.w && a.y + a.h >= b.y + b.h;
-}
-
+    private boolean overlaps(Rect r, List<Rect> placed){
+    for(Rect p: placed){
+        if (r.x < p.x + p.getW() &&
+            r.x + r.getW() > p.x &&
+            r.y < p.y + p.getH() &&
+            r.y + r.getH() > p.y) {
+        return true;
+        }
+    }
+    return false;
+    }
 
     private boolean invalidDim(String d){
         return d==null||!d.startsWith("[")||!d.contains(",");
