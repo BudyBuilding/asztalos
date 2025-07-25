@@ -116,6 +116,40 @@ public class TableOptimizationService {
                 }
             }
 
+                        String splitDim = color.getSplitDimension();
+            if (splitDim != null && !invalidDim(splitDim)) {
+                double splitW = parseDim(splitDim, 1);
+                double splitH = parseDim(splitDim, 0);
+
+                TablePlacement lastTp = packs.get(packs.size() - 1);
+                List<Rect> originalRects = lastTp.placed;
+
+                // Készítsünk friss Rect másolatokat
+                List<Rect> testRects = new ArrayList<>();
+                for (Rect r : originalRects) {
+                    testRects.add(new Rect(r.id, r.origW, r.origH, r.canRotate));
+                }
+
+                // Próbáljuk bepakolni őket a split méretű táblába
+                TablePlacement smallTp = new TablePlacement(lastTp.table, splitW);
+                boolean allFit = true;
+                for (Rect r : testRects) {
+                    if (!place(r, smallTp, splitW, splitH)) {
+                        allFit = false;
+                        break;
+                    }
+                }
+
+                if (allFit) {
+                    // Sikerült: cseréljük az utolsó TablePlacement tartalmát
+                    lastTp.skyline = smallTp.skyline;
+                    lastTp.placed  = smallTp.placed;
+                    // Frissítsük a táblát splitDimension-re
+                    lastTp.table.setSize(splitDim);
+                    createdTablesRepository.save(lastTp.table);
+                }
+            }
+
             // 3.3) Mentés DB-be
             for (TablePlacement tp: packs) {
                 for (Rect r: tp.placed) {
