@@ -1364,14 +1364,14 @@ const TableViewerComponent = ({
             fontWeight: "bold"
           }}
         >
-          {width}
+          {`Szélesség: ${width}`}
         </div>
 
         <div
           style={{
             position: "absolute",
             top: "50%",
-            left: "-20px",
+            left: "-40px",
             transform: "translateY(-50%) rotate(180deg)",
             fontSize: "14px",
             fontWeight: "bold",
@@ -1379,7 +1379,7 @@ const TableViewerComponent = ({
             transformOrigin: "center"
           }}
         >
-          {height}
+          {`Hosszúság: ${height}`}
         </div>
 
         {filteredItems.map((item) => {
