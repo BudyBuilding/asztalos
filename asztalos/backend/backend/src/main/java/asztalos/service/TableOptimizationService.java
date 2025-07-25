@@ -204,42 +204,61 @@ public class TableOptimizationService {
         }
     }
 
-    private boolean place(Rect r, TablePlacement tp, double sheetW, double sheetH) {
-        double bestY=Double.MAX_VALUE; int bestX=-1; boolean bestRot=false;
-        int bestW=0, bestH=0, maxX=(int)Math.floor(sheetW);
+// egy kis segédosztály a jelöltekhez
+private static class Candidate {
+    int x, w, h;
+    double y, waste;
+    boolean rot;
+    Candidate(int x, double y, int w, int h, boolean rot, double waste) {
+        this.x = x; this.y = y; this.w = w; this.h = h; this.rot = rot; this.waste = waste;
+    }
+}
 
-        for (boolean rot : new boolean[]{false, true}) {
-            if (rot && !r.canRotate) continue;
-            int w = (int)Math.ceil(rot ? r.origH : r.origW);
-            int h = (int)Math.ceil(rot ? r.origW : r.origH);
-            for (int x = 0; x <= maxX - w; x++) {
-                double y = 0;
-                for (int i = 0; i < w; i++) 
-                    y = Math.max(y, tp.skyline[x + i]);
-                // itt az új overlaps-hívás!
-                if (y + h <= sheetH &&
-                    y < bestY &&
-                    !overlaps(x, y, w, h, tp.placed)) {
-                    bestY = y;
-                    bestX = x;
-                    bestRot = rot;
-                    bestW = w;
-                    bestH = h;
-                }
+private boolean place(Rect r, TablePlacement tp, double sheetW, double sheetH) {
+    int maxX = (int)Math.floor(sheetW);
+    List<Candidate> candidates = new ArrayList<>();
+
+    // 1) gyűjtsük össze az összes elfogadható helyet
+    for (boolean rot : new boolean[]{false,true}) {
+        if (rot && !r.canRotate) continue;
+        int w = (int)Math.ceil(rot ? r.origH : r.origW);
+        int h = (int)Math.ceil(rot ? r.origW : r.origH);
+
+        for (int x = 0; x <= maxX - w; x++) {
+            double y = 0;
+            for (int i = 0; i < w; i++) {
+                y = Math.max(y, tp.skyline[x + i]);
+            }
+            if (y + h <= sheetH && !overlaps(x, y, w, h, tp.placed)) {
+                // kiszámoljuk, mennyi a hulladék: a teljes cella-terület minusz az eredeti terület
+                double waste = w * h - r.origW * r.origH;
+                candidates.add(new Candidate(x, y, w, h, rot, waste));
             }
         }
-        if(bestX<0) return false;
-        r.x=bestX; r.y=bestY; r.rotated=bestRot;
-        for (int i = 0; i < bestW; i++) {
-            tp.skyline[bestX + i] = bestY + bestH;
-        }
-        tp.placed.add(r);
-
-                log.debug("Placed Rect id={} at ({},{}), rotated={}, size={}x{} on Table {}",
-                  r.id, r.x, r.y, r.rotated, bestW, bestH, tp.table.getId());
-
-        return true;
     }
+
+    // 2) nincs egyetlen jó hely sem? akkor false
+    if (candidates.isEmpty()) return false;
+
+    // 3) válasszuk ki a legkisebb waste-pel bíró jelöltet
+    candidates.sort(Comparator.comparingDouble(c -> c.waste));
+    Candidate best = candidates.get(0);
+
+    // 4) helyezd el ténylegesen
+    r.x = best.x;
+    r.y = best.y;
+    r.rotated = best.rot;
+    for (int i = 0; i < best.w; i++) {
+        tp.skyline[best.x + i] = best.y + best.h;
+    }
+    tp.placed.add(r);
+
+    log.debug("Placed Rect id={} at ({},{}), rotated={}, size={}x{} waste={}",
+        r.id, r.x, r.y, r.rotated, best.w, best.h, best.waste);
+
+    return true;
+}
+
 private boolean overlaps(int x, double y, int w, int h, List<Rect> placed) {
     for (Rect p : placed) {
         if (x < p.x + p.getW() &&
