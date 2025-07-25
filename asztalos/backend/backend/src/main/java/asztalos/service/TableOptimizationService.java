@@ -278,7 +278,9 @@ public class TableOptimizationService {
                     resultTables.add(ct);
                     TablePlacement tp = new TablePlacement(ct, sheetW, sheetH);
                     // garantáltan elfér, mert új tábla üres
-                    tryPlaceOnTable(r, tp, sheetW, sheetH);
+                                       if (!tryPlaceOnTable(r, tp, sheetW, sheetH)) {
+                        throw new IllegalStateException("Az új táblában sem fért el a Rect id=");
+                    }
                     placements.add(tp);
                 }
             }
@@ -337,10 +339,11 @@ public class TableOptimizationService {
             if (rotate && !r.rotated) continue;
             double w = rotate ? r.height : r.width;
             double h = rotate ? r.width : r.height;
-
+            int wInt = (int)Math.ceil(w);
+            int hInt = (int)Math.ceil(h);
             for (int x = 0; x <= sheetW - w; x++) {
                 double y = 0;
-                for (int i = 0; i < (int)w; i++) {
+                for (int i = 0; i < wInt; i++) {
                     y = Math.max(y, tp.skyline[x + i]);
                 }
                 if (y + h <= sheetH && y < bestY && !overlaps(x, y, w, h, tp.placed)) {
