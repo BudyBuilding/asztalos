@@ -98,25 +98,20 @@ public class TableOptimizationService {
             // 3.2) First-fit decreasing
             List<TablePlacement> packs = new ArrayList<>();
             for (Rect r : rects) {
-                boolean placed=false;
+                boolean placed = false;
+                // először végigpróbáljuk a már létező táblákat
                 for (TablePlacement tp : packs) {
-                    List<Rect> list = tp.placed;
-                    for (int i = 0; i < list.size(); i++) {
-                        Rect a = list.get(i);
-                        for (int j = i + 1; j < list.size(); j++) {
-                        Rect b = list.get(j);
-                        if (overlaps(a, List.of(b))) {
-                            log.error("!!! OVERLAP DETECTED on table {} between rect {} and rect {}",
-                                    tp.table.getId(), a.id, b.id);
-                        }
-                        }
+                    if (place(r, tp, sheetW, sheetH)) {
+                        placed = true;
+                        break;
                     }
-                    }
+                }
+                // ha egyik sem vette fel, akkor új táblát hozunk létre
                 if (!placed) {
                     CreatedTables ct = nextTable.get();
                     result.add(ct);
-                    TablePlacement tp = new TablePlacement(ct,sheetW);
-                    place(r,tp,sheetW,sheetH);
+                    TablePlacement tp = new TablePlacement(ct, sheetW);
+                    place(r, tp, sheetW, sheetH);
                     packs.add(tp);
                 }
             }
@@ -179,15 +174,23 @@ public class TableOptimizationService {
         double bestY=Double.MAX_VALUE; int bestX=-1; boolean bestRot=false;
         int bestW=0, bestH=0, maxX=(int)Math.floor(sheetW);
 
-        for (boolean rot: new boolean[]{false,true}) {
+        for (boolean rot : new boolean[]{false, true}) {
             if (rot && !r.canRotate) continue;
-            int w=(int)Math.ceil(rot?r.origH:r.origW);
-            int h=(int)Math.ceil(rot?r.origW:r.origH);
-            for(int x=0;x<=maxX-w;x++){
-                double y=0;
-                for(int i=0;i<w;i++) y=Math.max(y,tp.skyline[x+i]);
-                if(y+h<=sheetH && y<bestY && !overlaps(r, tp.placed)){
-                    bestY=y; bestX=x; bestRot=rot; bestW=w; bestH=h;
+            int w = (int)Math.ceil(rot ? r.origH : r.origW);
+            int h = (int)Math.ceil(rot ? r.origW : r.origH);
+            for (int x = 0; x <= maxX - w; x++) {
+                double y = 0;
+                for (int i = 0; i < w; i++) 
+                    y = Math.max(y, tp.skyline[x + i]);
+                // itt az új overlaps-hívás!
+                if (y + h <= sheetH &&
+                    y < bestY &&
+                    !overlaps(x, y, w, h, tp.placed)) {
+                    bestY = y;
+                    bestX = x;
+                    bestRot = rot;
+                    bestW = w;
+                    bestH = h;
                 }
             }
         }
@@ -203,7 +206,17 @@ public class TableOptimizationService {
 
         return true;
     }
-
+private boolean overlaps(int x, double y, int w, int h, List<Rect> placed) {
+    for (Rect p : placed) {
+        if (x < p.x + p.getW() &&
+            x + w > p.x &&
+            y < p.y + p.getH() &&
+            y + h > p.y) {
+            return true;
+        }
+    }
+    return false;
+}
     private boolean overlaps(Rect r, List<Rect> placed){
     for(Rect p: placed){
         if (r.x < p.x + p.getW() &&
