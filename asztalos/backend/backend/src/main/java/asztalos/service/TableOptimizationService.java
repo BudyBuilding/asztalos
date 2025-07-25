@@ -23,6 +23,11 @@ public class TableOptimizationService {
     @Autowired private WorkRepository workRepository;
 
     @Transactional
+    public List<CreatedTables> generateTables(Work workParam) {
+        return generateTables(workParam, System.currentTimeMillis());
+    }
+
+    @Transactional
     public List<CreatedTables> generateTables(Work workParam, Long seed) {
         Work work = workRepository.getWorkById(workParam.getWorkId());
         double padding = 3.0;
