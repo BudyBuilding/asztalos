@@ -1257,318 +1257,356 @@ const TableViewerComponent = ({
           )}
         </div>
       )}
-
-      <div
-        ref={drawingRef}
-        style={{
-          width: `${width * scaleFactor}px`,
-          height: `${height * scaleFactor}px`,
-          position: "relative",
-          margin: "0 auto",
-          border: `${BORDER_WIDTH}px solid ${isEditing ? "#4CAF50" : "black"}`,
-          boxSizing: "content-box",
-          overflow: "hidden",
-          backgroundImage: backgroundImageStyle,
-          backgroundSize: "cover",
-          backgroundPosition: "center center",
-          backgroundRepeat: "no-repeat"
-        }}
-      >
-        <svg
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            pointerEvents: "none",
-            zIndex: 1
-          }}
-          width={width * scaleFactor}
-          height={height * scaleFactor}
-        >
-          <defs>
-            <mask id="itemMask">
-              <rect x="0" y="0" width="100%" height="100%" fill="white" />
-              {filteredItems.map((item) =>
-                (item.processedPositions || [])
-                  .filter((pos) => pos.tableId === table.id)
-                  .map((pos, index) => {
-                    const {
-                      x,
-                      y,
-                      rotation,
-                      tableId,
-                      width: itemWidth,
-                      height: itemHeight
-                    } = pos;
-
-                    const scaledX = x * scaleFactor;
-                    const scaledY = y * scaleFactor;
-                    const scaledWidth = itemWidth * scaleFactor;
-                    const scaledHeight = itemHeight * scaleFactor;
-                    if (rotation == 1) {
-                      const offsetX = (scaledHeight - scaledWidth) / 2;
-                      const offsetY = (scaledWidth - scaledHeight) / 2;
-                      return (
-                        <rect
-                          key={`${item.itemId}-${index}`}
-                          x={scaledX - offsetX}
-                          y={scaledY - offsetY}
-                          width={scaledHeight}
-                          height={scaledWidth}
-                          fill="black"
-                          transform={`rotate(90, ${
-                            scaledX + scaledWidth / 2
-                          }, ${scaledY + scaledHeight / 2})`}
-                        />
-                      );
-                    }
-                    return (
-                      <rect
-                        key={`${item.itemId}-${index}`}
-                        x={scaledX}
-                        y={scaledY}
-                        width={scaledWidth}
-                        height={scaledHeight}
-                        fill="black"
-                      />
-                    );
-                  })
-              )}
-            </mask>
-          </defs>
-          <g mask="url(#itemMask)">
-            {generateDiagonalLines().map((line, index) => (
-              <line
-                key={index}
-                x1={line.x1}
-                y1={line.y1}
-                x2={line.x2}
-                y2={line.y2}
-                stroke="rgba(0,0,0,0.5)"
-                strokeWidth="1"
-                style={{ mixBlendMode: "difference" }}
-              />
-            ))}
-          </g>
-        </svg>
-
+      <>
         <div
           style={{
             position: "absolute",
-            top: "-20px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            top: "10px",
+            left: "50%", // igazítsd a kívánt pozícióra
+            zIndex: 1000,
+            background: "rgba(255,255,255,0.8)",
+            padding: "4px 8px",
+            borderRadius: "4px",
             fontSize: "14px",
             fontWeight: "bold"
           }}
-        >
-          {`Szélesség: ${width}`}
-        </div>
-
+        ></div>
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "-40px",
-            transform: "translateY(-50%) rotate(180deg)",
+            top: `calc(50%  ${BORDER_WIDTH}px)`,
+            left: "10px",
+            transform: "translateY(-50%)",
+            zIndex: 1000,
+            background: "rgba(255,255,255,0.8)",
+            padding: "4px 8px",
+            borderRadius: "4px",
             fontSize: "14px",
             fontWeight: "bold",
-            writingMode: "vertical-rl",
-            transformOrigin: "center"
+            writingMode: "vertical-rl"
+          }}
+        ></div>
+        <div
+          ref={drawingRef}
+          style={{
+            width: `${width * scaleFactor}px`,
+            height: `${height * scaleFactor}px`,
+            position: "relative",
+            margin: "0 auto",
+            border: `${BORDER_WIDTH}px solid ${
+              isEditing ? "#4CAF50" : "black"
+            }`,
+            boxSizing: "content-box",
+            overflow: "hidden",
+            backgroundImage: backgroundImageStyle,
+            backgroundSize: "cover",
+            backgroundPosition: "center center",
+            backgroundRepeat: "no-repeat"
           }}
         >
-          {`Hosszúság: ${height}`}
-        </div>
+          <svg
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+              zIndex: 1
+            }}
+            width={width * scaleFactor}
+            height={height * scaleFactor}
+          >
+            <defs>
+              <mask id="itemMask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                {filteredItems.map((item) =>
+                  (item.processedPositions || [])
+                    .filter((pos) => pos.tableId === table.id)
+                    .map((pos, index) => {
+                      const {
+                        x,
+                        y,
+                        rotation,
+                        tableId,
+                        width: itemWidth,
+                        height: itemHeight
+                      } = pos;
 
-        {filteredItems.map((item) => {
-          return (item.processedPositions || [])
-            .filter((pos) => pos.tableId === table.id)
-            .map((pos, index) => {
-              const {
-                x = 0,
-                y = 0,
-                rotation,
-                tableId,
-                width: itemWidth,
-                height: itemHeight
-              } = pos;
+                      const scaledX = x * scaleFactor;
+                      const scaledY = y * scaleFactor;
+                      const scaledWidth = itemWidth * scaleFactor;
+                      const scaledHeight = itemHeight * scaleFactor;
+                      if (rotation == 1) {
+                        const offsetX = (scaledHeight - scaledWidth) / 2;
+                        const offsetY = (scaledWidth - scaledHeight) / 2;
+                        return (
+                          <rect
+                            key={`${item.itemId}-${index}`}
+                            x={scaledX - offsetX}
+                            y={scaledY - offsetY}
+                            width={scaledHeight}
+                            height={scaledWidth}
+                            fill="black"
+                            transform={`rotate(90, ${
+                              scaledX + scaledWidth / 2
+                            }, ${scaledY + scaledHeight / 2})`}
+                          />
+                        );
+                      }
+                      return (
+                        <rect
+                          key={`${item.itemId}-${index}`}
+                          x={scaledX}
+                          y={scaledY}
+                          width={scaledWidth}
+                          height={scaledHeight}
+                          fill="black"
+                        />
+                      );
+                    })
+                )}
+              </mask>
+            </defs>
+            <g mask="url(#itemMask)">
+              {generateDiagonalLines().map((line, index) => (
+                <line
+                  key={index}
+                  x1={line.x1}
+                  y1={line.y1}
+                  x2={line.x2}
+                  y2={line.y2}
+                  stroke="rgba(0,0,0,0.5)"
+                  strokeWidth="1"
+                  style={{ mixBlendMode: "difference" }}
+                />
+              ))}
+            </g>
+          </svg>
 
-              const positionKey = `${item.itemId}-${index}`;
-              const isSelected =
-                selectedItemPosition?.itemId === item.itemId &&
-                selectedItemPosition?.instanceId === pos.instanceId;
+          <div
+            style={{
+              position: "absolute",
+              top: "-20px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              fontSize: "14px",
+              fontWeight: "bold"
+            }}
+          >
+            {width}
+          </div>
 
-              const dispWidth = rotation == 1 ? itemHeight : itemWidth;
-              const dispHeight = rotation == 1 ? itemWidth : itemHeight;
-              const isRotated = rotation == 1;
-              const scaledX = x * scaleFactor;
-              const scaledY = y * scaleFactor;
-              const scaledWidth = itemWidth * scaleFactor;
-              const scaledHeight = itemHeight * scaleFactor;
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "-20px",
+              transform: "translateY(-50%) rotate(180deg)",
+              fontSize: "14px",
+              fontWeight: "bold",
+              writingMode: "vertical-rl",
+              transformOrigin: "center"
+            }}
+          >
+            {height}
+          </div>
 
-              let kantCode = "";
-              let kantLenCount = 0,
-                kantWidCount = 0;
-              if (Array.isArray(item.kant)) {
-                [kantCode, kantLenCount, kantWidCount] = item.kant;
-              } else if (typeof item.kant === "string") {
-                // pl. "[04, 1, 0]" → ["04","1","0"]
-                const parts = item.kant
-                  .replace(/^\[|\]$/g, "")
-                  .split(",")
-                  .map((s) => s.trim());
-                kantCode = parts[0] || "";
-                kantLenCount = parseInt(parts[1], 10) || 0;
-                kantWidCount = parseInt(parts[2], 10) || 0;
-              }
+          {filteredItems.map((item) => {
+            return (item.processedPositions || [])
+              .filter((pos) => pos.tableId === table.id)
+              .map((pos, index) => {
+                const {
+                  x = 0,
+                  y = 0,
+                  rotation,
+                  tableId,
+                  width: itemWidth,
+                  height: itemHeight
+                } = pos;
 
-              const kantMap = { "": "-", "04": "S", 2: "G", 42: "LAT", 1: "L" };
-              const kantChar = kantMap[String(kantCode)] || "";
-              const widthSuffix = kantChar.repeat(kantWidCount);
-              const heightSuffix = kantChar.repeat(kantLenCount);
+                const positionKey = `${item.itemId}-${index}`;
+                const isSelected =
+                  selectedItemPosition?.itemId === item.itemId &&
+                  selectedItemPosition?.instanceId === pos.instanceId;
 
-              let adjustedLeft = scaledX;
-              let adjustedTop = scaledY;
-              if (rotation == 1) {
-                const offsetX = (scaledHeight - scaledWidth) / 2;
-                const offsetY = (scaledWidth - scaledHeight) / 2;
-                adjustedLeft = scaledX - offsetX;
-                adjustedTop = scaledY - offsetY;
-              }
+                const dispWidth = rotation == 1 ? itemHeight : itemWidth;
+                const dispHeight = rotation == 1 ? itemWidth : itemHeight;
+                const isRotated = rotation == 1;
+                const scaledX = x * scaleFactor;
+                const scaledY = y * scaleFactor;
+                const scaledWidth = itemWidth * scaleFactor;
+                const scaledHeight = itemHeight * scaleFactor;
 
-              return (
-                <div
-                  key={positionKey}
-                  onMouseDown={(e) =>
-                    handleItemMouseDown(e, item, pos.instanceId)
-                  }
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedItemPosition(null);
-                      setSelectedDimension(null);
-                    } else {
-                      setSelectedItemPosition({
-                        itemId: item.itemId,
-                        instanceId: pos.instanceId
-                      });
-                    }
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: `${adjustedLeft}px`,
-                    top: `${adjustedTop}px`,
-                    width: `${rotation == 1 ? scaledHeight : scaledWidth}px`,
-                    height: `${rotation == 1 ? scaledWidth : scaledHeight}px`,
-                    backgroundColor: "transparent",
-                    border: `1px solid ${isSelected ? "#87CEEB" : "black"}`,
-                    boxSizing: "border-box",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    zIndex: 2,
-                    cursor: isEditing ? "move" : "pointer",
-                    transform: rotation == 1 ? "rotate(90deg)" : "rotate(0deg)",
-                    transformOrigin: "center"
-                  }}
-                >
+                let kantCode = "";
+                let kantLenCount = 0,
+                  kantWidCount = 0;
+                if (Array.isArray(item.kant)) {
+                  [kantCode, kantLenCount, kantWidCount] = item.kant;
+                } else if (typeof item.kant === "string") {
+                  // pl. "[04, 1, 0]" → ["04","1","0"]
+                  const parts = item.kant
+                    .replace(/^\[|\]$/g, "")
+                    .split(",")
+                    .map((s) => s.trim());
+                  kantCode = parts[0] || "";
+                  kantLenCount = parseInt(parts[1], 10) || 0;
+                  kantWidCount = parseInt(parts[2], 10) || 0;
+                }
+
+                const kantMap = {
+                  "": "-",
+                  "04": "S",
+                  2: "G",
+                  42: "LAT",
+                  1: "L"
+                };
+                const kantChar = kantMap[String(kantCode)] || "";
+                const widthSuffix = kantChar.repeat(kantWidCount);
+                const heightSuffix = kantChar.repeat(kantLenCount);
+
+                let adjustedLeft = scaledX;
+                let adjustedTop = scaledY;
+                if (rotation == 1) {
+                  const offsetX = (scaledHeight - scaledWidth) / 2;
+                  const offsetY = (scaledWidth - scaledHeight) / 2;
+                  adjustedLeft = scaledX - offsetX;
+                  adjustedTop = scaledY - offsetY;
+                }
+
+                return (
                   <div
+                    key={positionKey}
+                    onMouseDown={(e) =>
+                      handleItemMouseDown(e, item, pos.instanceId)
+                    }
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedItemPosition(null);
+                        setSelectedDimension(null);
+                      } else {
+                        setSelectedItemPosition({
+                          itemId: item.itemId,
+                          instanceId: pos.instanceId
+                        });
+                      }
+                    }}
                     style={{
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      textAlign: "center",
-                      transform: `rotate(${isRotated ? -90 : 0}deg)`,
-                      color: "#333"
+                      position: "absolute",
+                      left: `${adjustedLeft}px`,
+                      top: `${adjustedTop}px`,
+                      width: `${rotation == 1 ? scaledHeight : scaledWidth}px`,
+                      height: `${rotation == 1 ? scaledWidth : scaledHeight}px`,
+                      backgroundColor: "transparent",
+                      border: `1px solid ${isSelected ? "#87CEEB" : "black"}`,
+                      boxSizing: "border-box",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      zIndex: 2,
+                      cursor: isEditing ? "move" : "pointer",
+                      transform:
+                        rotation == 1 ? "rotate(90deg)" : "rotate(0deg)",
+                      transformOrigin: "center"
                     }}
                   >
-                    <span
+                    <div
                       style={{
-                        border: "0.5px solid black",
-                        borderRadius: "2px",
-                        padding: "2px 4px",
                         fontSize: "12px",
                         fontWeight: "bold",
-                        color: "#333",
-                        marginBottom: "2px"
+                        textAlign: "center",
+                        transform: `rotate(${isRotated ? -90 : 0}deg)`,
+                        color: "#333"
                       }}
                     >
-                      {item.itemId}
-                    </span>
-                    <br />
-                    {item.details}
+                      <span
+                        style={{
+                          border: "0.5px solid black",
+                          borderRadius: "2px",
+                          padding: "2px 4px",
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          color: "#333",
+                          marginBottom: "2px"
+                        }}
+                      >
+                        {item.itemId}
+                      </span>
+                      <br />
+                      {item.details}
+                    </div>
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        //setSelectedItemPosition({ itemId: item.itemId, index });
+                        setSelectedItemPosition({
+                          itemId: item.itemId,
+                          instanceId: pos.instanceId
+                        });
+                        setSelectedDimension("width");
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: "0",
+                        left: "50%",
+                        color: "#333",
+                        transform: `translateX(-50%) rotate(${
+                          isRotated ? -90 : 0
+                        }deg)`,
+                        fontSize: "10px",
+                        textAlign: "center",
+                        fontWeight: "normal",
+                        marginTop: "2px",
+                        cursor: "pointer",
+                        padding: "2px",
+                        fontWeight: "bold",
+                        border: `1px solid ${
+                          isSelected && selectedDimension == "width"
+                            ? "#87CEEB"
+                            : "transparent"
+                        }`
+                      }}
+                    >
+                      {dispWidth}
+                      <br />
+                      {widthSuffix}
+                    </div>
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedItemPosition({ itemId: item.itemId, index });
+                        setSelectedDimension("height");
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "0",
+                        transform: `translateY(-50%) rotate(${
+                          !isRotated ? 0 : -90
+                        }deg)`,
+                        fontSize: "10px",
+                        fontWeight: "normal",
+                        color: "#333",
+                        cursor: "pointer",
+                        padding: "2px",
+                        fontWeight: "bold",
+                        border: `1px solid ${
+                          isSelected && selectedDimension == "height"
+                            ? "#87CEEB"
+                            : "transparent"
+                        }`
+                      }}
+                    >
+                      {dispHeight}
+                      <br />
+                      {heightSuffix}
+                    </div>
                   </div>
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      //setSelectedItemPosition({ itemId: item.itemId, index });
-                      setSelectedItemPosition({
-                        itemId: item.itemId,
-                        instanceId: pos.instanceId
-                      });
-                      setSelectedDimension("width");
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: "0",
-                      left: "50%",
-                      color: "#333",
-                      transform: `translateX(-50%) rotate(${
-                        isRotated ? -90 : 0
-                      }deg)`,
-                      fontSize: "10px",
-                      textAlign: "center",
-                      fontWeight: "normal",
-                      marginTop: "2px",
-                      cursor: "pointer",
-                      padding: "2px",
-                      fontWeight: "bold",
-                      border: `1px solid ${
-                        isSelected && selectedDimension == "width"
-                          ? "#87CEEB"
-                          : "transparent"
-                      }`
-                    }}
-                  >
-                    {dispWidth}
-                    <br />
-                    {widthSuffix}
-                  </div>
-                  <div
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedItemPosition({ itemId: item.itemId, index });
-                      setSelectedDimension("height");
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "0",
-                      transform: `translateY(-50%) rotate(${
-                        !isRotated ? 0 : -90
-                      }deg)`,
-                      fontSize: "10px",
-                      fontWeight: "normal",
-                      color: "#333",
-                      cursor: "pointer",
-                      padding: "2px",
-                      fontWeight: "bold",
-                      border: `1px solid ${
-                        isSelected && selectedDimension == "height"
-                          ? "#87CEEB"
-                          : "transparent"
-                      }`
-                    }}
-                  >
-                    {dispHeight}
-                    <br />
-                    {heightSuffix}
-                  </div>
-                </div>
-              );
-            });
-        })}
-      </div>
+                );
+              });
+          })}
+        </div>
+      </>
       {isExporting && (
         <div
           style={{
