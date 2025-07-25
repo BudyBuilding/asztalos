@@ -53,7 +53,9 @@ public class TableOptimizationService {
         }
 
         List<CreatedTables> result = new ArrayList<>();
-        AtomicInteger globalSeed = new AtomicInteger(seed == null ? (int) System.currentTimeMillis() : seed.intValue());
+        AtomicInteger globalSeed = new AtomicInteger(
+            seed == null ? (int) System.currentTimeMillis() : seed.intValue()
+        );
 
         // 3) Packing per color
         for (Map.Entry<Color,List<CreatedItem>> e : byColor.entrySet()) {
@@ -62,7 +64,8 @@ public class TableOptimizationService {
             double sheetH = parseDim(color.getDimension(),0);
             log.info("Packing color={} on sheet {}×{}", color.getName(), sheetW, sheetH);
 
-            List<CreatedTables> saved = createdTablesRepository.findByWorkAndColor(work, color);
+            List<CreatedTables> saved = createdTablesRepository
+                .findByWorkAndColor(work, color);
             AtomicInteger ti = new AtomicInteger(0);
             Supplier<CreatedTables> nextTable = () -> {
                 int idx = ti.getAndIncrement();
@@ -84,7 +87,8 @@ public class TableOptimizationService {
                 int qty = Optional.ofNullable(it.getQty()).orElse(1);
                 double w = parseDim(it.getSize(),0) + 2 * padding;
                 double h = parseDim(it.getSize(),1) + 2 * padding;
-                boolean canRot = Boolean.TRUE.equals(color.getRotable()) || Boolean.TRUE.equals(it.isRotable());
+                boolean canRot = Boolean.TRUE.equals(color.getRotable())
+                             || Boolean.TRUE.equals(it.isRotable());
                 for (int i = 0; i < qty; i++) {
                     Rect r = new Rect(rid++, w, h, canRot);
                     rects.add(r);
@@ -103,7 +107,9 @@ public class TableOptimizationService {
                 for (TablePlacement tp : packs) {
                     List<Candidate> cands = collectCandidates(r, tp, sheetW, sheetH);
                     if (!cands.isEmpty()) {
-                        Candidate localBest = Collections.min(cands, Comparator.comparingDouble(c -> c.waste));
+                        Candidate localBest = Collections.min(
+                            cands, Comparator.comparingDouble(c -> c.waste)
+                        );
                         if (bestCand == null || localBest.waste < bestCand.waste) {
                             bestCand = localBest;
                             bestTp = tp;
@@ -126,13 +132,13 @@ public class TableOptimizationService {
                 }
             }
 
-            // (split logic, saving, price aggregation remain unchanged...)
+            // 3.3) Split-dimension logic (unchanged)
             String splitDim = color.getSplitDimension();
             if (splitDim != null && !invalidDim(splitDim)) {
                 double splitW = parseDim(splitDim,1);
                 double splitH = parseDim(splitDim,0);
-
                 TablePlacement lastTp = packs.get(packs.size() - 1);
+
                 List<Rect> testRects = new ArrayList<>();
                 for (Rect r : lastTp.placed) {
                     testRects.add(new Rect(r.id, r.origW, r.origH, r.canRotate));
@@ -154,12 +160,16 @@ public class TableOptimizationService {
                 }
             }
 
+            // 3.4) Persist placements
             for (TablePlacement tp : packs) {
                 for (Rect r : tp.placed) {
                     CreatedItem it = idMap.get(r.id);
                     String pos = String.format("[%.0f,%.0f,%d,%d]",
                                     r.x, r.y, r.rotated ? 0 : 1, tp.table.getId());
-                    it.setTablePosition(it.getTablePosition().isEmpty() ? pos : it.getTablePosition() + "," + pos);
+                    it.setTablePosition(
+                        it.getTablePosition().isEmpty() ? pos
+                            : it.getTablePosition() + "," + pos
+                    );
                     it.setTableRotation(r.rotated ? "0" : "1");
                     it.setTable(tp.table);
                     createdItemRepository.save(it);
@@ -194,7 +204,7 @@ public class TableOptimizationService {
         return result;
     }
 
-    // --- helper methods and classes ---
+    // --- helper classes and methods ---
 
     private static class TablePlacement {
         CreatedTables table;
@@ -218,7 +228,8 @@ public class TableOptimizationService {
         }
     }
 
-    private List<Candidate> collectCandidates(Rect r, TablePlacement tp, double sheetW, double sheetH) {
+    private List<Candidate> collectCandidates(Rect r, TablePlacement tp,
+                                              double sheetW, double sheetH) {
         List<Candidate> candidates = new ArrayList<>();
         int maxX = (int)Math.floor(sheetW);
         for (boolean rot : new boolean[]{false,true}) {
@@ -227,7 +238,9 @@ public class TableOptimizationService {
             int h = (int)Math.ceil(rot ? r.origW : r.origH);
             for (int x = 0; x <= maxX - w; x++) {
                 double y = 0;
-                for (int i = 0; i < w; i++) y = Math.max(y, tp.skyline[x + i]);
+                for (int i = 0; i < w; i++) {
+                    y = Math.max(y, tp.skyline[x + i]);
+                }
                 if (y + h <= sheetH && !overlaps(x, y, w, h, tp.placed)) {
                     double waste = w * h - r.origW * r.origH;
                     candidates.add(new Candidate(x, y, w, h, rot, waste));
@@ -238,9 +251,7 @@ public class TableOptimizationService {
     }
 
     private void applyCandidate(Rect r, TablePlacement tp, Candidate c) {
-        r.x = c.x;
-        r.y = c.y;
-        r.rotated = c.rot;
+        r.x = c.x; r.y = c.y; r.rotated = c.rot;
         for (int i = 0; i < c.w; i++) {
             tp.skyline[c.x + i] = c.y + c.h;
         }
@@ -250,7 +261,7 @@ public class TableOptimizationService {
     }
 
     private boolean place(Rect r, TablePlacement tp, double sheetW, double sheetH) {
-        // original FFD fallback, unchanged
+        // original FFD fallback (same as before)
         int maxX = (int)Math.floor(sheetW);
         List<Candidate> candidates = new ArrayList<>();
         for (boolean rot : new boolean[]{false,true}) {
