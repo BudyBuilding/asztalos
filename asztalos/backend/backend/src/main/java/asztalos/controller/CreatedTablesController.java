@@ -118,9 +118,12 @@ public class CreatedTablesController {
 
         // 4. Mentés
         generatedTables.forEach(CreatedtableService::save);
-
+        List<CreatedTablesDto> allTables = CreatedtableService.findByWork(work).stream()
+                                .filter(this::hasItems)
+                                .map(this::toDto)
+                                .collect(Collectors.toList());
         // 5. Válasz
-        return ResponseEntity.ok(generatedTables);
+        return ResponseEntity.ok(allTables);
     } 
 
     @GetMapping("/work/{workId}")

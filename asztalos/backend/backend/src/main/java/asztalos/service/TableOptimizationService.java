@@ -1,6 +1,5 @@
 // TableOptimizationService.java
 package asztalos.service;
-
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -9,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.transaction.Transactional;
 import asztalos.model.*;
 import asztalos.repository.*;
@@ -103,7 +105,7 @@ public class TableOptimizationService {
                         Rect a = list.get(i);
                         for (int j = i + 1; j < list.size(); j++) {
                         Rect b = list.get(j);
-                        if (overlaps(a.x, a.y, (int)Math.ceil(a.getW()), (int)Math.ceil(a.getH()), List.of(b))) {
+                        if (overlaps(a, List.of(b))) {
                             log.error("!!! OVERLAP DETECTED on table {} between rect {} and rect {}",
                                     tp.table.getId(), a.id, b.id);
                         }
@@ -131,6 +133,24 @@ public class TableOptimizationService {
                     createdItemRepository.save(it);
                 }
             }
+                List<Map<String,Object>> dump = new ArrayList<>();
+    for (TablePlacement tp : packs) {
+      Map<String,Object> tbl = new HashMap<>();
+      tbl.put("tableId", tp.table.getId());
+      List<Map<String,Object>> rects1 = new ArrayList<>();
+      for (Rect r : tp.placed) {
+        rects1.add(Map.of(
+          "id", r.id,
+          "x", r.x,
+          "y", r.y,
+          "w", r.getW(),
+          "h", r.getH()
+        ));
+      }
+      tbl.put("rects1", rects1);
+      dump.add(tbl);
+    }
+    log.info("PLACEMENT DUMP for color {}: {}", color.getName(), dump);
         }
 
         // 4) Ár összesítése
@@ -166,7 +186,7 @@ public class TableOptimizationService {
             for(int x=0;x<=maxX-w;x++){
                 double y=0;
                 for(int i=0;i<w;i++) y=Math.max(y,tp.skyline[x+i]);
-                if(y+h<=sheetH && y<bestY && !overlaps(x,y,w,h,tp.placed)){
+                if(y+h<=sheetH && y<bestY && !overlaps(r, tp.placed)){
                     bestY=y; bestX=x; bestRot=rot; bestW=w; bestH=h;
                 }
             }
@@ -184,11 +204,16 @@ public class TableOptimizationService {
         return true;
     }
 
-    private boolean overlaps(double x,double y,int w,int h,List<Rect> placed){
-        for(Rect p:placed){
-            if(x< p.x+p.getW() && x+w>p.x && y< p.y+p.getH() && y+h>p.y) return true;
+    private boolean overlaps(Rect r, List<Rect> placed){
+    for(Rect p: placed){
+        if (r.x < p.x + p.getW() &&
+            r.x + r.getW() > p.x &&
+            r.y < p.y + p.getH() &&
+            r.y + r.getH() > p.y) {
+        return true;
         }
-        return false;
+    }
+    return false;
     }
 
     private boolean invalidDim(String d){
