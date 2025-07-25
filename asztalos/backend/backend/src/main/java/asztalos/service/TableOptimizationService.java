@@ -58,8 +58,8 @@ public class TableOptimizationService {
         // 3) Színenként packing
         for (Map.Entry<Color,List<CreatedItem>> e : byColor.entrySet()) {
             Color color = e.getKey();
-            double sheetW = parseDim(color.getDimension(),0);
-            double sheetH = parseDim(color.getDimension(),1);
+            double sheetW = parseDim(color.getDimension(),1);
+            double sheetH = parseDim(color.getDimension(),0);
 
             // előre mentett táblák
             List<CreatedTables> saved = createdTablesRepository.findByWorkAndColor(work,color);
@@ -163,6 +163,10 @@ public class TableOptimizationService {
         r.x=bestX; r.y=bestY; r.rotated=bestRot;
         for(int i=0;i<bestW;i++) tp.skyline[bestX+i]=bestY+bestH;
         tp.placed.add(r);
+
+                log.debug("Placed Rect id={} at ({},{}), rotated={}, size={}x{} on Table {}",
+                  r.id, r.x, r.y, r.rotated, bestW, bestH, tp.table.getId());
+
         return true;
     }
 
