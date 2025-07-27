@@ -316,7 +316,11 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
         try {
             for (Field field : CreatedItem.class.getDeclaredFields()) {
                 String name = field.getName();
-                if ("object".equals(name) || "work".equals(name) || "itemId".equals(name)) {
+           if ("object".equals(name)
+            || "work".equals(name)
+            || "itemId".equals(name)
+            || "table".equals(name)    // ← így nem írjuk felül a táblakapcsolatot
+           ) {
                     continue;
                 }
                 field.setAccessible(true);
