@@ -209,7 +209,7 @@ function EditWork() {
         qty: 1,
         position: "[0,0,0]",
         rotation: "[0,0,0]",
-        colorId: null,
+        color: { colorId: null },
         name: "",
         details: "",
         material: "", // anyag
@@ -228,7 +228,7 @@ function EditWork() {
     );
     if (idx !== -1) {
       handleCreatedItemChange(idx, {
-        colorId: updatedItem.colorId,
+        color: { colorId: updatedItem.color?.colorId },
         position: updatedItem.position,
         rotation: updatedItem.rotation
       });
@@ -259,7 +259,7 @@ function EditWork() {
     );
     if (idx !== -1) {
       handleCreatedItemChange(idx, {
-        colorId: updatedItem.colorId,
+        color: { colorId: updatedItem.color?.colorId },
         position: updatedItem.position,
         rotation: updatedItem.rotation
       });
@@ -292,7 +292,7 @@ function EditWork() {
             ...it,
             object: { objectId: it.object.objectId },
             work: { workId: +workId },
-            color: it.colorId != null ? { colorId: it.colorId } : null,
+            color: it.colorId != null ? { colorId: it.color?.colorId } : null,
             material: it.material ?? ""
             // töröld ki a colorId mezőt, ha szükséges
           };
@@ -724,7 +724,9 @@ function EditWork() {
                       readOnly={isOrdered}
                       handleItemChange={handleCreatedItemChange}
                       handleItemColorChange={(idx, color) =>
-                        handleCreatedItemChange(idx, { colorId: color.colorId })
+                        handleCreatedItemChange(idx, {
+                          color: { colorId: color.colorId }
+                        })
                       }
                       onDragEnd={(result) => {
                         const { destination, draggableId } = result;
@@ -734,7 +736,9 @@ function EditWork() {
                           destination.droppableId === "no-color"
                             ? null
                             : +destination.droppableId;
-                        handleCreatedItemChange(idx, { colorId: newCid });
+                        handleCreatedItemChange(idx, {
+                          color: { colorId: newCid }
+                        });
                       }}
                       onDelete={handleDeleteItem}
                       objects={objects}

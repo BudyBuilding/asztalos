@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.springframework.web.server.ResponseStatusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +21,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import asztalos.dto.CreatedItemDto;
-import asztalos.dto.CreatedItemUpdateRequestDto;
-import asztalos.model.Color;
 import asztalos.model.CreatedItem;
 import asztalos.model.CreatedTables;
 import asztalos.model.User;
 import asztalos.model.Work;
 import asztalos.model.WorkObject;
-import asztalos.service.ColorService;
 import asztalos.service.CreatedItemService;
 import asztalos.service.CreatedTablesService;
 import asztalos.service.ObjectService;
@@ -53,9 +48,6 @@ public class CreatedItemController {
 
     @Autowired
     private ObjectService objectService;
-
-    @Autowired
-    private ColorService colorService;
 
     @Autowired
     private WorkService workService;
@@ -295,108 +287,57 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
 }
 
 
-@PutMapping("/{id}")
-public ResponseEntity<CreatedItemDto> updateCreatedItem(
-        @PathVariable Long id,
-        @RequestBody CreatedItemUpdateRequestDto dto) {
+     @PutMapping("/{id}")
+    public ResponseEntity<?> updateCreatedItem(@PathVariable Long id, @RequestBody CreatedItem updatedItem) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userService.findByUsername(username).orElse(null);
 
-    // 1. Authentication
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    String username = authentication.getName();
-    User currentUser = userService.findByUsername(username)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
 
-    // 2. Létező tétel betöltése
-    CreatedItem existing = createdItemService.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found"));
-
-    // 3. Jogosultság ellenőrzés (admin vagy objektum tulajdonosa)
-    boolean isAdmin = "admin".equals(currentUser.getRole());
-    boolean isOwner = existing.getObject().getUser().getUsername().equals(username);
-    if (!isAdmin && !isOwner) {
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-    }
-
-    // 4. Alapmezők frissítése
-    existing.setName(dto.getName());
-    existing.setDetails(dto.getDetails());
-    existing.setMaterial(dto.getMaterial());
-    existing.setKant(dto.getKant());
-    existing.setQty(dto.getQty());
-    existing.setRotable(dto.getRotable());
-    existing.setSize(dto.getSize());
-    existing.setPosition(dto.getPosition());
-    existing.setRotation(dto.getRotation());
-    existing.setTablePosition(dto.getTablePosition());
-    existing.setTableRotation(dto.getTableRotation());
-
-    // 5. Kapcsolódó entitások Optional -> T konverzióval
-
-    // Color
-    if (dto.getColorId() != null) {
-        Color color = colorService.findById(dto.getColorId());
-        existing.setColor(color);
-    } else {
-        existing.setColor(null);
-    }
-
-    // WorkObject
-    if (dto.getObjectId() != null) {
-        Optional<WorkObject> optObject = objectService.findById(dto.getObjectId());
-        if (optObject.isPresent()) {
-            existing.setObject(optObject.get());
-        } else {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Invalid objectId: " + dto.getObjectId()
-            );
+        Optional<CreatedItem> existingItemopt = createdItemService.findById(id);
+        if (!existingItemopt.isPresent()) {
+            return ResponseEntity.status(404).build();
         }
-    }
 
-    // Work
-    if (dto.getWorkId() != null) {
-        Optional<Work> optWork = workService.findById(dto.getWorkId());
-        if (optWork.isPresent()) {
-            existing.setWork(optWork.get());
-        } else {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Invalid workId: " + dto.getWorkId()
-            );
+        CreatedItem existingItem = existingItemopt.get();
+  /*      try {
+            Field[] fields = CreatedItem.class.getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Object value = field.get(updatedItem);
+                if (value != null) {
+                    field.set(existingItem, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+                    throw new RuntimeException("An error occurred while updating created item", e);
+        }*/
+
+        try {
+            for (Field field : CreatedItem.class.getDeclaredFields()) {
+                String name = field.getName();
+                if ("object".equals(name) || "work".equals(name) || "itemId".equals(name)) {
+                    continue;
+                }
+                field.setAccessible(true);
+                Object value = field.get(updatedItem);
+                if (value != null) {
+                    field.set(existingItem, value);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException("An error occurred while updating created item", e);
         }
+
+
+        CreatedItem savedItem = createdItemService.save(existingItem);
+        // módosítás után is újrageneráljuk a táblákat
+        Work work = savedItem.getObject().getWork();
+        List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+        tables.forEach(createdTablesService::save);
+        return ResponseEntity.ok(toDto(savedItem));
     }
-
-    // CreatedTables (table)
-    if (dto.getTableId() != null) {
-        Optional<CreatedTables> optTable = createdTablesService.findById(dto.getTableId());
-        if (optTable.isPresent()) {
-            existing.setTable(optTable.get());
-        } else {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Invalid tableId: " + dto.getTableId()
-            );
-        }
-    } else {
-        existing.setTable(null);
-    }
-
-
-    // 6. Mentés és táblák újragenerálása
-    CreatedItem saved = createdItemService.save(existing);
-    List<CreatedTables> newTables = tableOptimizationService.generateTables(
-            saved.getObject().getWork());
-    newTables.forEach(createdTablesService::save);
-
-    // 7. Válasz DTO-val
-    return ResponseEntity.ok(toDto(saved));
-}
-
-    
-    
-    
-    
-    private CreatedItemDto toDto(CreatedItem ci) {
+private CreatedItemDto toDto(CreatedItem ci) {
   CreatedItemDto d = new CreatedItemDto();
   d.setItemId(ci.getItemId());
   d.setName(ci.getName());
