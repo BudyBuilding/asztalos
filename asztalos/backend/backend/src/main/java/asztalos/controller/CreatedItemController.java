@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import asztalos.dto.CreatedItemDto;
 import asztalos.model.CreatedItem;
@@ -287,57 +288,81 @@ public ResponseEntity<?> deleteMultipleCreatedItems(@RequestBody List<Long> ids)
 }
 
 
-     @PutMapping("/{id}")
-    public ResponseEntity<?> updateCreatedItem(@PathVariable Long id, @RequestBody CreatedItem updatedItem) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User currentUser = userService.findByUsername(username).orElse(null);
+@PutMapping("/{id}")
+public ResponseEntity<?> updateCreatedItem(
+        @PathVariable Long id,
+        @RequestBody CreatedItem updatedItem) {
 
-
-        Optional<CreatedItem> existingItemopt = createdItemService.findById(id);
-        if (!existingItemopt.isPresent()) {
-            return ResponseEntity.status(404).build();
-        }
-
-        CreatedItem existingItem = existingItemopt.get();
-  /*      try {
-            Field[] fields = CreatedItem.class.getDeclaredFields();
-            for (Field field : fields) {
-                field.setAccessible(true);
-                Object value = field.get(updatedItem);
-                if (value != null) {
-                    field.set(existingItem, value);
-                }
-            }
-        } catch (IllegalAccessException e) {
-                    throw new RuntimeException("An error occurred while updating created item", e);
-        }*/
-
-        try {
-            for (Field field : CreatedItem.class.getDeclaredFields()) {
-                String name = field.getName();
-                if ("object".equals(name) || "work".equals(name) || "itemId".equals(name) || "table".equals(name)  || "createdTables".equals(name))  {
-                    continue;
-                }
-                field.setAccessible(true);
-                Object value = field.get(updatedItem);
-                if (value != null) {
-                    field.set(existingItem, value);
-                }
-            }
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException("An error occurred while updating created item", e);
-        }
-
-
-        CreatedItem savedItem = createdItemService.save(existingItem);
-        // módosítás után is újrageneráljuk a táblákat
-        Work work = savedItem.getObject().getWork();
-        List<CreatedTables> tables = tableOptimizationService.generateTables(work);
-        tables.forEach(createdTablesService::save);
-        return ResponseEntity.ok(toDto(savedItem));
+    // 1) Authentication & authorization
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String username = authentication.getName();
+    User currentUser = userService.findByUsername(username).orElse(null);
+    if (currentUser == null) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
-private CreatedItemDto toDto(CreatedItem ci) {
+
+    Optional<CreatedItem> existingOpt = createdItemService.findById(id);
+    if (existingOpt.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+    CreatedItem existingItem = existingOpt.get();
+
+    // Only admins or the owner of the object's parent work may update
+    boolean isAdmin = "admin".equals(currentUser.getRole());
+    boolean isOwner = existingItem.getObject().getUser().getUsername().equals(username);
+    if (!(isAdmin || isOwner)) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    // 2) Copy all simple, non‑association fields via reflection
+    try {
+        for (Field field : CreatedItem.class.getDeclaredFields()) {
+            String name = field.getName();
+            if ("object".equals(name)
+             || "work".equals(name)
+             || "itemId".equals(name)
+             || "table".equals(name)
+             || "createdTables".equals(name)) {
+                continue;
+            }
+            field.setAccessible(true);
+            Object newValue = field.get(updatedItem);
+            if (newValue != null) {
+                field.set(existingItem, newValue);
+            }
+        }
+    } catch (IllegalAccessException e) {
+        throw new RuntimeException("An error occurred while updating CreatedItem", e);
+    }
+
+    // 3) If the client supplied a table reference, load the managed entity
+    if (updatedItem.gettable() != null
+        && updatedItem.gettable().getId() != null) {
+
+        Long tableId = updatedItem.gettable().getId();
+        CreatedTables managedTable = createdTablesService
+            .findById(tableId)
+            .orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unknown CreatedTables id: " + tableId)
+            );
+        existingItem.setTable(managedTable);
+    }
+
+    // 4) Persist the changes
+    CreatedItem savedItem = createdItemService.save(existingItem);
+
+    // 5) Regenerate and save the related tables
+    Work work = savedItem.getObject().getWork();
+    List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+    tables.forEach(createdTablesService::save);
+
+    // 6) Return the updated DTO
+    return ResponseEntity.ok(toDto(savedItem));
+}
+
+
+    private CreatedItemDto toDto(CreatedItem ci) {
   CreatedItemDto d = new CreatedItemDto();
   d.setItemId(ci.getItemId());
   d.setName(ci.getName());

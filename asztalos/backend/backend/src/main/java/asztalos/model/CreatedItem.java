@@ -2,6 +2,7 @@ package asztalos.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -47,7 +48,7 @@ public void setGroupId(String groupId) {
     @JoinColumn(name = "color")
     private Color color;
 
-    @ManyToOne
+    @ManyToOne(cascade = { CascadeType.MERGE })   // or PERSIST, or ALL
     @JoinColumn(name = "createdTables")
     private CreatedTables CreatedTables;
 
