@@ -190,13 +190,32 @@ function EditWork() {
   }, [createdItems, colors]);
 
   const handleCreatedItemChange = (index, fields) => {
-    // közvetlenül a store‑on keresztül updateljük a tételt
-    dispatch(
-      createdItemApi.updateCreatedItemApi(createdItems[index].itemId, {
-        ...createdItems[index],
-        ...fields
-      })
-    ).catch((err) => console.error("Error updating createdItem:", err));
+    const orig = createdItems[index];
+    const payload = {
+      // Mindent, amit a DTO elvár:
+      itemId: orig.itemId,
+      name: orig.name,
+      details: orig.details,
+      material: orig.material,
+      kant: orig.kant,
+      qty: orig.qty,
+      position: orig.position,
+      rotation: orig.rotation,
+      size: orig.size,
+      tablePosition: orig.tablePosition,
+      tableRotation: orig.tableRotation,
+
+      // Kapcsolatok:
+      object: { objectId: orig.object.objectId },
+      work: { workId: orig.work.workId },
+
+      // A módosítás:
+      ...fields
+    };
+
+    dispatch(createdItemApi.updateCreatedItemApi(orig.itemId, payload)).catch(
+      (err) => console.error("Error updating createdItem:", err)
+    );
   };
 
   // ── Új item hozzáadása ───────────────────────────────────
@@ -228,7 +247,7 @@ function EditWork() {
     );
     if (idx !== -1) {
       handleCreatedItemChange(idx, {
-        color: { colorId: updatedItem.color?.colorId },
+        color: { colorId: updatedItem?.colorId },
         position: updatedItem.position,
         rotation: updatedItem.rotation
       });
