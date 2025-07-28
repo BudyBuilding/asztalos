@@ -46,7 +46,8 @@ export default function ModelViewer({
   const [isSnappingEnabled, setIsSnappingEnabled] = useState(false);
   const measureModeRef = useRef(measureMode);
   const firstPickRef = useRef(firstPick);
-
+  const posLabels = { x: "Jobbra-Balra", y: "Fel-Le", z: "Előre-Hátra" };
+  const rotLabels = { x: "Előre-Hátra", y: "Vízszintesen", z: "Oldalra" };
   // ha változik a state, tartsuk frissen a ref-eket:
   useEffect(() => {
     measureModeRef.current = measureMode;
@@ -230,7 +231,7 @@ export default function ModelViewer({
       if (!pick.hit) return;
 
       // ref-eket használva mindig a legfrissebb állapotot látjuk:
-      if (measureModeRef.current) {
+      if (measureModeRef.current && pi.event.shiftKey) {
         const worldPos = pick.pickedPoint;
         if (!worldPos) return;
 
@@ -383,6 +384,7 @@ export default function ModelViewer({
     wallMat.diffuseColor = new Color3(0.95, 0.95, 0.95);
     wallMat.alpha = 0.4;
     wallMat.specularColor = new Color3(0, 0, 0);
+    wallMat.backFaceCulling = false;
 
     const createWall = (name, opts, pos) => {
       const w = MeshBuilder.CreateBox(name, opts, scene);
@@ -731,9 +733,9 @@ export default function ModelViewer({
       >
         <Modal.Header
           onMouseDown={onHeaderMouseDown}
-          style={{ cursor: "move" }}
+          style={{ cursor: "move", padding: "0.5rem 1rem" }}
         >
-          <Modal.Title>Transform Object #{selectedObjectId}</Modal.Title>
+          <Modal.Title>Mozgatás és forgatás: #{selectedObjectId}</Modal.Title>
         </Modal.Header>
         <Modal.Body
           style={{
@@ -741,20 +743,30 @@ export default function ModelViewer({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            textAlign: "center"
+            textAlign: "center",
+            padding: "0.5rem 1rem"
           }}
         >
+          <h6 className="mb-2">Mozgatás</h6>
           {["x", "y", "z"].map((ax) => {
+            const label = posLabels[ax];
             const min = 0;
             const max = ax === "y" ? 3000 : 5000;
             const val = objPosition[ax];
-            const label = ax.toUpperCase();
 
             return (
-              <Form.Group key={ax} className="mb-4">
-                {/* felső sor: label + –, input, +, reset */}
-                <div className="d-flex align-items-center mb-2">
-                  <span style={{ width: 20, fontWeight: "bold" }}>
+              <Form.Group key={ax} style={{ width: "100%" }}>
+                <div
+                  className="d-flex align-items-center mb-2"
+                  style={{ gap: "0.5rem" /* egységnyi hézag a gombok közt */ }}
+                >
+                  <span
+                    className="fw-bold"
+                    style={{
+                      width:
+                        "6.5rem" /* a címkét legalább ennyire szélesre nyomja */
+                    }}
+                  >
                     {label}:
                   </span>
 
@@ -816,13 +828,18 @@ export default function ModelViewer({
           })}
 
           {/* rotationök */}
+          <h6 className="mb-2">Forgatás</h6>
           {["x", "y", "z"].map((ax) => {
+            const label = rotLabels[ax];
             const val = objRotation[ax];
             return (
-              <Form.Group key={`r${ax}`} className="mb-4">
-                <div className="d-flex align-items-center mb-2">
-                  <span style={{ width: 20, fontWeight: "bold" }}>
-                    {ax.toUpperCase()}:
+              <Form.Group key={`r${ax}`} style={{ width: "100%" }}>
+                <div
+                  className="d-flex align-items-center mb-2"
+                  style={{ gap: "0.5rem" }}
+                >
+                  <span className="fw-bold" style={{ width: "6.5rem" }}>
+                    {label}:
                   </span>
                   <Button
                     size="sm"
@@ -890,10 +907,10 @@ export default function ModelViewer({
 
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCancel}>
-            Cancel
+            Mégsem
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Apply
+            Alkalmazás
           </Button>
         </Modal.Footer>
       </Modal>
