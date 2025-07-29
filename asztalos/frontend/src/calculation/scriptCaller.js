@@ -84,10 +84,14 @@ export default function ScriptCaller({
     setCollapsedColors((prev) => ({ ...prev, [cid]: !prev[cid] }));
 
   // refs for width/height/depth inputs
-  const heightRef = useRef(null);
-  const widthRef = useRef(null);
-  const depthRef = useRef(null);
-
+  const handleDimChange = (dim) => (e) => {
+    const v = e.target.value;
+    setDims((prev) => ({ ...prev, [dim]: v === "" ? "" : Number(v) }));
+  };
+  const handleDimBlur = (dim) => (e) => {
+    const v = e.target.value;
+    setDims((prev) => ({ ...prev, [dim]: v === "" ? "" : Number(v) }));
+  };
   // available rooms (excluding "All")
   const rooms = useMemo(() => {
     return Array.from(
@@ -97,13 +101,18 @@ export default function ScriptCaller({
 
   // parse setting string "1:100,2:200" → {1:100,2:200}
   function parseSetting(str = "") {
-    return Object.fromEntries(
+    const obj = Object.fromEntries(
       str
         .split(",")
         .map((p) => p.split(":").map((x) => x.trim()))
         .filter(([k, v]) => k && v)
         .map(([k, v]) => [k, v])
     );
+    // ha van width/height/depth kulcs, konvertáljuk számmá
+    ["width", "height", "depth"].forEach((dim) => {
+      if (obj[dim] != null) obj[dim] = Number(obj[dim]);
+    });
+    return obj;
   }
 
   const dimLabels = {
@@ -156,7 +165,13 @@ export default function ScriptCaller({
   // when a script is chosen
   async function selectScript(script) {
     setSelectedScript(script);
-    setConfig(parseSetting(script.setting));
+    const cfg = parseSetting(script.setting);
+    setConfig(cfg);
+    setDims({
+      width: cfg.width ?? "",
+      height: cfg.height ?? "",
+      depth: cfg.depth ?? ""
+    });
     try {
       await scriptItemApi.getAllScriptItemsForScriptApi(script.scriptId);
       await dispatch(getScriptItemsByScript(script.scriptId));
@@ -181,12 +196,10 @@ export default function ScriptCaller({
 
   function handleGenerate() {
     if (!selectedScript) return;
-    const height = Number(heightRef.current.value);
-    const width = Number(widthRef.current.value);
-    const depth = Number(depthRef.current.value);
+    const { width, height, depth } = dims;
     const updatedConfig = { ...config, height, width, depth };
     setConfig(updatedConfig);
-
+    /*
     // feldolgozzuk a scriptet
     const items = processScript(
       updatedConfig,
@@ -199,13 +212,23 @@ export default function ScriptCaller({
       colorId: it.material === "PFL" ? -1 : null
     }));
     setGeneratedItems(itemsWithColor);
-    widthRef.current.value = width;
-    heightRef.current.value = height;
-    depthRef.current.value = depth;
     // dummy tételek készítése refScriptId alapján
     const realItems = items.filter((i) => !i.refScriptId);
     const refItems = items.filter((i) => !!i.refScriptId);
-
+*/
+    const allItems = processScript(
+      updatedConfig,
+      { height, width, depth },
+      selectedScript.scriptId
+    );
+    // csak ezt kell beállítani:
+    setGeneratedItems(
+      allItems.map((it) => ({
+        ...it,
+        colorId: it.material === "PFL" ? -1 : null
+      }))
+    );
+    /*
     setDummyScriptItems([]); // töröljük az előzőeket
     refItems.forEach((ref) => {
       dispatch(fetchScriptItemsForScript(ref.refScriptId))
@@ -229,7 +252,7 @@ export default function ScriptCaller({
         .catch((err) =>
           console.error("Error fetching nested script items:", err)
         );
-    });
+    });*/
   }
 
   // save object  created items
@@ -349,28 +372,27 @@ export default function ScriptCaller({
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
+    // régi box-ok eltávolítása
     scene.meshes
       .filter((m) => m.name.startsWith("box_"))
       .forEach((m) => m.dispose());
 
-    const wNum = Number(widthRef.current?.value || 0);
-    const hNum = Number(heightRef.current?.value || 0);
-    const dNum = Number(depthRef.current?.value || 0);
+    // újraszámoljuk a skálát a dims alapján
+    const wNum = dims.width || 0;
+    const hNum = dims.height || 0;
+    const dNum = dims.depth || 0;
     const maxDim = Math.max(wNum, hNum, dNum) || 1;
     const globalScale = 1 / maxDim;
-
     generatedItems.forEach((itm, idx) => {
       const [w, h, d] = itm.size;
       const [px, py, pz] = itm.position;
       const [rx, ry, rz] = itm.rotation;
-
       const sw = w * globalScale,
         sh = h * globalScale,
         sd = d * globalScale;
       const x = px * globalScale,
         y = py * globalScale,
         z = pz * globalScale;
-
       const box = MeshBuilder.CreateBox(
         `box_${idx}`,
         { width: sw, height: sh, depth: sd },
@@ -386,7 +408,7 @@ export default function ScriptCaller({
       mat.diffuseColor = new Color3(0.3, 0.3, 0.3);
       box.material = mat;
     });
-  }, [generatedItems]);
+  }, [generatedItems, dims]);
 
   function Header() {
     return (
@@ -437,13 +459,10 @@ export default function ScriptCaller({
                     <Form.Control
                       type="number"
                       size="sm"
-                      ref={
-                        dim === "width"
-                          ? widthRef
-                          : dim === "height"
-                          ? heightRef
-                          : depthRef
-                      }
+                      // uncontrolled input, csak a defaultValue-t adjuk át
+                      defaultValue={dims[dim]}
+                      // és csak blur-nél szinkronizáljuk a state-t
+                      onBlur={handleDimBlur(dim)}
                     />
                   </Form.Group>
                 ))}
@@ -477,7 +496,14 @@ export default function ScriptCaller({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "85vh",
+        width: "100%"
+      }}
+    >
       <Header />
       {!selectedScript ? (
         <Container
@@ -547,10 +573,16 @@ export default function ScriptCaller({
       ) : (
         <Container
           fluid
-          style={{ flex: 1, overflowY: "auto", marginTop: "1rem" }}
+          style={{
+            flex: "1 1 0",
+            overflowY: "auto",
+            marginTop: "1rem",
+            width: "100%",
+            paddingRight: "0"
+          }}
         >
-          <Row style={{ height: "100%" }}>
-            <Col md={3} className="border-end">
+          <Row style={{ height: "75vh", width: "100%" }}>
+            <Col md={3} className="border-end" style={{ width: "25%" }}>
               <h5>Beállítások</h5>
               <Form>
                 <Row className="g-2">
@@ -584,7 +616,7 @@ export default function ScriptCaller({
               </Form>
             </Col>
 
-            <Col md={6} className="text-center">
+            <Col md={6} style={{ width: "45%" }} className="text-center">
               {generatedItems.length > 0 ? (
                 <ObjectViewer
                   object={
@@ -600,11 +632,11 @@ export default function ScriptCaller({
                   onItemUpdate={handleItemUpdate}
                 />
               ) : (
-                <canvas ref={canvasRef} style={{ width: "100%" }} />
+                <canvas ref={canvasRef} style={{ width: "80%" }} />
               )}
             </Col>
 
-            <Col md={3} className="border-start">
+            <Col md={3} className="border-start" style={{ width: "30%" }}>
               <h5>Kiválasztott színek</h5>
               <div className="d-flex mb-3">
                 {palette.map((color) => {

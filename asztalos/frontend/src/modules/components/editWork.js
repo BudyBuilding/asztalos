@@ -591,7 +591,13 @@ function EditWork() {
 
       <div className="d-flex" style={{ height: "85vh", overflow: "hidden" }}>
         {/* Left Panel */}
-        <div style={{ flex: 1, overflowY: "hidden" }}>
+        <div
+          style={{
+            flex: "1 1 0", // növekedjék és zsugorodjék is
+            minWidth: 0, // engedi, hogy a gyerek elemek befelé zsugorodjanak
+            overflowY: "hidden"
+          }}
+        >
           {(selectedTab === "0" || selectedTab === "newObject") &&
             showModel && (
               <ModelViewer
@@ -608,10 +614,11 @@ function EditWork() {
           {selectedTab === "newObject" && showForm && (
             <div
               style={{
-                flex: 1,
+                flex: "1 1 0",
+                minWidth: 0,
                 display: "flex",
                 flexDirection: "column",
-                height: "100%",
+                height: "85vh",
                 overflow: "hidden"
               }}
             >
