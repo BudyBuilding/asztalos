@@ -12,11 +12,12 @@ const ColorSelector = ({ show, handleClose }) => {
   const colorTypes = {
     "Fa minta": ["#8B4513", "#A0522D"],
     MDF: ["#808080", "#696969"],
-    "Uni színek": ["#FF0000", "#00FF00"],
+    "Uni színek": ["#FF0000", "#00FF00"]
   };
 
   const colors = useSelector((state) => state.colors);
-
+  const groups = Array.from(new Set(colors.map((color) => color.groupName)));
+  const [selectedGroup, setSelectedGroup] = useState(groups[0] || "");
   function containAlready() {
     return colors.colors[selectedCategory]?.includes(selectedColor);
   }
@@ -26,7 +27,7 @@ const ColorSelector = ({ show, handleClose }) => {
       console.log("hello");
       dispatch({
         type: "UPDATE_COLORS",
-        payload: { colors: [selectedColor], category: selectedCategory },
+        payload: { colors: [selectedColor], category: selectedCategory }
       });
       handleClose();
     }
@@ -36,7 +37,7 @@ const ColorSelector = ({ show, handleClose }) => {
     <>
       <Modal show={show} onHide={handleClose} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>Color Selector</Modal.Title>
+          <Modal.Title>Szín kiválasztás</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group as={Row} className="mb-3">

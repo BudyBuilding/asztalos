@@ -26,7 +26,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [colorDimension, setColorDimension] = useState("[2780,2050,18]");
-
+  const [groupName, setColorGroupName] = useState("");
   // on open, populate form and load image if editing
   useEffect(() => {
     if (isEdit) {
@@ -37,6 +37,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setColorPrice(colorToEdit.price);
       setColorDimension(colorToEdit.dimension);
       setSelectedFile(null);
+      setColorGroupName(colorToEdit.groupName);
 
       /*    // fetch existing image by id
       if (colorToEdit.imageId) {
@@ -68,6 +69,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       setSelectedFile(null);
       setPreviewImage(null);
       setColorDimension("[2780,2050,18]");
+      setColorGroupName("");
     }
   }, [isEdit, colorToEdit, dispatch]);
 
@@ -142,7 +144,8 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
       materialType: colorType,
       name: colorName,
       rotable: colorRotable,
-      price: colorPrice
+      price: colorPrice,
+      groupName: groupName
     };
 
     try {
@@ -219,6 +222,21 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                         <option value="Gizir">Gizir</option>
                         <option value="PFL">PFL</option>
                       </Form.Select>
+                    </FloatingLabel>
+                  </Col>
+                  <Col>
+                    <FloatingLabel
+                      controlId="groupName"
+                      label="Csoport"
+                      className="mb-3"
+                    >
+                      <Form.Control
+                        type="text"
+                        placeholder="Írd be a csoport nevét"
+                        value={groupName}
+                        onChange={(e) => setColorGroupName(e.target.value)}
+                        required
+                      />
                     </FloatingLabel>
                   </Col>
                   <Col>

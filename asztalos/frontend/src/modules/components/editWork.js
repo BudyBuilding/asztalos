@@ -5,13 +5,15 @@ import GeneratedItemsList from "../helpers/GeneratedItemsList.js";
 import createdItemApi from "../../data/api/createdItemApi";
 import {
   Button,
+  ButtonGroup,
   Nav,
   NavDropdown,
   Modal,
   Card,
   Row,
   Col,
-  Image as RBImage
+  Image as RBImage,
+  Form
 } from "react-bootstrap";
 import { IonIcon } from "@ionic/react";
 import { add, chevronBack, chevronForward } from "ionicons/icons";
@@ -64,7 +66,11 @@ function EditWork() {
   const [showPaletteModal, setShowPaletteModal] = useState(false);
   const isOrdered = localWork?.isOrdered; //
   const colors = dispatch(useSelector(getAllColors)) || [];
-
+  const groups = React.useMemo(
+    () => Array.from(new Set(colors.map((c) => c.groupName))),
+    [colors]
+  );
+  const [selectedGroup, setSelectedGroup] = useState(groups[0] || "");
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
   const [panelWidth, setPanelWidth] = useState(30);
@@ -419,26 +425,64 @@ function EditWork() {
           <Modal.Title>Válassz egy színt</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Row xs={2} md={3} lg={4} className="g-3">
-            {colors.map((c) => (
-              <Col key={c.colorId}>
-                <Card
-                  onClick={() => selectColor(c)}
-                  style={{ cursor: "pointer" }}
+          <Form.Group as={Row} className="mb-3">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: "0.5rem",
+                marginBottom: "1rem"
+              }}
+            >
+              {groups.map((grp) => (
+                <div
+                  key={grp}
+                  onClick={() => setSelectedGroup(grp)}
+                  style={{
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "1rem",
+                    background: selectedGroup === grp ? "#0d6efd" : "#e9ecef",
+                    color: selectedGroup === grp ? "#fff" : "#000",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "background 0.2s, color 0.2s"
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      selectedGroup === grp ? "#0b5ed7" : "#d4d8dc")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background =
+                      selectedGroup === grp ? "#0d6efd" : "#e9ecef")
+                  }
                 >
-                  <RBImage
-                    src={`data:image/jpeg;base64,${c.imageDataReduced}`}
-                    height={100}
-                    style={{ objectFit: "cover" }}
-                  />
-                  <Card.Body className="p-2 text-center">
-                    <div className="color-name-container" data-name={c.name}>
-                      <span className="color-name">{c.name}</span>
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
+                  {grp}
+                </div>
+              ))}
+            </div>
+          </Form.Group>
+          <Row xs={2} md={3} lg={4} className="g-3">
+            {colors
+              .filter((c) => c.groupName === selectedGroup)
+              .map((c) => (
+                <Col key={c.colorId}>
+                  <Card
+                    onClick={() => selectColor(c)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <RBImage
+                      src={`data:image/jpeg;base64,${c.imageDataReduced}`}
+                      height={100}
+                      style={{ objectFit: "cover" }}
+                    />
+                    <Card.Body className="p-2 text-center">
+                      <div className="color-name-container" data-name={c.name}>
+                        <span className="color-name">{c.name}</span>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
           </Row>
         </Modal.Body>
       </Modal>

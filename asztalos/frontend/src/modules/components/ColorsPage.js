@@ -6,6 +6,7 @@ import Loading from "../helpers/Loading";
 import { Table, Modal, Image } from "react-bootstrap";
 import { getAllColors, getImageById } from "../../data/getters";
 import AddColorModal from "../modals/AddColorModal";
+import { Row, Col, Form } from "react-bootstrap";
 
 function ColorsPage() {
   const dispatch = useDispatch();
@@ -16,7 +17,17 @@ function ColorsPage() {
   const [render, setRender] = useState(true);
 
   const colors = useSelector((state) => state.colors) || colors1 || [];
-
+  const groups = React.useMemo(
+    () => Array.from(new Set(colors.map((c) => c.groupName))),
+    [colors]
+  );
+  const [selectedGroup, setSelectedGroup] = useState("");
+  // első betöltéskor default csoport
+  useEffect(() => {
+    if (groups.length && !groups.includes(selectedGroup)) {
+      setSelectedGroup(groups[0]);
+    }
+  }, [groups]);
   // Szerkesztéshez
   const [showColorModal, setShowColorModal] = useState(false);
   const [editingColor, setEditingColor] = useState(null);
@@ -115,6 +126,7 @@ function ColorsPage() {
                   <th>Elérhető</th>
                   <th>Forgatható</th>
                   <th>Darabolható</th>
+                  <th>Csoport</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,6 +173,7 @@ function ColorsPage() {
                       <td>
                         {color.rotable ? "Darabolható" : "Nem darabolható"}
                       </td>
+                      <td>{color.groupName}</td>
                     </tr>
                   );
                 })}
