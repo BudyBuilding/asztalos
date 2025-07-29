@@ -19,6 +19,7 @@ public class Setting {
     private String name;
         
     private String value;
+    private String valueList;
 
     public Setting() {
     }
@@ -46,5 +47,13 @@ public class Setting {
 
     public void setValue(String value) {
         this.value = value;
-    }           
+    } 
+    
+        public String getValueList() {
+        return valueList;
+    }       
+
+    public void setValueList(String valueList) {
+        this.valueList = valueList;
+    } 
 }
