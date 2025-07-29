@@ -142,8 +142,8 @@ export default function Item({
   return (
     <Container className="p-2 ">
       {/* 1st row: w × h = qty + rotate + chevron */}
-      <Row className="align-items-center">
-        <Col xs={8} className="d-flex align-items-center">
+      <Row className="align-items-center flex-wrap me-2">
+        <Col className="d-flex flex-wrap align-items-center ">
           <Form.Control
             className="text-center flex-grow-0"
             style={inputStyle}
@@ -181,7 +181,7 @@ export default function Item({
           />
           <Form.Control
             className="ms-2"
-            style={{ ...inputStyle, width: "auto", flexGrow: "0" }}
+            style={{ ...inputStyle, width: "40%", flexGrow: "0" }}
             placeholder="Name"
             value={item.name}
             onChange={(e) => handleChange("name", e.target.value)}
@@ -190,8 +190,8 @@ export default function Item({
         </Col>
 
         {/* rotate button only if rotable; else show disabled style */}
-        <Col xs="auto">
-          {!collapsed ? (
+        {!collapsed ? (
+          <Col xs="auto">
             <IonIcon
               icon={item.rotable ? reload : removeCircleOutline}
               style={{
@@ -200,10 +200,11 @@ export default function Item({
               }}
               onClick={handleRotate}
             />
-          ) : (
-            <div style={{ width: "1.5rem", height: "1.5rem" }} />
-          )}
-        </Col>
+          </Col>
+        ) : (
+          <></>
+          // <div style={{ width: "1.5rem", height: "1.5rem" }} />
+        )}
 
         {/* collapse chevron */}
         <Col xs="auto">
