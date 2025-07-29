@@ -32,6 +32,7 @@ public class Color {
     private String imageId; // changed imgUrl to imageId
 
     private Double price; // new price field
+    private String group;
 
     @Column(name = "image_data", columnDefinition = "bytea")
     private byte[] imageData;
@@ -130,12 +131,21 @@ public class Color {
     public void setRotable(Boolean rotable) {
         this.rotable = rotable;
     }
+
     public String getImageId() {
         return imageId;
     }
 
     public void setImageId(String imageId) {
         this.imageId = imageId;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public Double getPrice() {

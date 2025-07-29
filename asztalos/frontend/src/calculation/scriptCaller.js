@@ -71,6 +71,15 @@ export default function ScriptCaller({
     });
     return m;
   }, [allSettings]);
+  const settingsMeta = useMemo(() => {
+    return allSettings.map((s) => {
+      let list = s.valueList;
+      if (typeof list === "string") {
+        list = list.split(",").map((o) => o.trim());
+      }
+      return { ...s, valueList: Array.isArray(list) ? list : [] };
+    });
+  }, [allSettings]);
   // local state
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState("");
@@ -166,11 +175,20 @@ export default function ScriptCaller({
   async function selectScript(script) {
     setSelectedScript(script);
     const cfg = parseSetting(script.setting);
-    setConfig(cfg);
+    const cfgWithDefaults = allSettings.reduce(
+      (acc, s) => {
+        if (s.valueList?.length && acc[s.settingId] == null) {
+          acc[s.settingId] = s.valueList[0];
+        }
+        return acc;
+      },
+      { ...cfg }
+    );
+    setConfig(cfgWithDefaults);
     setDims({
-      width: cfg.width ?? "",
-      height: cfg.height ?? "",
-      depth: cfg.depth ?? ""
+      width: cfgWithDefaults.width ?? "",
+      height: cfgWithDefaults.height ?? "",
+      depth: cfgWithDefaults.depth ?? ""
     });
     try {
       await scriptItemApi.getAllScriptItemsForScriptApi(script.scriptId);
@@ -178,6 +196,22 @@ export default function ScriptCaller({
     } catch (error) {
       console.error("Error fetching script items:", error);
     }
+
+    const initialItems = processScript(
+      cfgWithDefaults,
+      {
+        width: cfgWithDefaults.width,
+        height: cfgWithDefaults.height,
+        depth: cfgWithDefaults.depth
+      },
+      script.scriptId
+    );
+    setGeneratedItems(
+      initialItems.map((it) => ({
+        ...it,
+        colorId: it.material === "PFL" ? -1 : null
+      }))
+    );
   }
 
   // handle config field changes
@@ -590,28 +624,55 @@ export default function ScriptCaller({
                     .filter(
                       ([key]) => !["height", "width", "depth"].includes(key)
                     )
-                    .map(([key, val]) => (
-                      <Col
-                        xs={12}
-                        className="d-flex align-items-center mb-2"
-                        key={key}
-                      >
-                        <Form.Label
-                          className="me-2 mb-0 text-capitalize"
-                          style={{ width: "100%" }}
+                    .filter(([key]) => {
+                      const allowed = selectedScript.setting
+                        .split(",")
+                        .map((p) => p.split(":")[0]);
+                      return allowed.includes(key);
+                    })
+                    .map(([key, val]) => {
+                      const meta = settingsMeta.find(
+                        (s) => String(s.settingId) === key
+                      );
+                      return (
+                        <Col
+                          xs={12}
+                          className="d-flex align-items-center mb-2"
+                          key={key}
                         >
-                          {settingNameById[key] || key}
-                        </Form.Label>
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          name={key}
-                          value={val}
-                          onChange={handleConfigChange}
-                          style={{ maxWidth: "6rem" }}
-                        />
-                      </Col>
-                    ))}
+                          <Form.Label
+                            className="me-2 mb-0"
+                            style={{ width: "100%" }}
+                          >
+                            {settingNameById[key] || key}
+                          </Form.Label>
+                          {meta?.valueList?.length ? (
+                            <Form.Select
+                              size="sm"
+                              name={key}
+                              value={val}
+                              onChange={handleConfigChange}
+                              style={{ maxWidth: "6rem" }}
+                            >
+                              {meta.valueList.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          ) : (
+                            <Form.Control
+                              type="text"
+                              size="sm"
+                              name={key}
+                              value={val}
+                              onChange={handleConfigChange}
+                              style={{ maxWidth: "6rem" }}
+                            />
+                          )}
+                        </Col>
+                      );
+                    })}
                 </Row>
               </Form>
             </Col>
