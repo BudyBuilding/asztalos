@@ -44,7 +44,7 @@ function EditWork() {
   const [showModel, setShowModel] = useState(true);
   const [tablesGenerated, setTablesGenerated] = useState(false);
   const [objects, setObjects] = useState([]);
-  const [swapSourceColor, setSwapSourceColor] = useState(null);
+  const [swapSourceColor, setSwapSourceColor] = useState(undefined);
   const createdItems = useSelector(
     (state) =>
       state.createdItems.filter((item) => item.work?.workId === Number(workId)),
@@ -387,30 +387,38 @@ function EditWork() {
     setSwapSourceColor(null);
   };
   const selectColor = (c) => {
-    if (swapSourceColor != null) {
-      // COLLECT one bulk‐update payload instead of N calls
+    // if swapSourceColor is any value (null or a number), we’re in swap‑mode
+    if (swapSourceColor !== undefined) {
       const bulkUpdates = createdItems
-        .filter((it) => it.color?.colorId === swapSourceColor)
+        .filter((it) => {
+          const cid = it.color?.colorId;
+          // if swapSourceColor===null ⇒ swap from no‑color
+          return swapSourceColor === null
+            ? cid == null // matches both undefined & null
+            : cid === swapSourceColor;
+        })
         .map((it) => ({
           itemId: it.itemId,
           color: { colorId: c.colorId }
         }));
 
-      // dispatch ONE API call for all swaps
       dispatch(createdItemApi.updateMultipleCreatedItemsApi(bulkUpdates)).catch(
         (err) => console.error("Bulk swap failed", err)
       );
 
-      setSwapSourceColor(null);
+      // exit swap‑mode
+      setSwapSourceColor(undefined);
       closePalette();
       return;
     }
-    // normal “add to palette” mode:
+
+    // normal “add to palette”:
     setPalette((p) =>
       p.length < 5 && !p.some((x) => x.colorId === c.colorId) ? [...p, c] : p
     );
     closePalette();
   };
+
   const removeColor = (cid) =>
     setPalette((p) => p.filter((x) => x.colorId !== cid));
 
