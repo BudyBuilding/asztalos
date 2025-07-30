@@ -300,10 +300,15 @@ export default function GeneratedItemsList({
                                       Item={itm}
                                       index={__idx}
                                       readOnly={readOnly}
-                                      visible={!hiddenItems.has(itm.itemId)}
-                                      onToggleVisibility={() =>
-                                        onToggleVisibility(itm.itemId)
-                                      }
+                                      {...(!readOnly
+                                        ? {
+                                            visible: hiddenItems
+                                              ? !hiddenItems.has(itm.itemId)
+                                              : [],
+                                            onToggleVisibility: () =>
+                                              onToggleVisibility(itm.itemId)
+                                          }
+                                        : {})}
                                       onItemChange={(upd) =>
                                         !readOnly &&
                                         handleItemChange(__idx, upd)
