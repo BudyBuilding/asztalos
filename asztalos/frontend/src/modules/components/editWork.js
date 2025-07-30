@@ -44,12 +44,7 @@ function EditWork() {
   const [showModel, setShowModel] = useState(true);
   const [tablesGenerated, setTablesGenerated] = useState(false);
   const [objects, setObjects] = useState([]);
-  /*const [createdItems, setCreatedItems] = useState(
-    useSelector((state) => state.createdItems) || []
-  );*/
-  /*const createdItems =
-    useSelector((state) => state.createdItems) || createdItems1 || [];
-*/
+  const [swapSourceColor, setSwapSourceColor] = useState(null);
   const createdItems = useSelector(
     (state) =>
       state.createdItems.filter((item) => item.work?.workId === Number(workId)),
@@ -387,8 +382,30 @@ function EditWork() {
 
   // UI helpers for palette modal
   const openPalette = () => setShowPaletteModal(true);
-  const closePalette = () => setShowPaletteModal(false);
+  const closePalette = () => {
+    setShowPaletteModal(false);
+    setSwapSourceColor(null);
+  };
   const selectColor = (c) => {
+    if (swapSourceColor != null) {
+      // COLLECT one bulk‐update payload instead of N calls
+      const bulkUpdates = createdItems
+        .filter((it) => it.color?.colorId === swapSourceColor)
+        .map((it) => ({
+          itemId: it.itemId,
+          color: { colorId: c.colorId }
+        }));
+
+      // dispatch ONE API call for all swaps
+      dispatch(createdItemApi.updateMultipleCreatedItemsApi(bulkUpdates)).catch(
+        (err) => console.error("Bulk swap failed", err)
+      );
+
+      setSwapSourceColor(null);
+      closePalette();
+      return;
+    }
+    // normal “add to palette” mode:
     setPalette((p) =>
       p.length < 5 && !p.some((x) => x.colorId === c.colorId) ? [...p, c] : p
     );
@@ -785,6 +802,10 @@ function EditWork() {
                       generatedItems={createdItems}
                       palette={palette}
                       collapsedColors={collapsedColors}
+                      onSwap={(colorId) => {
+                        setSwapSourceColor(colorId);
+                        setShowPaletteModal(true);
+                      }}
                       toggleColor={(cid) =>
                         setCollapsedColors((cc) => ({
                           ...cc,

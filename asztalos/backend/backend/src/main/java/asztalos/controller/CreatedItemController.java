@@ -366,6 +366,59 @@ private CreatedItemDto toDto(CreatedItem ci) {
     ));
   return d;
 }
+    @PutMapping("/items")
+    public ResponseEntity<?> updateMultipleCreatedItems(@RequestBody List<CreatedItem> items) {
+        Logger log = LoggerFactory.getLogger(CreatedItemController.class);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        User currentUser = userService.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        if (items.isEmpty()) {
+            return ResponseEntity.badRequest().body("Empty item list");
+        }
+        Work work = null;
+        try {
+            for (CreatedItem dto : items) {
+                Optional<CreatedItem> existingOpt = createdItemService.findById(dto.getItemId());
+                if (existingOpt.isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                         .body("Item not found: " + dto.getItemId());
+                }
+                CreatedItem existing = existingOpt.get();
+                // Security: only owner or admin
+                if (!"admin".equals(currentUser.getRole())
+                    && !"companyAdmin".equals(currentUser.getRole())
+                    && !"companyUser".equals(currentUser.getRole())
+                    && !existing.getObject().getUser().getUsername().equals(username)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+                // apply non-null updates (we only care about, say, color)
+                if (dto.getColor() != null) {
+                    existing.setColor(dto.getColor());
+                }
+                // ... add other fields here if needed ...
+                createdItemService.save(existing);
+                if (work == null) {
+                    work = existing.getObject().getWork();
+                }
+            }
+            // regenerate tables once
+            if (work != null) {
+                List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+                tables.forEach(createdTablesService::save);
+            }
+            // return the updated dtos
+            List<CreatedItemDto> dtos = items.stream()
+                .map(ci -> toDto(createdItemService.findById(ci.getItemId()).get()))
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(dtos);
+        } catch (Exception e) {
+            log.error("Error in bulk update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
 
 }

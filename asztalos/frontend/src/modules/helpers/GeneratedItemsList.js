@@ -15,7 +15,8 @@ export default function GeneratedItemsList({
   onDragEnd,
   onDelete, // receives an index to delete
   readOnly = false,
-  objects = []
+  objects = [],
+  onSwap
 }) {
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
@@ -70,19 +71,39 @@ export default function GeneratedItemsList({
               }}
             >
               <div
-                onClick={() => toggleColor("no-color")}
                 style={{
-                  cursor: "pointer",
                   display: "flex",
-                  alignItems: "center"
+                  alignItems: "center",
+                  justifyContent: "space-between"
                 }}
               >
-                <IonIcon
-                  icon={
-                    collapsedColors["no-color"] ? chevronForward : chevronDown
-                  }
-                />
-                <strong style={{ marginLeft: 6 }}>Nincs szín</strong>
+                <div
+                  onClick={() => toggleColor("no-color")}
+                  style={{
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center"
+                  }}
+                >
+                  <IonIcon
+                    icon={
+                      collapsedColors["no-color"] ? chevronForward : chevronDown
+                    }
+                  />
+                  <strong style={{ marginLeft: 6 }}>Nincs szín</strong>
+                </div>
+                <button
+                  style={{
+                    border: "none",
+                    background: "none",
+                    color: "#0d6efd",
+                    cursor: "pointer",
+                    padding: "0.25rem"
+                  }}
+                  onClick={() => onSwap(null)}
+                >
+                  Szín hozzáadás
+                </button>
               </div>
 
               {/* Objektumonként csoportosítva */}
@@ -189,13 +210,28 @@ export default function GeneratedItemsList({
                     style={{
                       cursor: "pointer",
                       display: "flex",
-                      alignItems: "center"
+                      alignItems: "center",
+                      justifyContent: "space-between"
                     }}
                   >
-                    <IonIcon
-                      icon={isCollapsed ? chevronForward : chevronDown}
-                    />
-                    <strong style={{ marginLeft: 6 }}>{color.name}</strong>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <IonIcon
+                        icon={isCollapsed ? chevronForward : chevronDown}
+                      />
+                      <strong style={{ marginLeft: 6 }}>{color.name}</strong>
+                    </div>
+                    <button
+                      style={{
+                        border: "none",
+                        background: "none",
+                        color: "#0d6efd",
+                        cursor: "pointer",
+                        padding: "0.25rem"
+                      }}
+                      onClick={() => onSwap(color.colorId)}
+                    >
+                      Csere
+                    </button>
                   </div>
 
                   {!collapsedColors[cid] &&

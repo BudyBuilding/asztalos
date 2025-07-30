@@ -169,6 +169,25 @@ const getCreatedItemOfUserAdminApi = (createdItemId) => {
   };
 };
 
+const updateMultipleCreatedItemsApi = (updatedItemsList) => {
+  return async (dispatch) => {
+    try {
+      console.log("Bulk updating items:", updatedItemsList);
+      const response = await axiosInstance.put(
+        `/created-items/items`,
+        updatedItemsList
+      );
+      console.log("Bulk update successful:", response.data);
+      // Assuming you have an action to merge many updates at once:
+      dispatch(addMoreCreatedItems(response.data));
+      return response.data;
+    } catch (error) {
+      console.error("Error bulk‐updating createdItems:", error);
+      throw error;
+    }
+  };
+};
+
 export default {
   getAllCreatedItemsApi,
   getAllCreatedItemsForObjectApi,
@@ -178,5 +197,6 @@ export default {
   deleteMultipleCreatedItemsApi,
   updateCreatedItemApi,
   createCreatedItemApi,
-  getCreatedItemOfUserAdminApi
+  getCreatedItemOfUserAdminApi,
+  updateMultipleCreatedItemsApi
 };
