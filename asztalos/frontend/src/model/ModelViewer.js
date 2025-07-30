@@ -31,7 +31,8 @@ export default function ModelViewer({
   onItemUpdate,
   onObjectUpdate,
   roomSize,
-  onRoomSizeChange
+  onRoomSizeChange,
+  hiddenItems
 }) {
   const dispatch = useDispatch();
 
@@ -520,7 +521,7 @@ export default function ModelViewer({
           else mat.diffuseColor = new Color3(0.7, 0.7, 0.7);
         } else mat.diffuseColor = new Color3(0.7, 0.7, 0.7);
         mesh.material = mat;
-
+        mesh.isVisible = !hiddenItems.has(item.itemId);
         mesh.renderOutline = false;
         mesh.outlineWidth = 0;
         mesh.outlineColor = Color3.Green();
@@ -567,7 +568,7 @@ export default function ModelViewer({
 
     camera.setTarget(new Vector3(roomW / 2, roomH / 2, roomD / 2));
     camera.radius = 10;
-  }, [objects, createdItems, usedColors, dispatch, roomSize]);
+  }, [objects, createdItems, usedColors, dispatch, roomSize, hiddenItems]);
 
   const handlePositionChange = (ax, value) => {
     if (!selectedObjectId) return;

@@ -16,7 +16,9 @@ export default function GeneratedItemsList({
   onDelete, // receives an index to delete
   readOnly = false,
   objects = [],
-  onSwap
+  onSwap,
+  hiddenItems,
+  onToggleVisibility
 }) {
   const itemsByColor = React.useMemo(() => {
     return generatedItems.reduce((acc, item, idx) => {
@@ -163,6 +165,14 @@ export default function GeneratedItemsList({
                                     Item={itm}
                                     index={__idx}
                                     readOnly={readOnly}
+                                    visible={!hiddenItems.has(itm.itemId)}
+                                    onToggleVisibility={() => {
+                                      console.log(
+                                        "generatedItemslist, toggle visible: ",
+                                        itm.itemId
+                                      );
+                                      onToggleVisibility(itm.itemId);
+                                    }}
                                     onItemChange={(upd) =>
                                       !readOnly && handleItemChange(__idx, upd)
                                     }
@@ -290,6 +300,10 @@ export default function GeneratedItemsList({
                                       Item={itm}
                                       index={__idx}
                                       readOnly={readOnly}
+                                      visible={!hiddenItems.has(itm.itemId)}
+                                      onToggleVisibility={() =>
+                                        onToggleVisibility(itm.itemId)
+                                      }
                                       onItemChange={(upd) =>
                                         !readOnly &&
                                         handleItemChange(__idx, upd)

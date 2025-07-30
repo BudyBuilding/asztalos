@@ -8,7 +8,9 @@ import {
   removeCircleOutline,
   chevronDown,
   chevronForward,
-  trash
+  trash,
+  eyeOutline,
+  eyeOffOutline
 } from "ionicons/icons";
 import ErrorModal from "./ErrorModal";
 
@@ -16,6 +18,8 @@ export default function Item({
   Item: initialItem,
   onItemChange,
   onDelete,
+  visible = true,
+  onToggleVisibility,
   readOnly = false
 }) {
   // Helpers to parse stored strings
@@ -142,7 +146,31 @@ export default function Item({
   return (
     <Container className="p-2 ">
       {/* 1st row: w × h = qty + rotate + chevron */}
-      <Row className="align-items-center flex-wrap me-2">
+      <Row
+        className="align-items-center flex-wrap me-2"
+        style={{ opacity: visible ? 1 : 0.3 }}
+      >
+        <Col xs="auto">
+          <IonIcon
+            icon={visible ? eyeOutline : eyeOffOutline}
+            style={{
+              cursor: "pointer",
+              fontSize: "1.5rem",
+              marginLeft: "0.5rem"
+            }}
+            onClick={(e) => {
+              e.stopPropagation(); // NE engedjük tovább a drag‐and‐dropnak
+              console.log(
+                "typeof onToggleVisibility: ",
+                typeof onToggleVisibility
+              );
+              if (typeof onToggleVisibility === "function") {
+                console.log("item, toggle visibel");
+                onToggleVisibility();
+              }
+            }}
+          />
+        </Col>
         <Col className="d-flex flex-wrap align-items-center ">
           <Form.Control
             className="text-center flex-grow-0"

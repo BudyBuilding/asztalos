@@ -44,6 +44,17 @@ function EditWork() {
   const [showModel, setShowModel] = useState(true);
   const [tablesGenerated, setTablesGenerated] = useState(false);
   const [objects, setObjects] = useState([]);
+  const [hiddenItems, setHiddenItems] = useState(new Set());
+  const toggleItemVisibility = (itemId) => {
+    console.log("hiding item: ", itemId);
+    setHiddenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
+
   const [swapSourceColor, setSwapSourceColor] = useState(undefined);
   const createdItems = useSelector(
     (state) =>
@@ -678,6 +689,7 @@ function EditWork() {
                 onObjectUpdate={handleObjectUpdate}
                 roomSize={parseRoom(localWork?.room || "[2500, 5000, 5000]")}
                 onRoomSizeChange={handleRoomChange}
+                hiddenItems={hiddenItems}
               />
             )}
           {selectedTab === "newObject" && showForm && (
@@ -841,6 +853,8 @@ function EditWork() {
                       }}
                       onDelete={handleDeleteItem}
                       objects={objects}
+                      hiddenItems={hiddenItems}
+                      onToggleVisibility={toggleItemVisibility}
                     />
                   </div>
                 </>
