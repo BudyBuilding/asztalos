@@ -189,6 +189,28 @@ const updateMultipleCreatedItemsApi = (updatedItemsList) => {
   };
 };
 
+const deleteCreatedItemsByObjectApi = (objectId) => {
+  return async (dispatch) => {
+    try {
+      // 1) gather all itemIds in the store for this object
+      const allItems = store.getState().createdItems || [];
+      const idsToDelete = allItems
+        .filter((it) => it.object?.objectId === objectId)
+        .map((it) => it.itemId);
+
+      // 2) call server
+      await axiosInstance.delete(`/created-items/object/${objectId}`);
+
+      // 3) purge from Redux
+      dispatch(deleteMoreCreatedItems(idsToDelete));
+      console.log(`Deleted ${idsToDelete.length} items for object ${objectId}`);
+    } catch (error) {
+      console.error("Error deleting createdItems by object:", error);
+      throw error;
+    }
+  };
+};
+
 export default {
   getAllCreatedItemsApi,
   getAllCreatedItemsForObjectApi,
@@ -199,5 +221,6 @@ export default {
   updateCreatedItemApi,
   createCreatedItemApi,
   getCreatedItemOfUserAdminApi,
-  updateMultipleCreatedItemsApi
+  updateMultipleCreatedItemsApi,
+  deleteCreatedItemsByObjectApi
 };

@@ -309,11 +309,9 @@ export default function ScriptCaller({
     if (!generatedItems.length) return;
 
     try {
-      if (initialGeneratedItems.length > 0) {
-        await Promise.all(
-          initialGeneratedItems.map((oldItem) =>
-            dispatch(createdItemApi.deleteCreatedItemApi(oldItem.itemId))
-          )
+      if (initialObject) {
+        await dispatch(
+          createdItemApi.deleteCreatedItemsByObjectApi(initialObject.objectId)
         );
       }
       // ha initialObject van, akkor UPDATE hajtódik végre:
