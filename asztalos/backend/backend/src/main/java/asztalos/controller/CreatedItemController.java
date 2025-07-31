@@ -419,6 +419,47 @@ private CreatedItemDto toDto(CreatedItem ci) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    /**
+     * Delete all CreatedItem-s belonging to the given WorkObject, then
+     * re-generate its tables once.
+     */
+    @DeleteMapping("/object/{objectId}")
+    public ResponseEntity<?> deleteByObjectId(@PathVariable Long objectId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userService.findByUsername(username).orElse(null);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Fetch the WorkObject
+        Optional<WorkObject> objOpt = objectService.findById(objectId);
+        if (objOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No such object: " + objectId);
+        }
+        WorkObject workObject = objOpt.get();
+
+        // Security: only admins or the owner may delete
+        boolean isAdmin = "admin".equals(currentUser.getRole());
+        boolean isOwner = workObject.getUser() != null
+                          && workObject.getUser().getUsername().equals(username);
+        if (!isAdmin && !isOwner) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        // Delete all items for this object
+        List<CreatedItem> items = createdItemService.findByObject(workObject);
+        Work work = workObject.getWork();
+        items.forEach(ci -> createdItemService.delete(ci.getItemId()));
+
+        // Re-generate tables once
+        if (work != null) {
+            List<CreatedTables> tables = tableOptimizationService.generateTables(work);
+            tables.forEach(createdTablesService::save);
+        }
+
+        return ResponseEntity.noContent().build();
+    }
 
 
 }
