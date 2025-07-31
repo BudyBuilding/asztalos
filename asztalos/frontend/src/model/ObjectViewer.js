@@ -538,6 +538,7 @@ export default function ObjectViewer({
         style={{
           width: "100%",
           height: "100%",
+
           display: "block",
           backgroundColor: "#FFFFFF" // itt is megadhatod
         }}

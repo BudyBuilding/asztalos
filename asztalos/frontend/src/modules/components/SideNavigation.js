@@ -41,6 +41,7 @@ function SideNavigation({ onToggle }) {
         // position: "fixed",
         top: 0,
         left: 0,
+        flexShrink: 0,
         width: showNav ? "10vw" : "3vw",
         height: "inherit",
         transition: "width 0.3s",

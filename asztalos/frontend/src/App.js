@@ -131,7 +131,7 @@ function App() {
 
         <div
           className="main-content p-0 m-0 ms-5 me-5 mt-2 overflow-hidden flex-fill d-flex flex-column"
-          style={{ flex: 1, overflow: "hidden" }}
+          style={{ flex: "1 1 auto", overflow: "hidden", minWidth: 0 }}
         >
           <Routes>
             <Route

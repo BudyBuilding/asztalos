@@ -6,6 +6,7 @@ import { chevronDown, chevronForward } from "ionicons/icons";
 import Item from "./item.js";
 
 export default function GeneratedItemsList({
+  calledFrom,
   onRegenerate,
   generatedItems,
   palette,
@@ -95,18 +96,22 @@ export default function GeneratedItemsList({
                   />
                   <strong style={{ marginLeft: 6 }}>Nincs szín</strong>
                 </div>
-                <button
-                  style={{
-                    border: "none",
-                    background: "none",
-                    color: "#0d6efd",
-                    cursor: "pointer",
-                    padding: "0.25rem"
-                  }}
-                  onClick={() => onSwap(null)}
-                >
-                  Szín hozzáadás
-                </button>
+                {calledFrom == 1 ? (
+                  <button
+                    style={{
+                      border: "none",
+                      background: "none",
+                      color: "#0d6efd",
+                      cursor: "pointer",
+                      padding: "0.25rem"
+                    }}
+                    onClick={() => onSwap(null)}
+                  >
+                    Szín hozzáadás
+                  </button>
+                ) : (
+                  <></>
+                )}
               </div>
 
               {/* Objektumonként csoportosítva */}
@@ -194,6 +199,7 @@ export default function GeneratedItemsList({
                                   }}
                                 >
                                   <Item
+                                    calledFrom={calledFrom}
                                     Item={itm}
                                     index={__idx}
                                     readOnly={readOnly}
@@ -266,18 +272,22 @@ export default function GeneratedItemsList({
                       />
                       <strong style={{ marginLeft: 6 }}>{color.name}</strong>
                     </div>
-                    <button
-                      style={{
-                        border: "none",
-                        background: "none",
-                        color: "#0d6efd",
-                        cursor: "pointer",
-                        padding: "0.25rem"
-                      }}
-                      onClick={() => onSwap(color.colorId)}
-                    >
-                      Csere
-                    </button>
+                    {calledFrom == 1 ? (
+                      <button
+                        style={{
+                          border: "none",
+                          background: "none",
+                          color: "#0d6efd",
+                          cursor: "pointer",
+                          padding: "0.25rem"
+                        }}
+                        onClick={() => onSwap(color.colorId)}
+                      >
+                        Csere
+                      </button>
+                    ) : (
+                      <></>
+                    )}
                   </div>
 
                   {!collapsedColors[cid] &&
@@ -366,6 +376,7 @@ export default function GeneratedItemsList({
                                     }}
                                   >
                                     <Item
+                                      calledFrom={calledFrom}
                                       Item={itm}
                                       index={__idx}
                                       readOnly={readOnly}

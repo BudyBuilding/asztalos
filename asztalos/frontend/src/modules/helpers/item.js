@@ -15,6 +15,7 @@ import {
 import ErrorModal from "./ErrorModal";
 
 export default function Item({
+  calledFrom,
   Item: initialItem,
   onItemChange,
   onDelete,
@@ -150,27 +151,31 @@ export default function Item({
         className="align-items-center flex-wrap me-2"
         style={{ opacity: visible ? 1 : 0.3 }}
       >
-        <Col xs="auto">
-          <IonIcon
-            icon={visible ? eyeOutline : eyeOffOutline}
-            style={{
-              cursor: "pointer",
-              fontSize: "1.5rem",
-              marginLeft: "0.5rem"
-            }}
-            onClick={(e) => {
-              e.stopPropagation(); // NE engedjük tovább a drag‐and‐dropnak
-              console.log(
-                "typeof onToggleVisibility: ",
-                typeof onToggleVisibility
-              );
-              if (typeof onToggleVisibility === "function") {
-                console.log("item, toggle visibel");
-                onToggleVisibility();
-              }
-            }}
-          />
-        </Col>
+        {calledFrom == 1 ? (
+          <Col xs="auto">
+            <IonIcon
+              icon={visible ? eyeOutline : eyeOffOutline}
+              style={{
+                cursor: "pointer",
+                fontSize: "1.5rem",
+                marginLeft: "0.5rem"
+              }}
+              onClick={(e) => {
+                e.stopPropagation(); // NE engedjük tovább a drag‐and‐dropnak
+                console.log(
+                  "typeof onToggleVisibility: ",
+                  typeof onToggleVisibility
+                );
+                if (typeof onToggleVisibility === "function") {
+                  console.log("item, toggle visibel");
+                  onToggleVisibility();
+                }
+              }}
+            />
+          </Col>
+        ) : (
+          <></>
+        )}
 
         <Col className="d-flex flex-wrap align-items-center ">
           <Form.Control

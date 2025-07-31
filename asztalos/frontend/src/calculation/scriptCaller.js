@@ -464,34 +464,6 @@ export default function ScriptCaller({
   function Header() {
     return (
       <Container fluid className="py-3 border-bottom">
-        <Modal show={showPaletteModal} onHide={closePaletteModal} size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Válassz egy színt</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Row xs={2} md={3} lg={4} className="g-3">
-              {palette.map((color) => {
-                const imageUrl = color.imageData;
-                return (
-                  <Col key={color.colorId}>
-                    <Card
-                      onClick={() => onColorSelect(color)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <RBImage
-                        src={imageUrl && `data:image/jpeg;base64,${imageUrl}`}
-                        style={{ height: 100, objectFit: "cover" }}
-                      />
-                      <Card.Body className="p-2 text-center">
-                        <Card.Text className="mb-0">{color.name}</Card.Text>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                );
-              })}
-            </Row>
-          </Modal.Body>
-        </Modal>
         <Row className="align-items-center">
           <Col xs="auto">
             <h3>
@@ -552,7 +524,8 @@ export default function ScriptCaller({
         display: "flex",
         flexDirection: "column",
         height: "85vh",
-        width: "100%"
+        width: "100%",
+        overflow: "hidden"
       }}
     >
       <Header />
@@ -626,13 +599,19 @@ export default function ScriptCaller({
           fluid
           style={{
             flex: "1 1 0",
-            overflowY: "auto",
             marginTop: "1rem",
             width: "100%",
+            overflow: "hidden",
             paddingRight: "0"
           }}
         >
-          <Row style={{ height: "75vh", width: "100%" }}>
+          <Row
+            style={{
+              height: "75vh",
+              width: "100%",
+              overflowX: "hidden"
+            }}
+          >
             <Col md={3} className="border-end" style={{ width: "25%" }}>
               <h5>Beállítások</h5>
               <Form>
@@ -694,74 +673,65 @@ export default function ScriptCaller({
               </Form>
             </Col>
 
-            <Col md={6} style={{ width: "45%" }} className="text-center">
+            <Col
+              md={6}
+              className="text-center"
+              style={{
+                flex: "1 1 0",
+                minWidth: 0, // ⚠️ engedjük, hogy a gyerek zsugorodjon
+                maxHeight: "75vh",
+                position: "relative",
+                overflow: "hidden",
+                maxWidth: "55%"
+              }}
+            >
               {generatedItems.length > 0 ? (
-                <ObjectViewer
-                  object={
-                    objectToViewData || {
-                      objectId: 0,
-                      position: "[0,0,0]",
-                      rotation: "[0,0,0]"
+                <div
+                  style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%", // örökölje a Col által adott 75vh-t
+                    overflowX: "hidden", // csak vízszintes kilógást tiltunk
+                    overflowY: "auto"
+                  }}
+                >
+                  <ObjectViewer
+                    object={
+                      objectToViewData || {
+                        objectId: 0,
+                        position: "[0,0,0]",
+                        rotation: "[0,0,0]"
+                      }
                     }
-                  }
-                  //createdItems={generatedItems}
-                  createdItems={[...generatedItems, ...dummyScriptItems]}
-                  usedColors={palette}
-                  onItemUpdate={handleItemUpdate}
-                />
+                    createdItems={[...generatedItems, ...dummyScriptItems]}
+                    usedColors={palette}
+                    onItemUpdate={handleItemUpdate}
+                  />
+                </div>
               ) : (
-                <canvas ref={canvasRef} style={{ width: "80%" }} />
+                <canvas
+                  ref={canvasRef}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    display: "block",
+                    margin: "auto"
+                  }}
+                />
               )}
             </Col>
 
-            <Col md={3} className="border-start" style={{ width: "30%" }}>
-              <h5>Kiválasztott színek</h5>
-              <div className="d-flex mb-3">
-                {palette.map((color) => {
-                  const imageUrl = color.imageDataReduced;
-                  return (
-                    <div
-                      key={color.colorId}
-                      className="position-relative me-1"
-                      style={{ width: 40, height: 40 }}
-                    >
-                      <RBImage
-                        src={`data:image/jpeg;base64,${imageUrl}`}
-                        thumbnail
-                        style={{ width: "100%", height: "100%" }}
-                      />
-                      <span
-                        onClick={() => onColorRemove(color.colorId)}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          right: 0,
-                          color: "red",
-                          background: "white",
-                          borderRadius: "50%",
-                          cursor: "pointer",
-                          width: "1rem",
-                          height: "1rem",
-                          textAlign: "center",
-                          lineHeight: "1rem"
-                        }}
-                      >
-                        –
-                      </span>
-                    </div>
-                  );
-                })}
-                {palette.length < 5 && (
-                  <div
-                    className="border bg-light d-flex align-items-center justify-content-center"
-                    style={{ width: 40, height: 40, cursor: "pointer" }}
-                    onClick={openPaletteModal}
-                  >
-                    <IonIcon icon={add} />
-                  </div>
-                )}
-              </div>
-
+            <Col
+              md={3}
+              className="border-start"
+              style={{
+                width: "30%",
+                flex: "0 0 auto",
+                minWidth: 0, // ⚠️ szükséges ahhoz, hogy az oszlop ne nyújtsa szét a sort
+                maxHeight: "75vh",
+                overflowY: "auto" // csak itt görgessen
+              }}
+            >
               <div style={{ flex: 1, overflowY: "auto" }}>
                 <h5 className="d-flex align-items-center justify-content-between">
                   Generált elemek
@@ -769,18 +739,22 @@ export default function ScriptCaller({
                     Új méret hozzáadás
                   </Button>
                 </h5>
-                <GeneratedItemsList
-                  generatedItems={generatedItems}
-                  palette={palette}
-                  collapsedColors={collapsedColors}
-                  toggleColor={toggleColor}
-                  handleItemChange={handleItemChange}
-                  handleItemColorChange={handleItemColorChange}
-                  onDragEnd={onDragEnd}
-                  onDelete={(idx) =>
-                    setGeneratedItems((old) => old.filter((_, i) => i !== idx))
-                  }
-                />
+                <div style={{ overflow: "auto", maxHeight: "71vh" }}>
+                  <GeneratedItemsList
+                    generatedItems={generatedItems}
+                    palette={palette}
+                    collapsedColors={collapsedColors}
+                    toggleColor={toggleColor}
+                    handleItemChange={handleItemChange}
+                    handleItemColorChange={handleItemColorChange}
+                    onDragEnd={onDragEnd}
+                    onDelete={(idx) =>
+                      setGeneratedItems((old) =>
+                        old.filter((_, i) => i !== idx)
+                      )
+                    }
+                  />
+                </div>
               </div>
             </Col>
           </Row>

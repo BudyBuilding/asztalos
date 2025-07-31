@@ -42,9 +42,8 @@ function EditWork() {
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
   const [showModel, setShowModel] = useState(true);
-  const [tablesGenerated, setTablesGenerated] = useState(false);
-  const [objects, setObjects] = useState([]);
   const [hiddenItems, setHiddenItems] = useState(new Set());
+  const [tablesGenerated, setTablesGenerated] = useState(false);
   const toggleItemVisibility = (itemId) => {
     console.log("hiding item: ", itemId);
     setHiddenItems((prev) => {
@@ -77,6 +76,10 @@ function EditWork() {
     shallowEqual
   );
 
+  const objects = useSelector(
+    (state) => state.objects.filter((o) => o.work?.workId === Number(workId)),
+    shallowEqual
+  );
   const [palette, setPalette] = useState([]);
   const [collapsedColors, setCollapsedColors] = useState({});
   const [currentObject, setCurrentObject] = useState([]);
@@ -140,18 +143,12 @@ function EditWork() {
         dims,
         items
       });
+      setSelectedTab("newObject");
+      setShowForm(true);
+      setShowModel(false);
     },
     [dispatch]
   );
-
-  useEffect(() => {
-    if (loading) return;
-    const loadObjects = async () => {
-      const all = await dispatch(getAllObjects());
-      setObjects(all.filter((o) => o.work?.workId === +workId));
-    };
-    loadObjects();
-  }, [loading, workId, dispatch]);
 
   // EditWork.js, a useEffect(…) után ahol setLocalWork‑ot hívod:
   // (vagy akár közvetlenül a helyén)
@@ -310,12 +307,6 @@ function EditWork() {
       updatedObject,
       objectIndex
     });
-    setObjects((prev) => {
-      const next = [...prev];
-      next[objectIndex] = updatedObject;
-      console.log("[EditWork] new objects[]:", next);
-      return next;
-    });
     dispatch(objectApi.updateObjectApi(updatedObject.objectId, updatedObject))
       .then(() =>
         console.log("[EditWork] API sikeres object update:", updatedObject)
@@ -342,6 +333,12 @@ function EditWork() {
     if (key === "0") {
       setShowForm(false);
       setShowModel(true);
+    } else if (key === "newObject") {
+      setShowForm(true);
+      setShowModel(false);
+    } else {
+      setShowForm(false);
+      setShowModel(false);
     }
   };
   useEffect(() => {
@@ -404,7 +401,6 @@ function EditWork() {
     if (objectToDelete != null) {
       await dispatch(objectApi.deleteObjectApi(objectToDelete));
       const all = await dispatch(getAllObjects());
-      setObjects(all.filter((o) => o.work?.workId === +workId));
       setSelectedTab("0");
       setShowDeleteModal(false);
       setObjectToDelete(null);
@@ -437,36 +433,25 @@ function EditWork() {
     setSwapSourceColor(null);
   };
   const selectColor = (c) => {
-    // if swapSourceColor is any value (null or a number), we’re in swap‑mode
     if (swapSourceColor !== undefined) {
+      // --- csak itt csinálunk bulk‐swap-et ---
       const bulkUpdates = createdItems
-        .filter((it) => {
-          const cid = it.color?.colorId;
-          // if swapSourceColor===null ⇒ swap from no‑color
-          return swapSourceColor === null
-            ? cid == null // matches both undefined & null
-            : cid === swapSourceColor;
-        })
-        .map((it) => ({
-          itemId: it.itemId,
-          color: { colorId: c.colorId }
-        }));
-
-      dispatch(createdItemApi.updateMultipleCreatedItemsApi(bulkUpdates)).catch(
-        (err) => console.error("Bulk swap failed", err)
-      );
-
-      // exit swap‑mode
+        .filter((it) =>
+          swapSourceColor === null
+            ? it.color?.colorId == null
+            : it.color?.colorId === swapSourceColor
+        )
+        .map((it) => ({ itemId: it.itemId, color: { colorId: c.colorId } }));
+      dispatch(createdItemApi.updateMultipleCreatedItemsApi(bulkUpdates));
       setSwapSourceColor(undefined);
       closePalette();
-      return;
+    } else {
+      // --- palettához adás: itt biztos ne legyen swap ---
+      setPalette((p) =>
+        p.length < 5 && !p.some((x) => x.colorId === c.colorId) ? [...p, c] : p
+      );
+      closePalette();
     }
-
-    // normal “add to palette”:
-    setPalette((p) =>
-      p.length < 5 && !p.some((x) => x.colorId === c.colorId) ? [...p, c] : p
-    );
-    closePalette();
   };
 
   const removeColor = (cid) =>
@@ -492,34 +477,8 @@ function EditWork() {
     document.removeEventListener("mouseup", onMouseUp);
   };
 
-  if (toRegenerate) {
-    console.log("EditWork → ScriptCaller navigálás:", {
-      initialObject: toRegenerate.originalObject,
-      initialScriptId: toRegenerate.scriptId,
-      initialConfig: toRegenerate.config,
-      initialDims: toRegenerate.dims,
-      initialGeneratedItems: toRegenerate.items
-    });
-    return (
-      <ScriptCaller
-        initialObject={toRegenerate.originalObject}
-        initialScriptId={toRegenerate.scriptId}
-        initialConfig={toRegenerate.config}
-        initialDims={toRegenerate.dims}
-        initialGeneratedItems={toRegenerate.items}
-        onSave={() => setToRegenerate(null)}
-        palette={palette}
-        onColorSelect={selectColor}
-        onColorRemove={removeColor}
-        showPaletteModal={showPaletteModal}
-        openPaletteModal={openPalette}
-        closePaletteModal={closePalette}
-      />
-    );
-  }
-
   return (
-    <div style={{ position: "relative", height: "94vh" }}>
+    <div style={{ position: "relative", height: "94vh", width: "100%" }}>
       {/* Palette Modal */}
       <Modal show={showPaletteModal} onHide={closePalette} size="lg">
         <Modal.Header closeButton>
@@ -768,38 +727,43 @@ function EditWork() {
                 overflow: "hidden"
               }}
             >
-              <ScriptCaller
-                newObjectKey="new"
-                onSave={async (generatedItems) => {
-                  // 1) Lezárjuk a formot, vissza a modellre
-                  setShowForm(false);
-                  setShowModel(true);
-
-                  try {
-                    // 2) MENTÉS: egyszerre batch létrehozás
-                    /*  await dispatch(
-                      createdItemApi.createCreatedItemApi(generatedItems)
-                    );*/
-
-                    // 3) Frissítjük az objektum‑lista UI‑t
-                    const all = await dispatch(getAllObjects());
-                    setObjects(all.filter((o) => o.work?.workId === +workId));
-
-                    // 4) Átváltunk a teljes modell nézetre
+              {toRegenerate ? (
+                <ScriptCaller
+                  initialObject={toRegenerate.originalObject}
+                  initialScriptId={toRegenerate.scriptId}
+                  initialConfig={toRegenerate.config}
+                  initialDims={toRegenerate.dims}
+                  initialGeneratedItems={toRegenerate.items}
+                  onSave={() => {
+                    setToRegenerate(null);
+                    // vissza a teljes modellnézethez
                     setSelectedTab("0");
-                  } catch (err) {
-                    console.error("Hiba a CreatedItems mentésekor:", err);
-                    alert("Nem sikerült elmenteni az elemeket.");
-                  }
-                }}
-                palette={palette}
-                onColorSelect={selectColor}
-                onColorRemove={removeColor}
-                showPaletteModal={showPaletteModal}
-                openPaletteModal={openPalette}
-                closePaletteModal={closePalette}
-                style={{ flex: 1 }}
-              />
+                  }}
+                  palette={palette}
+                  onColorSelect={selectColor}
+                  onColorRemove={removeColor}
+                  showPaletteModal={showPaletteModal}
+                  openPaletteModal={openPalette}
+                  closePaletteModal={closePalette}
+                  style={{ flex: 1 }}
+                />
+              ) : (
+                <ScriptCaller
+                  newObjectKey="new"
+                  onSave={async (generatedItems) => {
+                    setShowForm(false);
+                    setShowModel(true);
+                    // mentés utáni logika…
+                  }}
+                  palette={palette}
+                  onColorSelect={selectColor}
+                  onColorRemove={removeColor}
+                  showPaletteModal={showPaletteModal}
+                  openPaletteModal={openPalette}
+                  closePaletteModal={closePalette}
+                  style={{ flex: 1 }}
+                />
+              )}
             </div>
           )}
           {selectedTab !== "0" && selectedTab !== "newObject" && (
@@ -884,6 +848,7 @@ function EditWork() {
                   </h3>
                   <div style={{ maxHeight: "78vh", overflowY: "auto" }}>
                     <GeneratedItemsList
+                      calledFrom={1}
                       onRegenerate={handleRegenerate}
                       generatedItems={createdItems}
                       palette={palette}
