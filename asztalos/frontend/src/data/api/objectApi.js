@@ -7,7 +7,7 @@ import {
   deleteObject,
   updateObject,
   setObjectLoading,
-  replaceStoreWithMoreObjects,
+  replaceStoreWithMoreObjects
   // Delete a object
 } from "../store/actions/objectStoreFunctions";
 import { useDispatch } from "react-redux";
@@ -75,8 +75,13 @@ const deleteObjectApi = (objectId) => {
 const updateObjectApi = (objectId, updatedObjectData) => {
   return async (dispatch) => {
     try {
-      await axiosInstance.put(`/objects/${objectId}`, updatedObjectData);
-      dispatch(updateObject(updatedObjectData));
+      const response = await axiosInstance.put(
+        `/objects/${objectId}`,
+        updatedObjectData
+      );
+      console.log("Object added successfully:", response);
+      dispatch(updateObject(response.data));
+      return response.data;
     } catch (error) {
       console.error("Error while updating object:", error);
       throw error;
@@ -90,7 +95,6 @@ const createObjectApi = (objectData) => {
       console.log("creating new object");
       const response = await axiosInstance.post(`/objects`, objectData);
       console.log("Object added successfully:", response);
-
       dispatch(addObject(response.data));
       return response.data;
     } catch (error) {
@@ -120,5 +124,5 @@ export default {
   deleteObjectApi,
   updateObjectApi,
   createObjectApi,
-  getObjectOfUserAdminApi,
+  getObjectOfUserAdminApi
 };
