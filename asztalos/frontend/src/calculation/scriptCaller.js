@@ -44,6 +44,11 @@ import {
 } from "@babylonjs/core";
 import scriptItemApi from "../data/api/scriptItemApi";
 export default function ScriptCaller({
+  initialObject,
+  initialScriptId,
+  initialConfig,
+  initialDims,
+  initialGeneratedItems = [],
   onSave,
   palette,
   onColorSelect,
@@ -52,8 +57,13 @@ export default function ScriptCaller({
   openPaletteModal,
   closePaletteModal
 }) {
+  console.log("ScriptCaller beállítások:", {
+    initialScriptId,
+    initialConfig,
+    initialDims,
+    initialGeneratedItems
+  });
   const dispatch = useDispatch();
-
   // selectors via dispatch(useSelector)
   const scripts = dispatch(useSelector(getAllScripts)) || [];
   const selectedWork = dispatch(useSelector(getSelectedWork));
@@ -80,6 +90,25 @@ export default function ScriptCaller({
       return { ...s, valueList: Array.isArray(list) ? list : [] };
     });
   }, [allSettings]);
+
+  function parseArrayField(field) {
+    if (Array.isArray(field) && field.every((i) => typeof i === "number")) {
+      return field;
+    }
+    if (typeof field === "string") {
+      // próbáljuk JSON.parse-szel
+      try {
+        return JSON.parse(field);
+      } catch {
+        // fallback: csak számokat szedünk ki a stringből
+        return [...field.matchAll(/-?\d+(\.\d+)?/g)].map((m) =>
+          parseFloat(m[0])
+        );
+      }
+    }
+    return [];
+  }
+
   // local state
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState("");
@@ -87,16 +116,44 @@ export default function ScriptCaller({
   const [generatedItems, setGeneratedItems] = useState([]);
   const [objectToView, setObjectToView] = useState(null);
   const [objectToViewData, setObjectToViewData] = useState(null);
-  let lastGenerated = Date.now();
   const [collapsedColors, setCollapsedColors] = useState({});
   const toggleColor = (cid) =>
     setCollapsedColors((prev) => ({ ...prev, [cid]: !prev[cid] }));
 
-  // refs for width/height/depth inputs
-  const handleDimChange = (dim) => (e) => {
-    const v = e.target.value;
-    setDims((prev) => ({ ...prev, [dim]: v === "" ? "" : Number(v) }));
-  };
+  useEffect(() => {
+    if (!initialScriptId) return;
+    const init = async () => {
+      // 1) kiválasztjuk a scriptet
+      const script = scripts.find((s) => s.scriptId === initialScriptId);
+      if (script) setSelectedScript(script);
+
+      // 2) külső API-ból lekérjük a scriptItem-eket (defs)
+      await scriptItemApi.getAllScriptItemsForScriptApi(initialScriptId);
+      // 3) store-ba is betesszük őket
+      await dispatch(getScriptItemsByScript(initialScriptId));
+
+      // 4) ha van override tételek, azokat használjuk, egyébként sima generálás
+      if (initialGeneratedItems.length > 0) {
+        setGeneratedItems(initialGeneratedItems);
+      } else {
+        // itt a selectScript már a DEFINÍCIÓKKAL fog futni
+        selectScript(script);
+      }
+    };
+    if (initialConfig) {
+      setConfig(initialConfig);
+    }
+    if (
+      initialDims &&
+      typeof initialDims.width === "number" &&
+      typeof initialDims.height === "number" &&
+      typeof initialDims.depth === "number"
+    ) {
+      setDims(initialDims);
+    }
+    init();
+  }, [initialScriptId, initialGeneratedItems, scripts, dispatch]);
+
   const handleDimBlur = (dim) => (e) => {
     const v = e.target.value;
     setDims((prev) => ({ ...prev, [dim]: v === "" ? "" : Number(v) }));
@@ -233,23 +290,7 @@ export default function ScriptCaller({
     const { width, height, depth } = dims;
     const updatedConfig = { ...config, height, width, depth };
     setConfig(updatedConfig);
-    /*
-    // feldolgozzuk a scriptet
-    const items = processScript(
-      updatedConfig,
-      { height, width, depth },
-      selectedScript.scriptId
-    );
-    // defaultként add hozzá a palette[0]‑t minden újnak
-    const itemsWithColor = items.map((it) => ({
-      ...it,
-      colorId: it.material === "PFL" ? -1 : null
-    }));
-    setGeneratedItems(itemsWithColor);
-    // dummy tételek készítése refScriptId alapján
-    const realItems = items.filter((i) => !i.refScriptId);
-    const refItems = items.filter((i) => !!i.refScriptId);
-*/
+
     const allItems = processScript(
       updatedConfig,
       { height, width, depth },
@@ -262,82 +303,53 @@ export default function ScriptCaller({
         colorId: it.material === "PFL" ? -1 : null
       }))
     );
-    /*
-    setDummyScriptItems([]); // töröljük az előzőeket
-    refItems.forEach((ref) => {
-      dispatch(fetchScriptItemsForScript(ref.refScriptId))
-        .then(() => {
-          const nested = processScript(
-            updatedConfig,
-            { height, width, depth },
-            ref.refScriptId
-          );
-          // dummy attribútumok beállítása:
-          const dummies = nested.map((it) => ({
-            ...it,
-            isDummy: true,
-            qty: 1,
-            rotable: false,
-            kant: "[-,0,0]",
-            parentRef: ref.scriptItemId
-          }));
-          setDummyScriptItems((prev) => [...prev, ...dummies]);
-        })
-        .catch((err) =>
-          console.error("Error fetching nested script items:", err)
-        );
-    });*/
   }
 
-  // save object  created items
   async function handleSave() {
     if (!generatedItems.length) return;
 
     try {
-      // 1) Objektum létrehozása és a válasz adatainak kicsomagolása
-      const objectPayload = await dispatch(
-        objectApi.createObjectApi({
-          name: selectedScript.name,
-          usedScript: { scriptId: selectedScript.scriptId },
-          work: { workId: selectedWork },
-          client: { clientId: selectedClient },
-          usedColors: palette.map((c) => c.colorId),
+      // ha initialObject van, akkor UPDATE hajtódik végre:
+      let objectPayload;
+      if (initialObject) {
+        // frissítsük a létező objectet
+        const updated = {
+          ...initialObject,
           setting: JSON.stringify(config),
-          size: "[0,0,0]",
-          position: "[0,0,0]",
-          rotation: "[0,0,0]"
-        })
-      );
-
+          usedColors: palette.map((c) => c.colorId)
+          // ha kell: méret/pozíció is
+        };
+        objectPayload = await dispatch(
+          objectApi.updateObjectApi(initialObject.objectId, updated)
+        );
+      } else {
+        // egyébként CREATE
+        objectPayload = await dispatch(
+          objectApi.createObjectApi({
+            name: selectedScript.name,
+            usedScript: { scriptId: selectedScript.scriptId },
+            work: { workId: selectedWork },
+            client: { clientId: selectedClient },
+            usedColors: palette.map((c) => c.colorId),
+            setting: JSON.stringify(config),
+            size: "[0,0,0]",
+            position: "[0,0,0]",
+            rotation: "[0,0,0]"
+          })
+        );
+      }
+      console.log("objectPayload: ", objectPayload);
+      // mentjük a createdItems-eket is, ugyanúgy:
       const newObjectId = objectPayload.objectId;
-      setObjectToView(newObjectId);
-      setObjectToViewData(objectPayload);
-
-      // 2) CreatedItems payload összeállítása
       const itemsToSave = generatedItems.map((item) => ({
-        size: item.size,
-        qty: item.qty,
-        name: item.name || "name",
-        material: item.material,
-        kant: item.kant,
-        position: item.position,
-        rotation: item.rotation,
-        details: item.details || "",
-        rotable: item.rotable,
-        scriptItem: { scriptItemId: item.scriptItemId || null },
-        ...(item.colorId != null && { color: { colorId: item.colorId } }),
-        object: {
-          objectId: newObjectId // ✅ csak az ID
-        },
-        work: { workId: selectedWork } // ✅ csak az ID
+        ...item,
+        object: { objectId: newObjectId },
+        work: { workId: selectedWork },
+        ...(item.colorId != null && { color: { colorId: item.colorId } })
       }));
+      await dispatch(createdItemApi.createMultipleCreatedItemsApi(itemsToSave));
 
-      // 3) CreatedItems mentése
-      const createdItemsResponse = await dispatch(
-        createdItemApi.createMultipleCreatedItemsApi(itemsToSave)
-      );
-
-      // 4) Visszahívjuk a onSave callback-et
+      // callback
       onSave();
     } catch (err) {
       console.error("Hiba mentéskor:", err);

@@ -6,6 +6,7 @@ import { chevronDown, chevronForward } from "ionicons/icons";
 import Item from "./item.js";
 
 export default function GeneratedItemsList({
+  onRegenerate,
   generatedItems,
   palette,
   collapsedColors,
@@ -118,25 +119,56 @@ export default function GeneratedItemsList({
                       <div key={oid} style={{ marginTop: 8 }}>
                         {/* kattintható fejléc */}
                         <div
-                          onClick={() => toggleObject("no-color", oid)}
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            cursor: "pointer"
+                            justifyContent: "space-between",
+                            marginTop: 8,
+                            padding: "0 4px"
                           }}
                         >
-                          <IonIcon
-                            icon={
-                              collapsedObjects[key]
-                                ? chevronForward
-                                : chevronDown
-                            }
-                          />
-                          <strong style={{ marginLeft: 6 }}>
-                            {obj ? `#${oid} ${obj.name}` : `Obj #${oid}`}
-                          </strong>
+                          <div
+                            onClick={() => toggleObject("no-color", oid)}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              cursor: "pointer"
+                            }}
+                          >
+                            <IonIcon
+                              icon={
+                                collapsedObjects[key]
+                                  ? chevronForward
+                                  : chevronDown
+                              }
+                            />
+                            <strong style={{ marginLeft: 6 }}>
+                              {obj ? `#${oid} ${obj.name}` : `Obj #${oid}`}
+                            </strong>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.5rem"
+                            }}
+                          >
+                            {onRegenerate && !readOnly && (
+                              <button
+                                style={{
+                                  border: "none",
+                                  background: "none",
+                                  color: "#0d6efd",
+                                  cursor: "pointer",
+                                  padding: "0.25rem"
+                                }}
+                                onClick={() => onRegenerate(obj)}
+                              >
+                                Újragenerálás
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        {/* ha nincs összecsukva, jöhetnek az elemek */}
                         {!collapsedObjects[key] &&
                           items.map(({ __idx, ...itm }, idx) => (
                             <Draggable
@@ -165,7 +197,11 @@ export default function GeneratedItemsList({
                                     Item={itm}
                                     index={__idx}
                                     readOnly={readOnly}
-                                    visible={!hiddenItems.has(itm.itemId)}
+                                    visible={
+                                      hiddenItems
+                                        ? !hiddenItems.has(itm.itemId)
+                                        : []
+                                    }
                                     onToggleVisibility={() => {
                                       console.log(
                                         "generatedItemslist, toggle visible: ",
@@ -254,23 +290,56 @@ export default function GeneratedItemsList({
                       return (
                         <div key={oid} style={{ marginTop: 8 }}>
                           <div
-                            onClick={() => toggleObject(cid, oid)}
                             style={{
                               display: "flex",
                               alignItems: "center",
-                              cursor: "pointer"
+                              justifyContent: "space-between",
+                              marginTop: 8,
+                              padding: "0 4px"
                             }}
                           >
-                            <IonIcon
-                              icon={
-                                collapsedObjects[key]
-                                  ? chevronForward
-                                  : chevronDown
-                              }
-                            />
-                            <strong style={{ marginLeft: 6 }}>
-                              {obj ? `#${oid} ${obj.name}` : `Obj #${oid}`}
-                            </strong>
+                            <div
+                              onClick={() => toggleObject(cid, oid)}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                cursor: "pointer"
+                              }}
+                            >
+                              <IonIcon
+                                icon={
+                                  collapsedObjects[key]
+                                    ? chevronForward
+                                    : chevronDown
+                                }
+                              />
+                              <strong style={{ marginLeft: 6 }}>
+                                {obj ? `#${oid} ${obj.name}` : `Obj #${oid}`}
+                              </strong>
+                            </div>
+
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem"
+                              }}
+                            >
+                              {onRegenerate && !readOnly && (
+                                <button
+                                  style={{
+                                    border: "none",
+                                    background: "none",
+                                    color: "#0d6efd",
+                                    cursor: "pointer",
+                                    padding: "0.25rem"
+                                  }}
+                                  onClick={() => onRegenerate(obj)}
+                                >
+                                  Újragenerálás
+                                </button>
+                              )}
+                            </div>
                           </div>
                           {!collapsedObjects[key] &&
                             items.map(({ __idx, ...itm }, idx) => (

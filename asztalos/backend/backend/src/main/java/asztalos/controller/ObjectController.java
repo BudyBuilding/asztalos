@@ -179,8 +179,8 @@ public ResponseEntity<List<WorkObject>> getObjectsByWorkId(@PathVariable Long wo
                 // Handle IllegalAccessException
                 
             }
-
-            return ResponseEntity.ok(objectService.save(updatedObject));
+            WorkObject createdWorkObject = objectService.save(updatedObject);
+            return ResponseEntity.ok(createdWorkObject);
         } else {
             return ResponseEntity.notFound().build();
         }

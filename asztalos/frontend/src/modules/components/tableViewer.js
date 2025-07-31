@@ -416,7 +416,7 @@ const TableViewer = () => {
               toggleColor={(cid) =>
                 setCollapsedColors((cc) => ({ ...cc, [cid]: !cc[cid] }))
               }
-              readOnly={isOrdered}
+              readOnly={isOrdered ? isOrdered : false}
               handleItemChange={(idx, updatedFields) =>
                 handleCreatedItemChange(idx, updatedFields)
               }

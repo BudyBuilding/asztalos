@@ -37,7 +37,7 @@ function EditWork() {
   const dispatch = useDispatch();
   const works = useSelector((state) => state.works);
   const { workId } = useParams();
-
+  const [toRegenerate, setToRegenerate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("0");
   const [showForm, setShowForm] = useState(false);
@@ -53,6 +53,21 @@ function EditWork() {
       else next.add(itemId);
       return next;
     });
+  };
+  const parseJsonArray = (str = "") => {
+    if (!str.startsWith("[")) return [];
+    try {
+      return JSON.parse(str);
+    } catch {
+      // fallback: "[a,b,c]" → ["a","b","c"] → [Number(a),...]
+      return str
+        .slice(1, -1)
+        .split(",")
+        .map((x) => {
+          const n = parseFloat(x);
+          return isNaN(n) ? x.trim() : n;
+        });
+    }
   };
 
   const [swapSourceColor, setSwapSourceColor] = useState(undefined);
@@ -103,6 +118,31 @@ function EditWork() {
     };
     initWork();
   }, [works, workId, dispatch]);
+
+  // EditWork.js
+  const handleRegenerate = useCallback(
+    async (obj) => {
+      // obj.setting valójában egy JSON-string
+      const fullConfig = JSON.parse(obj.setting);
+
+      // szétdaraboljuk dims-re és a többi settingre
+      const { width, height, depth, ...otherConfig } = fullConfig;
+      const dims = { width, height, depth };
+
+      // lekérjük a korábbi createdItems-t (override)
+      const items = await dispatch(getCreatedItemsByObject(obj.objectId));
+
+      // átadjuk a ScriptCaller-nek
+      setToRegenerate({
+        originalObject: obj,
+        scriptId: obj.usedScript.scriptId,
+        config: otherConfig,
+        dims,
+        items
+      });
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
     if (loading) return;
@@ -249,7 +289,6 @@ function EditWork() {
         work: { workId: +workId }, // ← ide kell a munka
         itemId: Date.now() * -1
       };
-      //  setCreatedItems((old) => [...old, defaultItem]);
     }
   };
 
@@ -452,6 +491,32 @@ function EditWork() {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
   };
+
+  if (toRegenerate) {
+    console.log("EditWork → ScriptCaller navigálás:", {
+      initialObject: toRegenerate.originalObject,
+      initialScriptId: toRegenerate.scriptId,
+      initialConfig: toRegenerate.config,
+      initialDims: toRegenerate.dims,
+      initialGeneratedItems: toRegenerate.items
+    });
+    return (
+      <ScriptCaller
+        initialObject={toRegenerate.originalObject}
+        initialScriptId={toRegenerate.scriptId}
+        initialConfig={toRegenerate.config}
+        initialDims={toRegenerate.dims}
+        initialGeneratedItems={toRegenerate.items}
+        onSave={() => setToRegenerate(null)}
+        palette={palette}
+        onColorSelect={selectColor}
+        onColorRemove={removeColor}
+        showPaletteModal={showPaletteModal}
+        openPaletteModal={openPalette}
+        closePaletteModal={closePalette}
+      />
+    );
+  }
 
   return (
     <div style={{ position: "relative", height: "94vh" }}>
@@ -819,6 +884,7 @@ function EditWork() {
                   </h3>
                   <div style={{ maxHeight: "78vh", overflowY: "auto" }}>
                     <GeneratedItemsList
+                      onRegenerate={handleRegenerate}
                       generatedItems={createdItems}
                       palette={palette}
                       collapsedColors={collapsedColors}
@@ -832,7 +898,7 @@ function EditWork() {
                           [cid]: !cc[cid]
                         }))
                       }
-                      readOnly={isOrdered}
+                      readOnly={isOrdered ? isOrdered : false}
                       handleItemChange={handleCreatedItemChange}
                       handleItemColorChange={(idx, color) =>
                         handleCreatedItemChange(idx, {
