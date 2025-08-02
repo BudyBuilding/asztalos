@@ -44,7 +44,8 @@ export default function ModelViewer({
   const [measureMode, setMeasureMode] = useState(false);
   const [firstPick, setFirstPick] = useState(null);
   const SNAP_THRESHOLD_MM = 50;
-  const [isSnappingEnabled, setIsSnappingEnabled] = useState(false);
+  const hasPositionedCameraRef = useRef(false);
+  const [isSnappingEnabled, setIsSnappingEnabled] = useState(true);
   const measureModeRef = useRef(measureMode);
   const firstPickRef = useRef(firstPick);
   const posLabels = { x: "Jobbra-Balra", y: "Fel-Le", z: "Előre-Hátra" };
@@ -130,51 +131,53 @@ export default function ModelViewer({
       maximum: combinedMax
     };
   }
-
-  function snapObjectPosition(objPosition, selectedObjectId) {
-    const snapThreshold = SNAP_THRESHOLD_MM; // mm-ben marad
-    let snappedPosition = { ...objPosition };
-
-    const selectedRoot = groupRootsRef.current[selectedObjectId];
-    if (!selectedRoot) return snappedPosition;
-
-    const selectedBounding = getCombinedBoundingInfo(selectedRoot);
-    if (!selectedBounding) return snappedPosition;
-
-    const selectedSize = selectedBounding.maximum
-      .subtract(selectedBounding.minimum)
-      .scale(1000); // méter -> mm
-
-    const otherObjects = Object.entries(groupRootsRef.current).filter(
-      ([oid]) => parseInt(oid, 10) !== selectedObjectId
+  function snapOnAxis(posMM, selectedId, axis) {
+    const thresholdM = SNAP_THRESHOLD_MM / 1000; // m-ben
+    const root = groupRootsRef.current[selectedId];
+    if (!root) return posMM;
+    // 1) lokális extents a gyökérpozícióhoz képest
+    const bi = getCombinedBoundingInfo(root);
+    if (!bi) return posMM;
+    const localMin = bi.minimum.subtract(root.position); // Vector3
+    const localMax = bi.maximum.subtract(root.position);
+    // 2) új középpont méterben
+    const newCenter = new Vector3(
+      posMM.x / 1000,
+      posMM.y / 1000,
+      posMM.z / 1000
     );
-
-    for (const [oid, root] of otherObjects) {
-      const bounding = getCombinedBoundingInfo(root);
-      if (!bounding) continue;
-
-      const size = bounding.maximum.subtract(bounding.minimum).scale(1000); // méter -> mm
-      const otherPosition = root.position.scale(1000); // méter -> mm
-
-      ["x", "y", "z"].forEach((axis) => {
-        // Szélek kiszámítása:
-        const selectedMin = objPosition[axis] - selectedSize[axis] / 2;
-        const selectedMax = objPosition[axis] + selectedSize[axis] / 2;
-        const otherMin = otherPosition[axis] - size[axis] / 2;
-        const otherMax = otherPosition[axis] + size[axis] / 2;
-
-        // Snap min-edge
-        if (Math.abs(selectedMin - otherMax) <= snapThreshold) {
-          snappedPosition[axis] = otherMax + selectedSize[axis] / 2;
-        }
-        // Snap max-edge
-        else if (Math.abs(selectedMax - otherMin) <= snapThreshold) {
-          snappedPosition[axis] = otherMin - selectedSize[axis] / 2;
-        }
-      });
+    const newMin = newCenter[axis] + localMin[axis];
+    const newMax = newCenter[axis] + localMax[axis];
+    // 3) végig a többi objektumon
+    for (const [oid, other] of Object.entries(groupRootsRef.current)) {
+      if (+oid === selectedId) continue;
+      const obi = getCombinedBoundingInfo(other);
+      if (!obi) continue;
+      const otherMin = obi.minimum[axis];
+      const otherMax = obi.maximum[axis];
+      // Snap min-edge: selected új minje -> otherMax
+      if (Math.abs(newMin - otherMax) <= thresholdM) {
+        // a gyökér középpontja legyen: otherMax - localMin
+        const snappedCenterM = otherMax - localMin[axis];
+        return {
+          ...posMM,
+          [axis]: Math.round(snappedCenterM * 1000)
+        };
+      }
+      // Snap max-edge: selected új maxja -> otherMin
+      if (Math.abs(newMax - otherMin) <= thresholdM) {
+        const snappedCenterM = otherMin - localMax[axis];
+        return {
+          ...posMM,
+          [axis]: Math.round(snappedCenterM * 1000)
+        };
+      }
     }
-
-    return snappedPosition;
+    return {
+      x: Math.round(posMM.x),
+      y: Math.round(posMM.y),
+      z: Math.round(posMM.z)
+    };
   }
 
   // soften backdrop blur
@@ -446,8 +449,11 @@ export default function ModelViewer({
     });
 
     if (createdItems.length === 0) {
-      camera.setTarget(new Vector3(roomW / 2, roomH / 2, roomD / 2));
-      camera.radius = 10;
+      if (!hasPositionedCameraRef.current) {
+        camera.setTarget(new Vector3(roomW / 2, roomH / 2, roomD / 2));
+        camera.radius = 10;
+        hasPositionedCameraRef.current = true;
+      }
       return;
     }
 
@@ -577,35 +583,31 @@ export default function ModelViewer({
         );
       });
     });
-
-    camera.setTarget(new Vector3(roomW / 2, roomH / 2, roomD / 2));
-    camera.radius = 10;
   }, [objects, createdItems, usedColors, dispatch, roomSize, hiddenItems]);
 
   const handlePositionChange = (ax, value) => {
     if (!selectedObjectId) return;
-    setObjPosition((prev) => ({
-      ...prev,
-      [ax]: value
-    }));
+    // csak egészre kerekítjük
+    const intVal = Math.round(value);
+    setObjPosition((prev) => {
+      const newPos = { ...prev, [ax]: intVal };
+      return isSnappingEnabled
+        ? snapOnAxis(newPos, selectedObjectId, ax)
+        : newPos;
+    });
   };
 
-  // 4) apply position transformations
   useEffect(() => {
     if (!selectedObjectId) return;
     const root = groupRootsRef.current[selectedObjectId];
     if (!root) return;
-
-    const finalPosition = isSnappingEnabled
-      ? snapObjectPosition(objPosition, selectedObjectId)
-      : objPosition;
-
+    // objPosition már a helyes, snapelt root center mm-ben
     root.position.set(
-      finalPosition.x / 1000,
-      finalPosition.y / 1000,
-      finalPosition.z / 1000
+      objPosition.x / 1000,
+      objPosition.y / 1000,
+      objPosition.z / 1000
     );
-  }, [objPosition, selectedObjectId, isSnappingEnabled]);
+  }, [objPosition, selectedObjectId]);
 
   // 5) apply rotation
   useEffect(() => {
@@ -666,6 +668,11 @@ export default function ModelViewer({
     }
     setIsModalOpen(false);
   };
+  const dimLabels = {
+    h: "Magasság",
+    w: "Szélesség",
+    d: "Mélység"
+  };
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div
@@ -682,21 +689,26 @@ export default function ModelViewer({
         }}
       >
         {["h", "w", "d"].map((ax) => (
-          <Form.Control
-            key={ax}
-            type="number"
-            step={1} /* explicit 1‑es lépésköz */
-            min={0} /* ha szeretnéd nullánál lejjebb semmiképp */
-            size="sm"
-            style={{ width: "4rem" }}
-            value={roomSize[ax]}
-            onChange={(e) => {
-              /* e.target.valueAsNumber közvetlenül Number‑t ad */
-              const v = e.target.valueAsNumber;
-              onRoomSizeChange(ax, isNaN(v) ? 0 : v);
-            }}
-            placeholder={ax.toUpperCase()}
-          />
+          <Form.Group key={ax} className="text-center ">
+            {/*<Form.Label style={{ fontSize: "0.6rem", padding: "0" }}>
+              {dimLabels[ax]}
+            </Form.Label>*/}
+            <Form.Control
+              key={ax}
+              type="number"
+              step={1} /* explicit 1‑es lépésköz */
+              min={0} /* ha szeretnéd nullánál lejjebb semmiképp */
+              size="sm"
+              style={{ width: "4rem" }}
+              value={roomSize[ax]}
+              onChange={(e) => {
+                /* e.target.valueAsNumber közvetlenül Number‑t ad */
+                const v = e.target.valueAsNumber;
+                onRoomSizeChange(ax, isNaN(v) ? 0 : v);
+              }}
+              placeholder={ax.toUpperCase()}
+            />
+          </Form.Group>
         ))}
         <div>
           <Button
@@ -895,6 +907,13 @@ export default function ModelViewer({
         </Modal.Body>
 
         <Modal.Footer>
+          <Button
+            variant={isSnappingEnabled ? "outline-danger" : "outline-success"}
+            onClick={() => setIsSnappingEnabled((prev) => !prev)}
+            className="me-auto"
+          >
+            {isSnappingEnabled ? "Tapadás ki." : "Tapadás be."}
+          </Button>
           <Button variant="secondary" onClick={handleCancel}>
             Mégsem
           </Button>
