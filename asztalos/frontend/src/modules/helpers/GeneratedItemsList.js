@@ -270,7 +270,31 @@ export default function GeneratedItemsList({
                       <IonIcon
                         icon={isCollapsed ? chevronForward : chevronDown}
                       />
-                      <strong style={{ marginLeft: 6 }}>{color.name}</strong>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        {color.imageDataReduced ? (
+                          <img
+                            src={`data:image/jpeg;base64,${color.imageDataReduced}`}
+                            alt={color.name}
+                            style={{ width: 16, height: 16, borderRadius: 2 }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 16,
+                              height: 16,
+                              backgroundColor: color.hex || "#ddd",
+                              borderRadius: 2
+                            }}
+                          />
+                        )}
+                        <strong>{color.name}</strong>
+                      </div>
                     </div>
                     {calledFrom == 1 ? (
                       <button

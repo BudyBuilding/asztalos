@@ -177,6 +177,30 @@ function EditWork() {
     dispatch(updateWork({ ...localWork, room: roomStr }));
   };
 
+  const paletteByMaterial = React.useMemo(() => {
+    // 1) collect all used colorIds from createdItems
+    const usedColorIds = new Set(
+      createdItems.map((it) => it.color?.colorId).filter((cid) => cid != null)
+    );
+
+    // 2) filter the palette down to just those used colors
+    const usedPalette = palette.filter((c) => usedColorIds.has(c.colorId));
+
+    // 3) group by c.material
+    const map = usedPalette.reduce((acc, c) => {
+      const mat = c.materialType || "Alap";
+      if (!acc[mat]) acc[mat] = [];
+      acc[mat].push(c);
+      return acc;
+    }, {});
+
+    // 4) produce an array [{ material, colors: […] }, …]
+    return Object.entries(map).map(([material, colors]) => ({
+      material,
+      colors
+    }));
+  }, [palette, createdItems]);
+
   useEffect(() => {
     const wid = +workId;
 
@@ -629,63 +653,82 @@ function EditWork() {
             </NavDropdown.Item>
           ))}
         </NavDropdown>
-        <div className="d-flex align-items-center ms-auto">
-          {palette.map((c) => (
+
+        <div
+          className="d-flex align-items-center ms-auto"
+          style={{ gap: "1rem" }}
+        >
+          {paletteByMaterial.map(({ material, colors }) => (
             <div
-              key={c.colorId}
-              className="position-relative me-1"
-              style={{ width: 40, height: 40 }}
+              key={material}
+              className="d-flex align-items-center"
+              style={{ gap: "0.25rem", whiteSpace: "nowrap" }}
             >
-              {c.imageDataReduced ? (
-                <RBImage
-                  src={
-                    c.imageDataReduced
-                      ? `data:image/jpeg;base64,${c.imageDataReduced}`
-                      : undefined
-                  }
-                  thumbnail
-                  style={{ width: "100%", height: "100%" }}
-                />
-              ) : (
-                // ha nincs kép, mutassunk egy színes négyzetet hex alapján
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: c.hex || "#ddd"
-                  }}
-                />
-              )}
-              <span
-                onClick={() => removeColor(c.colorId)}
+              <div
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  color: "red",
-                  cursor: "pointer",
-                  background: "white",
-                  borderRadius: "50%",
-                  width: "1rem",
-                  height: "1rem",
-                  textAlign: "center",
-                  lineHeight: "1rem"
+                  fontSize: ".75rem",
+                  fontWeight: "500"
                 }}
               >
-                –
-              </span>
+                {material}:
+              </div>
+              <div className="d-flex" style={{ gap: "0.25rem" }}>
+                {colors.map((c) => (
+                  <div
+                    key={c.colorId}
+                    className="position-relative"
+                    style={{ width: 32, height: 32 }}
+                    title={c.name}
+                  >
+                    {c.imageDataReduced ? (
+                      <RBImage
+                        src={`data:image/jpeg;base64,${c.imageDataReduced}`}
+                        thumbnail
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          backgroundColor: c.hex || "#ddd"
+                        }}
+                      />
+                    )}
+                    <span
+                      onClick={() => removeColor(c.colorId)}
+                      style={{
+                        position: "absolute",
+                        top: -4,
+                        right: -4,
+                        color: "red",
+                        cursor: "pointer",
+                        background: "white",
+                        borderRadius: "50%",
+                        width: "1rem",
+                        height: "1rem",
+                        textAlign: "center",
+                        lineHeight: "1rem"
+                      }}
+                    >
+                      ×
+                    </span>
+                  </div>
+                ))}
+                {colors.length < 5 && (
+                  <div
+                    onClick={openPalette}
+                    className="border bg-light d-flex align-items-center justify-content-center"
+                    style={{ width: 32, height: 32, cursor: "pointer" }}
+                  >
+                    <IonIcon icon={add} />
+                  </div>
+                )}
+              </div>
             </div>
           ))}
-          {palette.length < 5 && (
-            <div
-              onClick={openPalette}
-              className="border bg-light d-flex align-items-center justify-content-center"
-              style={{ width: 40, height: 40, cursor: "pointer" }}
-            >
-              <IonIcon icon={add} />
-            </div>
-          )}
         </div>
+
         <Button onClick={handleSaveWork} className="ms-2">
           Munka mentése
         </Button>
