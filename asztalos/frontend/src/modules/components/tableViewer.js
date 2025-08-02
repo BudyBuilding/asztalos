@@ -327,7 +327,8 @@ const TableViewer = () => {
         style={{
           width: `${dividerPosition}%`,
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
+          height: "100%"
         }}
       >
         <TableViewerComponent
@@ -489,7 +490,7 @@ const TableViewerComponent = ({
   const filteredTables = selectedColorId
     ? createdTables.filter((t) => t.color?.colorId === selectedColorId)
     : createdTables;
-
+  const [tableRotation, setTableRotation] = useState(0);
   const showNav = filteredTables.length > 1;
   const allWorks = dispatch(getAllWorks());
   const selectedWork = allWorks.find((w) => w.workId == workId);
@@ -644,7 +645,9 @@ const TableViewerComponent = ({
       setIsExporting(false);
     }
   };
-
+  const toggleTableRotation = () => {
+    setTableRotation((prev) => (prev === 0 ? 90 : 0));
+  };
   if (showNoTableText) {
     return (
       <div
@@ -685,7 +688,6 @@ const TableViewerComponent = ({
   const [height = 0, width = 0, thickness = 0] = JSON.parse(
     table.size || "[0,0,0]"
   );
-  const colorName = table.color?.name || "N/A";
 
   const parsePositions = (tablePosition) => {
     if (!tablePosition) return [];
@@ -830,11 +832,14 @@ const TableViewerComponent = ({
       (p) => p.instanceId === instanceId
     );
     let { x, y, rotation } = pos;
-    const [origW, origH] = JSON.parse(item.size || "[0,0]");
+    const [origW1, origH1] = JSON.parse(item.size || "[0,0]");
     const newRot = rotation === 0 ? 1 : 0;
-    const w = newRot ? origH : origW;
-    const h = newRot ? origW : origH;
-    const [tableH, tableW] = JSON.parse(table.size || "[0,0]");
+    const w = newRot ? origH1 : origW1;
+    const h = newRot ? origW1 : origH1;
+
+    let [origH, origW] = JSON.parse(table.size || "[0,0]");
+    const tableW = origW;
+    const tableH = origH;
     const allPoses = getTablePositions(editedItems, table.id);
 
     // bounds és collision
@@ -901,11 +906,26 @@ const TableViewerComponent = ({
     // utolsó ütközésmentes
     let lastValid = { x: startX, y: startY };
 
+    let [origH, origW] = JSON.parse(table.size || "[0,0]");
+    // ha el van forgatva 90°-kal, cseréljük a dimenziókat
+    //    const tableH = tableRotation === 90 ? origW : origH;
+    //  const tableW = tableRotation === 90 ? origH : origW;
+
     const [tableH, tableW] = JSON.parse(table.size || "[0,0]");
 
     const onMouseMove = (me) => {
-      const dx = (me.clientX - e.clientX) / scaleFactor;
-      const dy = (me.clientY - e.clientY) / scaleFactor;
+      const deltaX = me.clientX - e.clientX;
+      const deltaY = me.clientY - e.clientY;
+      let dx, dy;
+      if (tableRotation === 90) {
+        // 90°-os elforgatásnál felcseréljük és invertáljuk az axeseket
+        dx = deltaY / scaleFactor;
+        dy = -deltaX / scaleFactor;
+      } else {
+        // alapértelmezett (0°)
+        dx = deltaX / scaleFactor;
+        dy = deltaY / scaleFactor;
+      }
       const rawX = startX + dx;
       const rawY = startY + dy;
       const boundedX = Math.max(0, Math.min(rawX, tableW - w));
@@ -1050,7 +1070,14 @@ const TableViewerComponent = ({
   };
 
   return (
-    <div style={{ padding: "20px", position: "relative", textAlign: "center" }}>
+    <div
+      style={{
+        padding: "20px",
+        position: "relative",
+        textAlign: "center",
+        height: "100%"
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -1099,8 +1126,8 @@ const TableViewerComponent = ({
       <div
         style={{
           position: "absolute",
-          top: "10px",
-          right: "10px",
+          top: 10,
+          right: 10,
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
@@ -1294,18 +1321,35 @@ const TableViewerComponent = ({
             writingMode: "vertical-rl"
           }}
         ></div>
+        <button
+          onClick={toggleTableRotation}
+          style={{
+            position: "absolute",
+            top: "10px",
+            left: "0px",
+            padding: "8px 16px",
+            backgroundColor: "#FF9800",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            zIndex: 2001
+          }}
+        >
+          Tábla forgatása
+        </button>
+
         <div
           ref={drawingRef}
           style={{
+            display: "inline-block",
             width: `${width * scaleFactor}px`,
             height: `${height * scaleFactor}px`,
-            position: "relative",
-            margin: "0 auto",
             border: `${BORDER_WIDTH}px solid ${
               isEditing ? "#4CAF50" : "black"
             }`,
+            transform: `rotate(${tableRotation}deg)`,
+            transformOrigin: "center center",
             boxSizing: "content-box",
-            overflow: "hidden",
             backgroundImage: backgroundImageStyle,
             backgroundSize: "cover",
             backgroundPosition: "center center",
@@ -1395,29 +1439,39 @@ const TableViewerComponent = ({
           <div
             style={{
               position: "absolute",
-              top: "-20px",
+              top: `-${tableRotation === 90 ? 35 : 30}px`,
               left: "50%",
-              transform: "translateX(-50%)",
+              transform: `translateX(-50%) rotate(${
+                tableRotation === 90 ? -90 : 0
+              }deg)`,
+              transformOrigin: "center",
               fontSize: "14px",
-              fontWeight: "bold"
+              fontWeight: "bold",
+              zIndex: 10,
+              padding: "2px 4px",
+              borderRadius: "4px"
             }}
           >
-            {width}
+            {width || "Nincs méret"}
           </div>
 
           <div
             style={{
               position: "absolute",
               top: "50%",
-              left: "-20px",
-              transform: "translateY(-50%) rotate(180deg)",
+              left: `-${tableRotation === 90 ? -1 : 50}px`,
+              transform: `translateY(-50%) rotate(${
+                tableRotation === 90 ? -90 : 0
+              }deg)`,
+              transformOrigin: "center",
               fontSize: "14px",
               fontWeight: "bold",
-              writingMode: "vertical-rl",
-              transformOrigin: "center"
+              zIndex: 10,
+              padding: "2px 4px",
+              borderRadius: "4px"
             }}
           >
-            {height}
+            {height || "Nincs méret"}
           </div>
 
           {filteredItems.map((item) => {
@@ -1514,7 +1568,9 @@ const TableViewerComponent = ({
                       zIndex: 2,
                       cursor: isEditing ? "move" : "pointer",
                       transform:
-                        rotation == 1 ? "rotate(90deg)" : "rotate(0deg)",
+                        rotation == 1
+                          ? `rotate(${tableRotation == 90 ? -90 : 90}deg)`
+                          : "rotate(0deg)",
                       transformOrigin: "center"
                     }}
                   >
@@ -1523,7 +1579,10 @@ const TableViewerComponent = ({
                         fontSize: "12px",
                         fontWeight: "bold",
                         textAlign: "center",
-                        transform: `rotate(${isRotated ? -90 : 0}deg)`,
+                        transform: `rotate(${
+                          (isRotated ? (tableRotation == 90 ? 90 : -90) : 0) -
+                          tableRotation
+                        }deg)`,
                         color: "#333"
                       }}
                     >
@@ -1559,8 +1618,10 @@ const TableViewerComponent = ({
                         left: "50%",
                         color: "#333",
                         transform: `translateX(-50%) rotate(${
-                          isRotated ? -90 : 0
+                          (isRotated ? (tableRotation == 90 ? 90 : -90) : 0) -
+                          tableRotation
                         }deg)`,
+
                         fontSize: "10px",
                         textAlign: "center",
                         fontWeight: "normal",
@@ -1590,7 +1651,8 @@ const TableViewerComponent = ({
                         top: "50%",
                         left: "0",
                         transform: `translateY(-50%) rotate(${
-                          !isRotated ? 0 : -90
+                          (isRotated ? (tableRotation == 90 ? 90 : -90) : 0) -
+                          tableRotation
                         }deg)`,
                         fontSize: "10px",
                         fontWeight: "normal",
