@@ -46,7 +46,7 @@ const TableViewer = () => {
   const [createdItems, setCreatedItems] = useState([]);
   const [processedItems, setProcessedItems] = useState([]);
   const [currentTableIndex, setCurrentTableIndex] = useState(0);
-  const [dividerPosition, setDividerPosition] = useState(75);
+  const [dividerPosition, setDividerPosition] = useState(70);
   const [selectedItemPosition, setSelectedItemPosition] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTables, setEditedTables] = useState([]);
@@ -1037,6 +1037,18 @@ const TableViewerComponent = ({
     setCurrentTableIndex(newIndex);
   };
 
+  const controlButton = {
+    width: "140px", // itt állítod be az egységes szélességet
+    padding: "8px 16px",
+    fontSize: "14px",
+    cursor: "pointer",
+    backgroundColor: "#4CAF50",
+    color: "white",
+    border: "none",
+    borderRadius: "12px",
+    textAlign: "center"
+  };
+
   return (
     <div style={{ padding: "20px", position: "relative", textAlign: "center" }}>
       <div
@@ -1084,62 +1096,37 @@ const TableViewerComponent = ({
           ))}
         </select>
       </div>
-      <div style={{ position: "absolute", top: "10px", right: "10px" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "8px"
+        }}
+      >
+        {!cannotEdit ? (
+          <button onClick={onGenerate} style={controlButton}>
+            Generálás
+          </button>
+        ) : (
+          <></>
+        )}
         {!isEditing && (
           <>
-            <button
-              onClick={handleExportPdf}
-              style={{
-                padding: "8px 16px",
-                fontSize: "14px",
-                cursor: "pointer",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "12px",
-                marginRight: "8px"
-              }}
-            >
-              Exportálás PDF-ként
+            <button onClick={handleExportPdf} style={controlButton}>
+              Exportálás PDF
             </button>
             {!cannotEdit ? (
-              <button
-                onClick={startEditing}
-                style={{
-                  padding: "8px 16px",
-                  fontSize: "14px",
-                  cursor: "pointer",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "12px",
-                  marginRight: "8px"
-                }}
-              >
-                Tábla szerkesztése
+              <button onClick={startEditing} style={controlButton}>
+                Szerkesztés
               </button>
             ) : (
               <></>
             )}
           </>
-        )}
-        {!cannotEdit ? (
-          <button
-            onClick={onGenerate}
-            style={{
-              padding: "8px 16px",
-              fontSize: "14px",
-              cursor: "pointer",
-              backgroundColor: "#9E9E9E",
-              color: "white",
-              border: "none",
-              borderRadius: "12px"
-            }}
-          >
-            Generálás
-          </button>
-        ) : (
-          <></>
         )}
       </div>
 
@@ -1152,7 +1139,7 @@ const TableViewerComponent = ({
             right: "10px",
             display: "flex",
             flexDirection: "column",
-            gap: "10px",
+            gap: "8px",
             zIndex: 5 // keep it underneath if needed
           }}
         >
