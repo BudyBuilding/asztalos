@@ -68,6 +68,18 @@ export default function ModelViewer({
     x: window.innerWidth / 15,
     y: window.innerHeight / 5
   });
+  useEffect(() => {
+    const dialog = document.querySelector(".modal-dialog");
+    if (dialog) {
+      dialog.style.position = "absolute";
+      dialog.style.top = `${modalPos.y}px`;
+      dialog.style.left = `${modalPos.x}px`;
+      dialog.style.margin = "0";
+      dialog.style.transform = "none"; // <— Ezt kell hozzáadni
+      dialog.style.width = "auto"; // vagy tetszőleges fix/százalék szélesség
+    }
+  }, [modalPos, isModalOpen]);
+
   const [dragging, setDragging] = useState(false);
   const dragRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0 });
   const MM_TO_M = 0.001;
@@ -707,30 +719,6 @@ export default function ModelViewer({
         show={isModalOpen}
         onHide={handleCancel}
         backdropClassName="no-blur-backdrop"
-        dialogAs={({
-          className,
-          style,
-          children,
-          contentClassName,
-          ...props
-        }) => (
-          <div
-            {...props} // itt már nincs contentClassName a props között
-            className={className}
-            style={{
-              ...style,
-              position: "absolute",
-              top: modalPos.y,
-              left: modalPos.x,
-              margin: 0,
-              backgroundColor: "#fff",
-              borderRadius: "0.3rem",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.2)"
-            }}
-          >
-            {children}
-          </div>
-        )}
       >
         <Modal.Header
           onMouseDown={onHeaderMouseDown}

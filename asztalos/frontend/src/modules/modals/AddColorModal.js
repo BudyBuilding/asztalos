@@ -221,6 +221,7 @@ const AddColorModal = ({ show, onHide, colorToEdit }) => {
                         <option value="MDF">MDF</option>
                         <option value="Gizir">Gizir</option>
                         <option value="PFL">PFL</option>
+                        <option value="Munkalap">Munkalap</option>
                       </Form.Select>
                     </FloatingLabel>
                   </Col>
