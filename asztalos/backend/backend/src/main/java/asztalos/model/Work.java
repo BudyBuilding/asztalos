@@ -59,6 +59,7 @@ public class Work {
     private Date finishDate;
     private Date companyFinishDate;
     private Date cancelDate;
+    private Date scheduleDate;
     private String companyStatus;
     private String room;
 
@@ -252,6 +253,14 @@ public class Work {
 
     public void setCancelDate(Date cancelDate) {
         this.cancelDate = cancelDate;
+    }
+
+    public Date getScheduleDate() {
+        return scheduleDate;
+    }
+
+    public void setScheduleDate(Date scheduleDate) {
+        this.scheduleDate = scheduleDate;
     }
 }
 
