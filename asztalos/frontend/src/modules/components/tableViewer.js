@@ -26,7 +26,7 @@ import GeneratedItemsList from "../helpers/GeneratedItemsList";
 import { jsPDF } from "jspdf";
 import { IonIcon } from "@ionic/react";
 import { reload, removeCircleOutline } from "ionicons/icons";
-import { Button } from "react-bootstrap";
+import { Button, Modal } from "react-bootstrap";
 import {
   parsePositions,
   generateDiagonalLines,
@@ -482,7 +482,7 @@ const TableViewerComponent = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const BORDER_WIDTH = 2;
   const drawingRef = useRef(null);
-  //const [tableHeight, tableWidth] = JSON.parse(table.size || "[0,0]");
+  const [showExportModal, setShowExportModal] = useState(false);
   const bgImageBase64 = dispatch(
     getColorById(table?.color?.colorId)
   )?.imageData;
@@ -739,40 +739,49 @@ const TableViewerComponent = ({
         acc[cid].push(tbl);
         return acc;
       }, {});
-      const keys = selectedColorId
-        ? [String(selectedColorId)]
-        : Object.keys(byColor);
 
-      if (separate) {
-        for (const cid of keys) {
-          const tbls = byColor[cid] || [];
-          tbls.forEach((tbl) => {
-            tbl.colorName = (
-              allColors.find((c) => c.colorId === tbl.color?.colorId)?.name ||
-              "no_color"
-            ).replace(/\s+/g, "_");
-          });
+      // Ha van selectedColorId, csak arra hívjuk, külön vagy egyben is?
+      if (selectedColorId != null) {
+        const tbls = byColor[selectedColorId] || [];
+        const colorName =
+          allColors
+            .find((c) => c.colorId === selectedColorId)
+            ?.name.replace(/\s+/g, "_") || "no_color";
+
+        // Ha külön akarod, lehetne: tbls.forEach, de mivel csak egy szín, elég egyszer
+        await generatePdfFor(
+          tbls,
+          `${user}_${colorName}_${workId}.pdf`,
+          user,
+          workId
+        );
+      } else {
+        // nincs filter: lehet külön színenként, vagy mind egyben
+        const keys = Object.keys(byColor);
+        if (separate) {
+          for (const cid of keys) {
+            const tbls = byColor[cid] || [];
+            const colorName =
+              allColors
+                .find((c) => c.colorId === Number(cid))
+                ?.name.replace(/\s+/g, "_") || "no_color";
+
+            await generatePdfFor(
+              tbls,
+              `${user}_${colorName}_${workId}.pdf`,
+              user,
+              workId
+            );
+          }
+        } else {
+          // mind egy fájlba
           await generatePdfFor(
-            tbls,
-            `${user}_${tbls[0].colorName}_${workId}.pdf`,
+            [].concat(...Object.values(byColor)),
+            `${user}_${workId}_all.pdf`,
             user,
             workId
           );
         }
-      } else {
-        const allTbls = keys.flatMap((k) => byColor[k] || []);
-        allTbls.forEach((tbl) => {
-          tbl.colorName = (
-            allColors.find((c) => c.colorId === tbl.color?.colorId)?.name ||
-            "no_color"
-          ).replace(/\s+/g, "_");
-        });
-        await generatePdfFor(
-          allTbls,
-          `${user}_${workId}_all.pdf`,
-          user,
-          workId
-        );
       }
     } catch (e) {
       console.error(e);
@@ -1215,6 +1224,71 @@ const TableViewerComponent = ({
         height: "100%"
       }}
     >
+      <Modal show={showExportModal} onHide={() => setShowExportModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Exportálás PDF</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {selectedColorId == null
+            ? "Hogyan szeretnéd exportálni a táblákat?"
+            : `Biztosan exportálod a 
+         ${
+           allColors.find((c) => c.colorId === selectedColorId)?.name ||
+           "kiválasztott"
+         } színt?`}
+        </Modal.Body>
+
+        <Modal.Footer>
+          {selectedColorId == null ? (
+            <>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  handleExportPdf(false); // egy fájlban
+                  setShowExportModal(false);
+                }}
+              >
+                Egyben
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  handleExportPdf(true); // színenként külön
+                  setShowExportModal(false);
+                }}
+              >
+                Színenként külön
+              </Button>
+              <Button
+                variant="outline-dark"
+                onClick={() => setShowExportModal(false)}
+              >
+                Mégsem
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline-dark"
+                onClick={() => {
+                  handleExportPdf(false); // csak a kiszűrt szín
+                  setShowExportModal(false);
+                }}
+              >
+                Biztos
+              </Button>
+              <Button
+                variant="outline-dark"
+                onClick={() => setShowExportModal(false)}
+              >
+                Mégsem
+              </Button>
+            </>
+          )}
+        </Modal.Footer>
+      </Modal>
+
       <div
         style={{
           display: "flex",
@@ -1281,12 +1355,7 @@ const TableViewerComponent = ({
         {!isEditing && (
           <>
             <button
-              onClick={() => {
-                const separate = window.confirm(
-                  "Színenként külön fájlba szeretnéd exportálni?"
-                );
-                handleExportPdf(separate);
-              }}
+              onClick={() => setShowExportModal(true)}
               style={controlButton}
             >
               Exportálás PDF
@@ -1716,8 +1785,6 @@ const TableViewerComponent = ({
                       position: "absolute",
                       left: `${adjustedLeft}px`,
                       top: `${adjustedTop}px`,
-                      //width: `${rotation == 1 ? scaledHeight : scaledWidth}px`,
-                      //height: `${rotation == 1 ? scaledWidth : scaledHeight}px`,
                       width: `${rotation == 1 ? dispHpx : dispWpx}px`,
                       height: `${rotation == 1 ? dispWpx : dispHpx}px`,
                       backgroundColor: "transparent",
