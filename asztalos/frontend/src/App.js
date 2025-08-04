@@ -38,6 +38,7 @@ import ScrollToTop from "./modules/helpers/ScrollToTop.js";
 import TopNavigationBar from "./modules/components/TopNavigation.js";
 import TableViewer from "./modules/components/tableViewer.js";
 import EmployeePage from "./modules/components/companyComponents/EmployeePage.js";
+import SchedulePage from "./modules/components/companyComponents/SchedulePage.js";
 
 function App() {
   const dispatch = useDispatch();
@@ -171,6 +172,18 @@ function App() {
                 ) : currentUser?.role === "companyAdmin" ||
                   currentUser?.role === "companyUser" ? (
                   <CompanyWorkAnalyzer />
+                ) : (
+                  <div>Unauthorized</div>
+                )
+              }
+            />
+            <Route
+              path="/schedule/"
+              element={
+                currentUser?.role === "companyAdmin" ||
+                currentUser?.role === "admin" ||
+                currentUser?.role === "companyUser" ? (
+                  <SchedulePage />
                 ) : (
                   <div>Unauthorized</div>
                 )

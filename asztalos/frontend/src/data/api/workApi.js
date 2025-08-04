@@ -5,7 +5,7 @@ import {
   addWork,
   addMoreWorks,
   deleteWork,
-  updateWork,
+  updateWork
 } from "../store/actions/workStoreFunctions";
 import { useDispatch } from "react-redux";
 
@@ -42,8 +42,11 @@ const deleteWorkApi = (workId) => {
 export const updateWorkApi = (workId, updatedWorkData) => {
   return async (dispatch) => {
     try {
-      await axiosInstance.put(`/works/${workId}`, updatedWorkData);
-      dispatch(updateWork(updatedWorkData));
+      const response = await axiosInstance.put(
+        `/works/${workId}`,
+        updatedWorkData
+      );
+      dispatch(updateWork(response.data));
     } catch (error) {
       console.error("Error while updating work:", error);
       throw error;
@@ -86,5 +89,5 @@ export default {
   deleteWorkApi,
   updateWorkApi,
   createWorkApi,
-  getWorkOfUserAdminApi,
+  getWorkOfUserAdminApi
 };
