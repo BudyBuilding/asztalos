@@ -11,6 +11,7 @@ import {
   getAllWorks,
   getColorById
 } from "../../data/getters";
+import { flushSync } from "react-dom";
 import html2canvas from "html2canvas";
 import {
   updateTables,
@@ -495,6 +496,11 @@ const TableViewerComponent = ({
   const allWorks = dispatch(getAllWorks());
   const selectedWork = allWorks.find((w) => w.workId == workId);
   const isOrdered = selectedWork?.isOrdered;
+
+  const [showBackground, setShowBackground] = useState(true);
+
+  const toggleBackground = () => setShowBackground((b) => !b);
+
   const allColors = useSelector((state) =>
     Array.isArray(state.colors) ? state.colors : Object.values(state.colors)
   );
@@ -560,91 +566,222 @@ const TableViewerComponent = ({
     dispatch(getAllColors());
   }, [dispatch]);
 
-  const handleExportPdf = async () => {
-    const totalStart = performance.now();
-    setIsExporting(true);
+  // 1) GENERATE PDF
+  async function generatePdfFor(tables, fileName, user, workId) {
+    const pdf = new jsPDF({ orientation: "landscape", unit: "px" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const leftColW = pageW * 0.2;
+    const centerColW = pageW * 0.6;
+    const rightColW = pageW * 0.2;
+    const margin = 10;
+    let first = true;
 
-    try {
-      if (!createdTables.length) {
-        alert("Nincs exportálható tábla. Kérlek, generálj táblákat először.");
-        return;
+    for (const tbl of tables) {
+      // Find the global index of the table in filteredTables
+      const globalIndex = filteredTables.findIndex((t) => t.id === tbl.id);
+      if (globalIndex === -1) continue; // Skip if table not found
+
+      // Set the current table index to ensure the correct table is rendered
+      setCurrentTableIndex(globalIndex);
+
+      // Wait for the DOM to update (React may need a tick to re-render)
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Verify that the drawingRef corresponds to the correct table
+      if (!drawingRef.current) {
+        console.error(`Drawing ref not found for table ${tbl.id}`);
+        continue;
       }
 
-      const work = dispatch(getWorkById(workId));
-      let user = (work?.user?.name || "Unknown_User").replace(/\s+/g, "_");
+      if (!first) pdf.addPage();
+      first = false;
+      let [tblH, tblW /*, tblThick */] = JSON.parse(tbl.size || "[0,0,0]");
+      if (tableRotation === 90) {
+        [tblH, tblW] = [tblW, tblH];
+      }
+      // — Left column: Header fields —
+      const headerFields = [
+        `Felhasználó: ${user}`,
+        `Munka: ${workId}`,
+        `Szín: ${tbl.colorName}`,
+        `Tábla ID: ${tbl.id}`,
+        `tblH: ${tblH}`,
+        `tblW: ${tblW}`
+      ];
+      let headerY = 20;
+      pdf.setFontSize(14);
+      headerFields.forEach((field) => {
+        const lines = pdf.splitTextToSize(field, leftColW - 2 * margin);
+        pdf.text(lines, margin, headerY, { align: "left", baseline: "top" });
+        headerY += lines.length * 16;
+      });
 
-      // Csoportosítás szín szerint
-      const byColor = createdTables.reduce((acc, tbl) => {
-        const cid = tbl.color?.colorId ?? "__NO_COLOR__";
-        (acc[cid] = acc[cid] || []).push(tbl);
+      // — Right column: Group by kant code —
+      const itemsOnTable = processedItems.filter((it) =>
+        it.processedPositions.some((p) => p.tableId === tbl.id)
+      );
+      const byKant = itemsOnTable.reduce((acc, it) => {
+        const rawKant = it.kant != null ? it.kant : "[-,0,0]";
+        const parts = Array.isArray(rawKant)
+          ? rawKant
+          : rawKant.replace(/^\[|\]$/g, "").split(",");
+        const [code = "-", lenCnt = "0", widCnt = "0"] = parts.map((v) =>
+          v.trim()
+        );
+        if (!acc[code]) acc[code] = [];
+        acc[code].push({
+          item: it,
+          lenCnt: Number(lenCnt),
+          widCnt: Number(widCnt)
+        });
         return acc;
       }, {});
 
-      for (const [cid, tables] of Object.entries(byColor)) {
-        let colorName = tables[0]?.color?.name || "no_color";
-        const colorStart = performance.now();
+      pdf.setFontSize(12);
+      let y = 20;
+      const rightX = pageW - rightColW + margin;
 
-        const pdf = new jsPDF({ orientation: "landscape", unit: "px" });
-        const pageW = pdf.internal.pageSize.getWidth();
-        const pageH = pdf.internal.pageSize.getHeight();
+      for (const [code, group] of Object.entries(byKant)) {
+        const title = code === "-" ? "Nincs kant" : `Kant: ${code}`;
+        const titleLines = pdf.splitTextToSize(title, rightColW - 2 * margin);
+        pdf.text(titleLines, rightX, y, { align: "left", baseline: "top" });
+        y += titleLines.length * 14;
 
-        for (let i = 0; i < tables.length; i++) {
-          const tbl = tables[i];
-          setCurrentTableIndex(createdTables.indexOf(tbl));
-          await new Promise((r) => setTimeout(r, 50));
+        for (const { item, lenCnt, widCnt } of group) {
+          const [h, w] = JSON.parse(item.size);
+          const qty = item.qty;
+          const line = `${h} * ${w} = ${qty} || ${item.itemId}`;
+          const wrapped = pdf.splitTextToSize(line, rightColW - 2 * margin);
+          pdf.text(wrapped, rightX, y, { align: "left", baseline: "top" });
+          y += wrapped.length * 14;
 
-          // Canvas fehér háttérrel
-          const origBg = drawingRef.current.style.backgroundImage;
-          drawingRef.current.style.backgroundImage = "none";
-          const canvas = await html2canvas(drawingRef.current, {
-            backgroundColor: "#fff"
+          const symY = y;
+          const lenX = rightX;
+          const widX = rightX + pdf.getTextWidth(`${h} * `);
+          const symLen = lenCnt > 0 ? "=" : lenCnt < 0 ? "-" : "";
+          const symWid = widCnt > 0 ? "=" : widCnt < 0 ? "-" : "";
+          if (symLen)
+            pdf.text(symLen, lenX, symY, { align: "left", baseline: "top" });
+          if (symWid)
+            pdf.text(symWid, widX, symY, { align: "left", baseline: "top" });
+
+          y += 14;
+          pdf.setDrawColor(0);
+          pdf.setLineWidth(0.5);
+          pdf.line(rightX, y, rightX + (rightColW - 2 * margin), y);
+          y += 4;
+        }
+        y += 10; // Space between groups
+      }
+
+      // — Center: Canvas —
+      flushSync(() => setCurrentTableIndex(globalIndex));
+
+      // 2) canvas felbontás növelése scale:2-vel, CORS-szel, logolás kikapcs
+      const origBg = drawingRef.current.style.backgroundImage;
+      drawingRef.current.style.backgroundImage = "none";
+      const canvas = await html2canvas(drawingRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+      drawingRef.current.style.backgroundImage = origBg;
+
+      // 3) JPEG-be konvertáljuk, 0.8 quality-val – gyorsabb és kicsi
+      const imgData = canvas.toDataURL("image/jpeg", 0.8);
+
+      const baseRatio = Math.min(
+        centerColW / canvas.width,
+        (pageH - 2 * margin) / canvas.height,
+        1
+      );
+      const shrinkFactor = 0.85;
+      const ratio = baseRatio * shrinkFactor;
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const imgX = leftColW + (centerColW - imgW) / 2;
+      const imgY = (pageH - imgH) / 2 + 20;
+      pdf.addImage(imgData, "JPEG", imgX, imgY, imgW, imgH);
+
+      pdf.setFontSize(12);
+      pdf.setTextColor(0);
+
+      const widthText = String(tblW);
+      const widthX = imgX + imgW / 2;
+      const widthY = imgY - 8;
+      pdf.text(widthText, widthX, widthY, { align: "center" });
+
+      const heightText = String(tblH);
+      const heightX = imgX + imgW + 8 + 10;
+      const heightY = imgY + imgH / 2;
+      pdf.text(heightText, heightX, heightY, {
+        align: "center",
+        baseline: "middle",
+        angle: 0
+      });
+    }
+
+    pdf.save(fileName);
+  }
+
+  // 2) EXPORT HANDLER
+  const handleExportPdf = async (separate) => {
+    setIsExporting(true);
+    try {
+      const work = dispatch(getWorkById(workId));
+      const user = (work?.user?.name || "Unknown_User").replace(/\s+/g, "_");
+
+      const byColor = createdTables.reduce((acc, tbl) => {
+        const cid = tbl.color?.colorId ?? "__NO_COLOR__";
+        if (!acc[cid]) acc[cid] = [];
+        acc[cid].push(tbl);
+        return acc;
+      }, {});
+      const keys = selectedColorId
+        ? [String(selectedColorId)]
+        : Object.keys(byColor);
+
+      if (separate) {
+        for (const cid of keys) {
+          const tbls = byColor[cid] || [];
+          tbls.forEach((tbl) => {
+            tbl.colorName = (
+              allColors.find((c) => c.colorId === tbl.color?.colorId)?.name ||
+              "no_color"
+            ).replace(/\s+/g, "_");
           });
-          drawingRef.current.style.backgroundImage = origBg;
-
-          const imgData = canvas.toDataURL("image/png");
-          const ratio =
-            Math.min(pageW / canvas.width, pageH / canvas.height) * 0.8;
-          const x = (pageW - canvas.width * ratio) / 2;
-          const y = (pageH - canvas.height * ratio) / 2;
-
-          if (i > 0) pdf.addPage();
-
-          // Felirat minden oldalon, egymás alá
-          pdf.setFontSize(16);
-          pdf.setTextColor(0);
-          pdf.text(
-            [
-              `Felhasználó: ${user}`,
-              `Munka: ${workId}`,
-              `Szín: ${colorName}`,
-              `Azonosító: ${tbl.id}`
-            ],
-            10,
-            12
-          );
-
-          // Kép beszúrása
-          pdf.addImage(
-            imgData,
-            "PNG",
-            x,
-            y,
-            canvas.width * ratio,
-            canvas.height * ratio
+          await generatePdfFor(
+            tbls,
+            `${user}_${tbls[0].colorName}_${workId}.pdf`,
+            user,
+            workId
           );
         }
-
-        user = user.replace(/\s+/g, "_");
-        colorName = colorName.replace(/\s+/g, "_");
-        pdf.save(`${user}_${colorName}_${workId}.pdf`);
+      } else {
+        const allTbls = keys.flatMap((k) => byColor[k] || []);
+        allTbls.forEach((tbl) => {
+          tbl.colorName = (
+            allColors.find((c) => c.colorId === tbl.color?.colorId)?.name ||
+            "no_color"
+          ).replace(/\s+/g, "_");
+        });
+        await generatePdfFor(
+          allTbls,
+          `${user}_${workId}_all.pdf`,
+          user,
+          workId
+        );
       }
-    } catch (err) {
-      console.error("🚨 Export error:", err);
-      alert("Hiba történt a PDF exportálás során.");
+    } catch (e) {
+      console.error(e);
+      alert("Hiba az exportálás során");
     } finally {
       setIsExporting(false);
     }
   };
+
   const toggleTableRotation = () => {
     setTableRotation((prev) => (prev === 0 ? 90 : 0));
   };
@@ -662,7 +799,7 @@ const TableViewerComponent = ({
           position: "relative"
         }}
       >
-        <p>There is no table, please add one</p>
+        <p>Még nincs tábla, generálj először</p>
         <button
           onClick={onGenerate}
           style={{
@@ -1143,9 +1280,18 @@ const TableViewerComponent = ({
         )}
         {!isEditing && (
           <>
-            <button onClick={handleExportPdf} style={controlButton}>
+            <button
+              onClick={() => {
+                const separate = window.confirm(
+                  "Színenként külön fájlba szeretnéd exportálni?"
+                );
+                handleExportPdf(separate);
+              }}
+              style={controlButton}
+            >
               Exportálás PDF
             </button>
+
             {!cannotEdit ? (
               <button onClick={startEditing} style={controlButton}>
                 Szerkesztés
@@ -1297,51 +1443,48 @@ const TableViewerComponent = ({
           style={{
             position: "absolute",
             top: "10px",
-            left: "50%", // igazítsd a kívánt pozícióra
-            zIndex: 1000,
-            background: "rgba(255,255,255,0.8)",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "14px",
-            fontWeight: "bold"
-          }}
-        ></div>
-        <div
-          style={{
-            position: "absolute",
-            top: `calc(50%  ${BORDER_WIDTH}px)`,
-            left: "10px",
-            transform: "translateY(-50%)",
-            zIndex: 1000,
-            background: "rgba(255,255,255,0.8)",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            fontSize: "14px",
-            fontWeight: "bold",
-            writingMode: "vertical-rl"
-          }}
-        ></div>
-        <button
-          onClick={toggleTableRotation}
-          style={{
-            position: "absolute",
-            top: "10px",
             left: "0px",
-            padding: "8px 16px",
-            backgroundColor: "#FF9800",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
             zIndex: 2001
           }}
         >
-          Tábla forgatása
-        </button>
+          <button
+            onClick={toggleTableRotation}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#FF9800",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer"
+            }}
+          >
+            Tábla forgatása
+          </button>
+
+          <button
+            onClick={toggleBackground}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "#FF9800",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer"
+            }}
+          >
+            {showBackground ? "Háttér ki" : "Háttér be"}
+          </button>
+        </div>
 
         <div
           ref={drawingRef}
           style={{
+            position: "relative",
             display: "inline-block",
+            marginTop: tableRotation === 90 ? "0" : "20px",
             width: `${width * scaleFactor}px`,
             height: `${height * scaleFactor}px`,
             border: `${BORDER_WIDTH}px solid ${
@@ -1350,12 +1493,50 @@ const TableViewerComponent = ({
             transform: `rotate(${tableRotation}deg)`,
             transformOrigin: "center center",
             boxSizing: "content-box",
-            backgroundImage: backgroundImageStyle,
+            backgroundImage: showBackground ? backgroundImageStyle : "none",
             backgroundSize: "cover",
             backgroundPosition: "center center",
-            backgroundRepeat: "no-repeat"
+            backgroundRepeat: "no-repeat",
+            overflow: "visible"
           }}
         >
+          <div
+            style={{
+              position: "absolute",
+              top: `-${tableRotation === 90 ? 35 : 30}px`,
+              left: "50%",
+              transform: `translateX(-50%) rotate(${
+                tableRotation === 90 ? -90 : 0
+              }deg)`,
+              transformOrigin: "center",
+              fontSize: "14px",
+              fontWeight: "bold",
+              zIndex: 10,
+              padding: "2px 4px",
+              borderRadius: "4px"
+            }}
+          >
+            {width || "Nincs méret"}
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: `-${tableRotation === 90 ? 35 : 50}px`,
+              transform: `translateY(-50%) rotate(${
+                tableRotation === 90 ? -90 : 0
+              }deg)`,
+              transformOrigin: "center",
+              fontSize: "14px",
+              fontWeight: "bold",
+              zIndex: 10,
+              padding: "2px 4px",
+              borderRadius: "4px"
+            }}
+          >
+            {height || "Nincs méret"}
+          </div>
           <svg
             style={{
               position: "absolute",
@@ -1436,44 +1617,6 @@ const TableViewerComponent = ({
             </g>
           </svg>
 
-          <div
-            style={{
-              position: "absolute",
-              top: `-${tableRotation === 90 ? 35 : 30}px`,
-              left: "50%",
-              transform: `translateX(-50%) rotate(${
-                tableRotation === 90 ? -90 : 0
-              }deg)`,
-              transformOrigin: "center",
-              fontSize: "14px",
-              fontWeight: "bold",
-              zIndex: 10,
-              padding: "2px 4px",
-              borderRadius: "4px"
-            }}
-          >
-            {width || "Nincs méret"}
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: `-${tableRotation === 90 ? -1 : 50}px`,
-              transform: `translateY(-50%) rotate(${
-                tableRotation === 90 ? -90 : 0
-              }deg)`,
-              transformOrigin: "center",
-              fontSize: "14px",
-              fontWeight: "bold",
-              zIndex: 10,
-              padding: "2px 4px",
-              borderRadius: "4px"
-            }}
-          >
-            {height || "Nincs méret"}
-          </div>
-
           {filteredItems.map((item) => {
             return (item.processedPositions || [])
               .filter((pos) => pos.tableId === table.id)
@@ -1486,6 +1629,24 @@ const TableViewerComponent = ({
                   width: itemWidth,
                   height: itemHeight
                 } = pos;
+                const scaledWidth = itemWidth * scaleFactor;
+                const scaledHeight = itemHeight * scaleFactor;
+
+                // 2) minimalizáljuk, hogy sose legyen 20px-nél kisebb
+                const MIN_PX = 5;
+                // ha ez alá esik, elrejtjük a részleteket
+                const DETAIL_THRESHOLD = 30;
+                const scaledW = itemWidth * scaleFactor;
+                const scaledH = itemHeight * scaleFactor;
+                const dispWpx = Math.max(scaledW, MIN_PX);
+                const dispHpx = Math.max(scaledH, MIN_PX);
+                const isTooSmall =
+                  scaledW < DETAIL_THRESHOLD || scaledH < DETAIL_THRESHOLD;
+                const fontSizePx = Math.max(
+                  6,
+                  Math.min(12, Math.min(dispWpx, dispHpx) / 5)
+                );
+                const paddingPx = fontSizePx / 4;
 
                 const positionKey = `${item.itemId}-${index}`;
                 const isSelected =
@@ -1497,8 +1658,6 @@ const TableViewerComponent = ({
                 const isRotated = rotation == 1;
                 const scaledX = x * scaleFactor;
                 const scaledY = y * scaleFactor;
-                const scaledWidth = itemWidth * scaleFactor;
-                const scaledHeight = itemHeight * scaleFactor;
 
                 let kantCode = "";
                 let kantLenCount = 0,
@@ -1557,8 +1716,10 @@ const TableViewerComponent = ({
                       position: "absolute",
                       left: `${adjustedLeft}px`,
                       top: `${adjustedTop}px`,
-                      width: `${rotation == 1 ? scaledHeight : scaledWidth}px`,
-                      height: `${rotation == 1 ? scaledWidth : scaledHeight}px`,
+                      //width: `${rotation == 1 ? scaledHeight : scaledWidth}px`,
+                      //height: `${rotation == 1 ? scaledWidth : scaledHeight}px`,
+                      width: `${rotation == 1 ? dispHpx : dispWpx}px`,
+                      height: `${rotation == 1 ? dispWpx : dispHpx}px`,
                       backgroundColor: "transparent",
                       border: `1px solid ${isSelected ? "#87CEEB" : "black"}`,
                       boxSizing: "border-box",
@@ -1574,34 +1735,39 @@ const TableViewerComponent = ({
                       transformOrigin: "center"
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        transform: `rotate(${
-                          (isRotated ? (tableRotation == 90 ? 90 : -90) : 0) -
-                          tableRotation
-                        }deg)`,
-                        color: "#333"
-                      }}
-                    >
-                      <span
+                    {!isTooSmall && (
+                      <div
                         style={{
-                          border: "0.5px solid black",
-                          borderRadius: "2px",
-                          padding: "2px 4px",
                           fontSize: "12px",
                           fontWeight: "bold",
-                          color: "#333",
-                          marginBottom: "2px"
+                          textAlign: "center",
+                          transform: `rotate(${
+                            (isRotated
+                              ? tableRotation === 90
+                                ? 90
+                                : -90
+                              : 0) - tableRotation
+                          }deg)`,
+                          color: "#333"
                         }}
                       >
-                        {item.itemId}
-                      </span>
-                      <br />
-                      {item.details}
-                    </div>
+                        <span
+                          style={{
+                            border: isTooSmall ? "none" : "0.5px solid black",
+                            borderRadius: "2px",
+                            fontSize: `${fontSizePx}px`,
+                            padding: `${paddingPx}px`,
+                            color: "#333",
+                            marginBottom: "2px"
+                          }}
+                        >
+                          {item.itemId}
+                        </span>
+                        <br />
+                        {item.details}
+                      </div>
+                    )}
+
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1621,13 +1787,19 @@ const TableViewerComponent = ({
                           (isRotated ? (tableRotation == 90 ? 90 : -90) : 0) -
                           tableRotation
                         }deg)`,
-
-                        fontSize: "10px",
+                        fontSize: isTooSmall ? "8px" : "10px",
+                        lineHeight: isTooSmall ? "1" : "normal",
                         textAlign: "center",
                         fontWeight: "normal",
-                        marginTop: "2px",
+                        marginTop: isTooSmall ? "5px" : "2px",
+                        marginTop:
+                          tableRotation === 90
+                            ? "0" // ha vízszintesen forgatott a tábla, nagyobb lentréptetés
+                            : isTooSmall
+                            ? "3px" // ha túl kicsi, nullával
+                            : "2px",
                         cursor: "pointer",
-                        padding: "2px",
+                        padding: isTooSmall ? "0px" : "2px",
                         fontWeight: "bold",
                         border: `1px solid ${
                           isSelected && selectedDimension == "width"
@@ -1637,8 +1809,12 @@ const TableViewerComponent = ({
                       }}
                     >
                       {dispWidth}
-                      <br />
-                      {widthSuffix}
+                      {!isTooSmall && (
+                        <>
+                          <br />
+                          {widthSuffix}
+                        </>
+                      )}
                     </div>
                     <div
                       onClick={(e) => {
@@ -1664,12 +1840,18 @@ const TableViewerComponent = ({
                           isSelected && selectedDimension == "height"
                             ? "#87CEEB"
                             : "transparent"
-                        }`
+                        }`,
+                        fontSize: isTooSmall ? "8px" : "10px",
+                        lineHeight: isTooSmall ? "1" : "normal"
                       }}
                     >
                       {dispHeight}
-                      <br />
-                      {heightSuffix}
+                      {!isTooSmall && (
+                        <>
+                          <br />
+                          {heightSuffix}
+                        </>
+                      )}
                     </div>
                   </div>
                 );
