@@ -28,7 +28,12 @@ public class CreatedTables {
     private Double price;
     
     private String size;
-
+    private String kantLength;
+    private String cutLength;
+    private String usedTables;
+    private String tableUsage;
+    private Number partCount;
+    private Number measureCount;  
   @Temporal(TemporalType.TIMESTAMP)
     private Date lastUpdateDate;                
 
@@ -94,6 +99,53 @@ public class CreatedTables {
 
     public void setLastUpdateDate(Date lastUpdateDate) {
         this.lastUpdateDate = lastUpdateDate;
+    }
+
+        public String getKantLength() {
+        return kantLength;
+    }
+
+    public void setKantLength(String kantLength) {
+        this.kantLength = kantLength;
+    }
+
+    public String getCutLength() {
+        return cutLength;
+    }
+
+    public void setCutLength(String cutLength) {
+        this.cutLength = cutLength;
+    }
+
+    public String getUsedTables() {
+        return usedTables;
+    }
+
+    public void setUsedTables(String usedTables) {
+        this.usedTables = usedTables;
+    }
+
+    public String getTableUsage() {
+        return tableUsage;
+    }
+
+    public void setTableUsage(String tableUsage) {
+        this.tableUsage = tableUsage;
+    }
+
+    public Number getPartCount() {
+        return partCount;
+    }
+
+    public void setPartCount(Number partCount) {
+        this.partCount = partCount;
+    }
+    public Number getMeasureCount() {
+        return measureCount;
+    }
+
+    public void setMeasureCount(Number measureCount) {
+        this.measureCount = measureCount;
     }
 
 }
