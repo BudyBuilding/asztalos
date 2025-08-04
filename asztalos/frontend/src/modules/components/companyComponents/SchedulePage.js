@@ -216,6 +216,24 @@ function SchedulePage() {
     title = capitalizeFirst(d);
   }
 
+  function sumTables(works) {
+    // Az összes munkához
+    let sum = 0;
+    works.forEach((w) => {
+      if (!w.usedTables) return;
+      // pl: "[13:2|14:3.5]"
+      const arr = w.usedTables.replace(/[\[\]]/g, "").split("|");
+      arr.forEach((pair) => {
+        const parts = pair.split(":");
+        if (parts.length === 2) {
+          const num = parseFloat(parts[1].replace(",", "."));
+          if (!isNaN(num)) sum += num;
+        }
+      });
+    });
+    return sum;
+  }
+
   return (
     <div
       style={{
@@ -386,6 +404,19 @@ function SchedulePage() {
                             }}
                           >
                             {format(day, "d", { locale: hu })}
+                            <span
+                              style={{
+                                fontWeight: 400,
+                                color: "#444",
+                                marginLeft: 4
+                              }}
+                            >
+                              {cellWorks.length > 0 && (
+                                <>
+                                  {" | Táblák száma: "} {sumTables(cellWorks)}
+                                </>
+                              )}
+                            </span>
                           </div>
                           <div
                             style={{
