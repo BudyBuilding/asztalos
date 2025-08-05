@@ -171,11 +171,9 @@ public class WorkController {
 
                 // Végigmegyünk az összes mezőn
                 for (Field field : fields) {
-                    field.setAccessible(true); // A mező hozzáférhetővé tétele
-                    Object value = field.get(workDetails); // Az érték lekérése az eredeti munkaobjektumból
-                    if (value != null) {
-                        field.set(updatedWork, value); // Az érték beállítása az új munkaobjektumban
-                    }
+                    field.setAccessible(true);
+                    Object value = field.get(workDetails);
+                    field.set(updatedWork, value); // -> null is lehet
                 }
             } catch (IllegalAccessException e) {
                     throw new RuntimeException("An error occurred while updating user details", e);

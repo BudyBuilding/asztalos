@@ -23,7 +23,7 @@ import Button from "react-bootstrap/Button";
 function CompanyDashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [works, setWorks] = useState([]);
+  const works = useSelector((state) => state.works);
   const [users, setUsers] = useState([]);
   const [tables, setTables] = useState([]);
   const [userList, setUserList] = useState([]);
@@ -152,8 +152,8 @@ function CompanyDashboard() {
       const loadedUsers = loadUsers();
       const loadedWorks = loadWorks();
       const filteredUsers = loadedUsers.filter((p) => p.role === "user");
-      setUsers(filteredUsers);
-      setWorks(loadedWorks);
+      setUsers(loadUsers());
+      //  setWorks(loadedWorks);
       setUserList(filteredUsers);
       setWorkList(loadedWorks);
 

@@ -41,6 +41,7 @@ function SchedulePage() {
       await dispatch(getAllWorks());
       setLoading(false);
     }
+
     load();
   }, [dispatch]);
 
@@ -110,8 +111,8 @@ function SchedulePage() {
   const titleStyle = {
     fontSize: "1.1rem",
     fontWeight: 500,
-    minWidth: "160px",
-    maxWidth: "280px",
+
+    width: "200px",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -208,9 +209,9 @@ function SchedulePage() {
     const m = format(currentDate, "LLLL yyyy", { locale: hu });
     title = capitalizeFirst(m);
   } else if (view === "week") {
-    const w1 = format(weekDays[0], "yyyy.MM.dd", { locale: hu });
-    const w2 = format(weekDays[6], "yyyy.MM.dd", { locale: hu });
-    title = `Hét: ${w1} – ${w2}`;
+    const w1 = format(weekDays[0], "MM.dd", { locale: hu });
+    const w2 = format(weekDays[6], "MM.dd", { locale: hu });
+    title = `${w1} – ${w2}`;
   } else {
     const d = format(currentDate, "yyyy.MM.dd, EEEE", { locale: hu });
     title = capitalizeFirst(d);
@@ -450,7 +451,8 @@ function SchedulePage() {
                 width: "100%",
                 minWidth: "630px",
                 borderCollapse: "collapse",
-                tableLayout: "fixed"
+                tableLayout: "fixed",
+                height: "100%"
               }}
             >
               <thead>
@@ -473,8 +475,8 @@ function SchedulePage() {
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                <tr>
+              <tbody style={{ height: "100%" }}>
+                <tr style={{ height: "100%" }}>
                   {weekDays.map((day, di) => {
                     const cellWorks = works.filter((w) => {
                       if (!w.scheduleDate) return false;
@@ -507,6 +509,19 @@ function SchedulePage() {
                           }}
                         >
                           {format(day, "d", { locale: hu })}
+                          <span
+                            style={{
+                              fontWeight: 400,
+                              color: "#444",
+                              marginLeft: 4
+                            }}
+                          >
+                            {cellWorks.length > 0 && (
+                              <>
+                                {" | Táblák száma: "} {sumTables(cellWorks)}
+                              </>
+                            )}
+                          </span>
                         </div>
                         <div
                           style={{
@@ -515,7 +530,15 @@ function SchedulePage() {
                           }}
                         >
                           {cellWorks.map((w) => (
-                            <WorkBox key={w.workId} w={w} />
+                            <WorkBox
+                              key={w.workId}
+                              w={w}
+                              draggable={
+                                !w.scheduleDate ||
+                                parseISO(w.scheduleDate) >= today
+                              }
+                              onDragStart={handleDragStart}
+                            />
                           ))}
                         </div>
                       </td>
@@ -532,7 +555,8 @@ function SchedulePage() {
                 borderRadius: "8px",
                 padding: "1.0rem",
                 background: "#fafcff",
-                minHeight: "120px"
+                minHeight: "120px",
+                height: "100%"
               }}
             >
               <div
@@ -546,11 +570,23 @@ function SchedulePage() {
                 {capitalizeFirst(
                   format(currentDate, "yyyy. MMMM d., EEEE", { locale: hu })
                 )}
+                {dayWorks.length > 0 && (
+                  <> | Táblák száma: {sumTables(dayWorks)}</>
+                )}
               </div>
               {dayWorks.length === 0 ? (
                 <div style={{ color: "#888" }}>Nincs munka erre a napra.</div>
               ) : (
-                dayWorks.map((w) => <WorkBox key={w.workId} w={w} />)
+                dayWorks.map((w) => (
+                  <WorkBox
+                    key={w.workId}
+                    w={w}
+                    draggable={
+                      !w.scheduleDate || parseISO(w.scheduleDate) >= today
+                    }
+                    onDragStart={handleDragStart}
+                  />
+                ))
               )}
             </div>
           )}
@@ -583,37 +619,72 @@ function SchedulePage() {
         >
           Be nem ütemezett munkák
         </div>
-        {unscheduledWorks.length === 0 ? (
-          <div style={{ color: "#999", fontSize: "0.89em" }}>
-            <span style={{ fontSize: "1.5em" }}>
-              Nincs jelenleg ütemezésre váró munka
-            </span>
-          </div>
-        ) : (
-          unscheduledWorks.map((w) => (
+        <div
+          onDrop={async (e) => {
+            e.preventDefault();
+            const workId = e.dataTransfer.getData("workId");
+            if (!workId) return;
+            if (
+              window.confirm(
+                "Biztos vissza akarod tenni ezt a munkát a be nem ütemezettek közé?"
+              )
+            ) {
+              await dispatch(
+                workApi.updateWorkApi(workId, { scheduleDate: null })
+              );
+            }
+          }}
+          onDragOver={(e) => e.preventDefault()}
+        >
+          {unscheduledWorks.length === 0 ? (
             <div
-              key={w.workId}
-              draggable
-              onDragStart={(e) => handleDragStart(e, w.workId)}
-              style={{
-                background: "#ffebee",
-                borderRadius: "6px",
-                border: "1px solid #f8bbd0",
-                marginBottom: "0.32rem",
-                padding: "0.23rem 0.20rem",
-                fontSize: "0.88em",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap"
+              style={{ color: "#999", fontSize: "0.89em" }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                const workId = e.dataTransfer.getData("workId");
+                if (!workId) return;
+                if (
+                  window.confirm(
+                    "Biztos vissza akarod tenni ezt a munkát a be nem ütemezettek közé?"
+                  )
+                ) {
+                  await dispatch(
+                    workApi.updateWorkApi(workId, { scheduleDate: null })
+                  );
+                }
               }}
-              title={`#${w.workId} - ${w.name} | ${w.user?.name || "–"}`}
+              onDragOver={(e) => e.preventDefault()}
             >
-              <b>#{w.workId}</b>
-              <br />
-              <span style={{ color: "#b71c1c" }}>{w.user?.name || "–"}</span>
+              <span style={{ fontSize: "1.5em" }}>
+                Nincs jelenleg ütemezésre váró munka
+              </span>
             </div>
-          ))
-        )}
+          ) : (
+            unscheduledWorks.map((w) => (
+              <div
+                key={w.workId}
+                draggable
+                onDragStart={(e) => handleDragStart(e, w.workId)}
+                style={{
+                  background: "#ffebee",
+                  borderRadius: "6px",
+                  border: "1px solid #f8bbd0",
+                  marginBottom: "0.32rem",
+                  padding: "0.23rem 0.20rem",
+                  fontSize: "0.88em",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+                title={`#${w.workId} - ${w.name} | ${w.user?.name || "–"}`}
+              >
+                <b>#{w.workId}</b>
+                <br />
+                <span style={{ color: "#b71c1c" }}>{w.user?.name || "–"}</span>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
