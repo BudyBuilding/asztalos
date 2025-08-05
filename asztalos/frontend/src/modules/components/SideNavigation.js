@@ -144,21 +144,34 @@ function SideNavigation({ onToggle }) {
         {userRole == "companyAdmin" ||
         userRole == "companyUser" ||
         userRole == "admin" ? (
-          <Nav.Link
-            onClick={() => handleSelectTab("schedule")}
-            style={navLinkStyle("schedule")}
-          >
-            {selectedTab === "schedule" ? (
-              <i className="bi bi-people-fill me-2"></i>
-            ) : (
-              <i className="bi bi-people me-2"></i>
-            )}
-
-            {showNav ? "Naptár" : ""}
-          </Nav.Link>
+          <>
+            <Nav.Link
+              onClick={() => handleSelectTab("schedule")}
+              style={navLinkStyle("schedule")}
+            >
+              {selectedTab === "schedule" ? (
+                <i className="bi bi-calendar2-week-fill me-2"></i>
+              ) : (
+                <i className="bi bi-calendar2-week me-2"></i>
+              )}
+              {showNav ? "Naptár" : ""}
+            </Nav.Link>
+            <Nav.Link
+              onClick={() => handleSelectTab("reports")}
+              style={navLinkStyle("reports")}
+            >
+              {selectedTab === "reports" ? (
+                <i className="bi bi-bar-chart-fill me-2"></i>
+              ) : (
+                <i className="bi bi-bar-chart me-2"></i>
+              )}
+              {showNav ? "Kimutatások" : ""}
+            </Nav.Link>
+          </>
         ) : (
           <></>
         )}
+
         <Nav.Link
           onClick={() => handleSelectTab("colors")}
           style={navLinkStyle("colors")}

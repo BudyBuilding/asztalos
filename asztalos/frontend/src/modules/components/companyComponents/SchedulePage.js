@@ -35,6 +35,7 @@ function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("month");
+  const palette = useSelector((state) => state.colors || []); // vagy props
 
   useEffect(() => {
     async function load() {
@@ -94,8 +95,26 @@ function SchedulePage() {
     return isSameDay(sd, currentDate);
   });
 
+  function parseUsedTables(str) {
+    // pl: "[feher:2|szurke:1|piros:0.5]"
+    if (!str) return [];
+    return str
+      .replace(/[\[\]]/g, "")
+      .split("|")
+      .map((pair) => {
+        const [colorId, db] = pair.split(":");
+        if (colorId && db) return [colorId, parseFloat(db.replace(",", "."))];
+        return null;
+      })
+      .filter(Boolean);
+  }
+
   // Be nem ütemezett munkák
-  const unscheduledWorks = works.filter((w) => !w.scheduleDate);
+  //const unscheduledWorks = works.filter((w) => !w.scheduleDate);
+  const UNSCHEDULED_DATE = "2000-01-01";
+  const unscheduledWorks = works.filter(
+    (w) => !w.scheduleDate || w.scheduleDate.startsWith(UNSCHEDULED_DATE)
+  );
   const navigationBarStyle = {
     display: "flex",
     alignItems: "center",
@@ -146,7 +165,7 @@ function SchedulePage() {
   // Munka “kártya” doboz
   const today = new Date();
 
-  const WorkBox = ({ w, draggable, onDragStart }) => (
+  const WorkBox = ({ w, draggable, onDragStart, shownColors = false }) => (
     <div
       key={w.workId}
       style={{
@@ -169,6 +188,11 @@ function SchedulePage() {
       <span style={{ color: "#1976d2" }}>{w.user?.name || "–"}</span>
       {" - "}
       <b>#{w.workId}</b> - {w.name}
+      {shownColors ? (
+        <WorkColorsInfo usedTables={w.usedTables} palette={palette} />
+      ) : (
+        <></>
+      )}
     </div>
   );
 
@@ -233,6 +257,53 @@ function SchedulePage() {
       });
     });
     return sum;
+  }
+
+  function WorkColorsInfo({ usedTables, palette }) {
+    const rows = parseUsedTables(usedTables);
+    if (!rows.length) return <span style={{ color: "#aaa" }}>nincs tábla</span>;
+    return (
+      <div>
+        {rows.map(([colorId, db], idx) => {
+          const color = palette.find(
+            (c) => String(c.colorId) === String(colorId)
+          );
+          return (
+            <div
+              key={idx}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: 2
+              }}
+            >
+              {/* Szín négyzet vagy kép */}
+              {color?.imageDataReduced ? (
+                <img
+                  src={`data:image/jpeg;base64,${color.imageDataReduced}`}
+                  alt={color.name}
+                  style={{ width: 16, height: 16, borderRadius: 2 }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 16,
+                    height: 16,
+                    backgroundColor: color?.hex || "#ddd",
+                    borderRadius: 2,
+                    border: "1px solid #ccc"
+                  }}
+                />
+              )}
+              <span style={{ fontSize: "0.93em", color: "#1a237e" }}>
+                {color?.name || colorId}: <b>{db}</b> tábla
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
@@ -484,6 +555,18 @@ function SchedulePage() {
                       return isSameDay(sd, day);
                     });
                     const isWeekend = di >= 5;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const cellDay = new Date(day);
+                    cellDay.setHours(0, 0, 0, 0);
+                    const isPast = cellDay < today;
+                    let background;
+                    if (isPast) {
+                      background = isWeekend ? "#e1e1e1" : "#ededed";
+                    } else {
+                      background = isWeekend ? "#ffeaea" : "#fff";
+                    }
+
                     return (
                       <td
                         key={di}
@@ -495,9 +578,16 @@ function SchedulePage() {
                           maxHeight: "110px",
                           padding: "2px 2px 2px 4px",
                           fontSize: "0.8rem",
-                          background: isWeekend ? "#ffeaea" : "#fff",
+                          background,
                           color: isWeekend ? "#b71c1c" : "#222",
                           overflow: "hidden"
+                        }}
+                        onDrop={(e) => {
+                          if (cellDay >= today)
+                            handleDrop(e, format(cellDay, "yyyy-MM-dd"));
+                        }}
+                        onDragOver={(e) => {
+                          if (cellDay >= today) handleDragOver(e, cellDay);
                         }}
                       >
                         <div
@@ -530,15 +620,18 @@ function SchedulePage() {
                           }}
                         >
                           {cellWorks.map((w) => (
-                            <WorkBox
-                              key={w.workId}
-                              w={w}
-                              draggable={
-                                !w.scheduleDate ||
-                                parseISO(w.scheduleDate) >= today
-                              }
-                              onDragStart={handleDragStart}
-                            />
+                            <div key={w.workId} style={{ marginBottom: 6 }}>
+                              <WorkBox
+                                w={w}
+                                draggable={
+                                  !w.scheduleDate ||
+                                  parseISO(w.scheduleDate) >= today
+                                }
+                                onDragStart={handleDragStart}
+                                shownColors={true}
+                              />
+                              {/* SZÍNEK LISTÁJA */}
+                            </div>
                           ))}
                         </div>
                       </td>
@@ -548,48 +641,68 @@ function SchedulePage() {
               </tbody>
             </table>
           )}
-          {view === "day" && (
-            <div
-              style={{
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                padding: "1.0rem",
-                background: "#fafcff",
-                minHeight: "120px",
-                height: "100%"
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "1.08rem",
-                  marginBottom: "0.5rem",
-                  color: "#1976d2"
-                }}
-              >
-                {capitalizeFirst(
-                  format(currentDate, "yyyy. MMMM d., EEEE", { locale: hu })
-                )}
-                {dayWorks.length > 0 && (
-                  <> | Táblák száma: {sumTables(dayWorks)}</>
-                )}
-              </div>
-              {dayWorks.length === 0 ? (
-                <div style={{ color: "#888" }}>Nincs munka erre a napra.</div>
-              ) : (
-                dayWorks.map((w) => (
-                  <WorkBox
-                    key={w.workId}
-                    w={w}
-                    draggable={
-                      !w.scheduleDate || parseISO(w.scheduleDate) >= today
-                    }
-                    onDragStart={handleDragStart}
-                  />
-                ))
-              )}
-            </div>
-          )}
+          {view === "day" &&
+            (() => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const thisDay = new Date(currentDate);
+              thisDay.setHours(0, 0, 0, 0);
+              const isPast = thisDay < today;
+              let background = isPast ? "#ededed" : "#fafcff";
+
+              return (
+                <div
+                  style={{
+                    border: "1px solid #ccc",
+                    borderRadius: "8px",
+                    padding: "1.0rem",
+                    background,
+                    minHeight: "120px",
+                    height: "100%"
+                  }}
+                  onDrop={(e) => {
+                    if (thisDay >= today)
+                      handleDrop(e, format(thisDay, "yyyy-MM-dd"));
+                  }}
+                  onDragOver={(e) => {
+                    if (thisDay >= today) handleDragOver(e, thisDay);
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "1.08rem",
+                      marginBottom: "0.5rem",
+                      color: "#1976d2"
+                    }}
+                  >
+                    {capitalizeFirst(
+                      format(currentDate, "yyyy. MMMM d., EEEE", { locale: hu })
+                    )}
+                    {dayWorks.length > 0 && (
+                      <> | Táblák száma: {sumTables(dayWorks)}</>
+                    )}
+                  </div>
+                  {dayWorks.length === 0 ? (
+                    <div style={{ color: "#888" }}>
+                      Nincs munka erre a napra.
+                    </div>
+                  ) : (
+                    dayWorks.map((w) => (
+                      <WorkBox
+                        key={w.workId}
+                        w={w}
+                        draggable={
+                          !w.scheduleDate || parseISO(w.scheduleDate) >= today
+                        }
+                        onDragStart={handleDragStart}
+                        shownColors={true}
+                      />
+                    ))
+                  )}
+                </div>
+              );
+            })()}
         </div>
       </div>
       {/* Jobb oldal - be nem ütemezett munkák */}
@@ -605,7 +718,8 @@ function SchedulePage() {
           maxHeight: "90vh",
           overflowY: "auto",
           fontSize: "0.89em",
-          boxSizing: "border-box"
+          boxSizing: "border-box",
+          overflowX: "auto"
         }}
       >
         <div
@@ -620,6 +734,10 @@ function SchedulePage() {
           Be nem ütemezett munkák
         </div>
         <div
+          style={{
+            overflow: "hidden",
+            height: "100%"
+          }}
           onDrop={async (e) => {
             e.preventDefault();
             const workId = e.dataTransfer.getData("workId");
@@ -630,31 +748,14 @@ function SchedulePage() {
               )
             ) {
               await dispatch(
-                workApi.updateWorkApi(workId, { scheduleDate: null })
+                workApi.updateWorkApi(workId, { scheduleDate: "2000-01-01" })
               );
             }
           }}
           onDragOver={(e) => e.preventDefault()}
         >
           {unscheduledWorks.length === 0 ? (
-            <div
-              style={{ color: "#999", fontSize: "0.89em" }}
-              onDrop={async (e) => {
-                e.preventDefault();
-                const workId = e.dataTransfer.getData("workId");
-                if (!workId) return;
-                if (
-                  window.confirm(
-                    "Biztos vissza akarod tenni ezt a munkát a be nem ütemezettek közé?"
-                  )
-                ) {
-                  await dispatch(
-                    workApi.updateWorkApi(workId, { scheduleDate: null })
-                  );
-                }
-              }}
-              onDragOver={(e) => e.preventDefault()}
-            >
+            <div>
               <span style={{ fontSize: "1.5em" }}>
                 Nincs jelenleg ütemezésre váró munka
               </span>
@@ -681,6 +782,60 @@ function SchedulePage() {
                 <b>#{w.workId}</b>
                 <br />
                 <span style={{ color: "#b71c1c" }}>{w.user?.name || "–"}</span>
+                <br />
+                {/* SZÍNEK LISTÁJA */}
+                <div style={{ marginTop: 4 }}>
+                  {parseUsedTables(w.usedTables).length === 0 ? (
+                    <span style={{ color: "#aaa" }}>nincs tábla</span>
+                  ) : (
+                    parseUsedTables(w.usedTables).map(([colorId, db], idx) => {
+                      // palette-ből keresd ki a színt!
+                      const color = palette.find(
+                        (c) => String(c.colorId) === String(colorId)
+                      );
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            marginBottom: 2
+                          }}
+                        >
+                          {"    "}
+                          <span
+                            style={{ fontSize: "0.93em", color: "#1a237e" }}
+                          >
+                            <b>{db}</b> tábla -
+                          </span>
+                          {/* Szín négyzet */}
+                          {color?.imageDataReduced ? (
+                            <img
+                              src={`data:image/jpeg;base64,${color?.imageDataReduced}`}
+                              alt={color.name}
+                              style={{ width: 16, height: 16, borderRadius: 2 }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 16,
+                                height: 16,
+                                backgroundColor: color?.hex || "#ddd",
+                                borderRadius: 2
+                              }}
+                            />
+                          )}
+                          <span
+                            style={{ fontSize: "0.93em", color: "#1a237e" }}
+                          >
+                            {color?.name || colorId}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             ))
           )}

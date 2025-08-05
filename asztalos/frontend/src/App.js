@@ -39,6 +39,7 @@ import TopNavigationBar from "./modules/components/TopNavigation.js";
 import TableViewer from "./modules/components/tableViewer.js";
 import EmployeePage from "./modules/components/companyComponents/EmployeePage.js";
 import SchedulePage from "./modules/components/companyComponents/SchedulePage.js";
+import ReportsPage from "./modules/components/companyComponents/ReportsPage.js";
 
 function App() {
   const dispatch = useDispatch();
@@ -184,6 +185,18 @@ function App() {
                 currentUser?.role === "admin" ||
                 currentUser?.role === "companyUser" ? (
                   <SchedulePage />
+                ) : (
+                  <div>Unauthorized</div>
+                )
+              }
+            />{" "}
+            <Route
+              path="/reports/"
+              element={
+                currentUser?.role === "companyAdmin" ||
+                currentUser?.role === "admin" ||
+                currentUser?.role === "companyUser" ? (
+                  <ReportsPage />
                 ) : (
                   <div>Unauthorized</div>
                 )
