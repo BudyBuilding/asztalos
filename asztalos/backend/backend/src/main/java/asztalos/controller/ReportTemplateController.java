@@ -1,62 +1,46 @@
 package asztalos.controller;
 
-import asztalos.model.ReportTemplate;
-import asztalos.service.ReportTemplateService;
-import asztalos.dto.CreateUpdateReportTemplateDto;
-import asztalos.dto.RunReportRequest;
+import asztalos.dto.CreateUpdateReportTemplateDto; // ha van
+import asztalos.dto.ReportTemplateDetailDto;
+import asztalos.dto.ReportTemplateListDto;
+import asztalos.service.ReportTemplateQueryService;
+import asztalos.service.ReportTemplateService; // a már meglévő create/update/delete szolgáltatásod
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/report-templates")
+@RequestMapping("/report-templates")
 @RequiredArgsConstructor
 public class ReportTemplateController {
 
-    private final ReportTemplateService service;
+    private final ReportTemplateService commandService;      // már meglevő (create/update/delete)
+    private final ReportTemplateQueryService queryService;   // ÚJ (list/detail DTO)
 
     @GetMapping
-    public List<ReportTemplate> list() {
-        return service.findAll();
+    public List<ReportTemplateListDto> list() {
+        return queryService.list();
     }
 
     @GetMapping("/{id}")
-    public ReportTemplate get(@PathVariable UUID id) {
-        return service.findById(id);
+    public ReportTemplateDetailDto get(@PathVariable UUID id) {
+        return queryService.get(id);
     }
 
     @PostMapping
-    public ReportTemplate create(@RequestBody CreateUpdateReportTemplateDto dto) {
-        return service.create(dto);
+    public Object create(@RequestBody CreateUpdateReportTemplateDto dto) {
+        return commandService.create(dto); // maradhat, ahogy eddig volt
     }
 
     @PutMapping("/{id}")
-    public ReportTemplate update(@PathVariable UUID id, @RequestBody CreateUpdateReportTemplateDto dto) {
-        return service.update(id, dto);
+    public Object update(@PathVariable UUID id, @RequestBody CreateUpdateReportTemplateDto dto) {
+        return commandService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
-        service.delete(id);
-    }
-
-    @PostMapping("/{id}/run")
-    public ResponseEntity<ByteArrayResource> run(@PathVariable UUID id, @RequestBody RunReportRequest req) {
-        ReportTemplateService.RunResult result = service.run(id, req);
-
-        ContentDisposition cd = ContentDisposition.attachment()
-                .filename(result.fileName)
-                .build();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(cd);
-        headers.setContentType(MediaType.parseMediaType(result.contentType));
-
-        return new ResponseEntity<>(result.resource, headers, HttpStatus.OK);
+        commandService.delete(id);
     }
 }

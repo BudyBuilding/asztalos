@@ -13,3 +13,4 @@ public class RunReportRequest {
     private Map<String, Object> params;       // { "period": { "from": "...", "to": "..." }, "status": "open", ... }
     private String fileName;                  // opcionális custom fájlnév (kiterjesztés nélkül)
 }
+

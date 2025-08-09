@@ -2,11 +2,11 @@
 import { combineReducers } from "redux";
 import {
   worksReducer,
-  selectedWorkReducer,
+  selectedWorkReducer
 } from "../actions/workStoreFunctions";
 import {
   clientsReducer,
-  selectedClientReducer,
+  selectedClientReducer
 } from "../actions/clientStoreFunctions";
 import authReducer from "../actions/authStoreFunctions";
 import {
@@ -14,17 +14,18 @@ import {
   selectedObjectReducer,
   objectLoadingReducer,
   createdItemsReducer,
-  createdTablesReducer,
+  createdTablesReducer
 } from "../actions/objectStoreFunctions";
 import { colorReducer } from "../actions/colorStoreFunctions";
 import { imageReducer } from "../actions/imageStoreFunctions";
 import {
   scriptReducer,
   selectedScriptReducer,
-  scriptItemsReducer,
+  scriptItemsReducer
 } from "../actions/scriptStoreFunctions";
 import { tablesReducer } from "../actions/tableStoreFunctions";
 import { settingReducer } from "../actions/settingStoreFunctions";
+import { reportsReducer } from "../actions/reportStoreFunctions";
 const initialState = {
   colors: [],
   images: [],
@@ -40,9 +41,8 @@ const initialState = {
   selectedScriptItems: [],
   objectLoading: false,
   createdItems: [],
-  createdTables: [],
+  createdTables: []
 };
-
 
 const itemsReducer = (state = initialState.items, action) => {
   switch (action.type) {
@@ -72,6 +72,7 @@ const reducers = combineReducers({
   createdItems: createdItemsReducer,
   createdTables: createdTablesReducer,
   tables: tablesReducer,
+  reports: reportsReducer
 });
 
 export default reducers;

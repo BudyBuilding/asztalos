@@ -12,6 +12,7 @@ import createdTablesApi from "./api/createdTablesApi";
 import settingsApi from "./api/settingsApi";
 import authApi from "./api/authApi";
 import store from "./store/store";
+import reportApi from "./api/reportApi";
 
 // users
 export const fetchUsers = () => {
@@ -107,7 +108,9 @@ export const fetchSettingsByWork = () => {
 export const fetchSettingsByList = () => {
   settingsApi.getAllSettingOfListOfIdsApi();
 };
-
+export const fetchReportTemplates = () => {
+  reportApi.getAllReportTemplatesApi();
+};
 /////////////
 export const fetchAll = async () => {
   const currentUser = store.getState().auth.user;
@@ -116,6 +119,7 @@ export const fetchAll = async () => {
     if (currentUser.role === "admin" || currentUser.role === "companyAdmin") {
       await fetchUsers();
       await fetchCreatedTables();
+      await fetchReportTemplates();
     }
     await fetchColors();
     await fetchClients();

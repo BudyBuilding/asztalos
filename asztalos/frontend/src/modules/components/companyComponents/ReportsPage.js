@@ -1,5 +1,5 @@
 // src/pages/ReportsPage.js
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   Card,
   Container,
@@ -14,6 +14,8 @@ import {
   InputGroup
 } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
+import reportApi from "../../../data/api/reportApi";
+import downloadBlob from "../../../data/downloadBlob";
 
 // ==== Mock: elérhető formátumok (később backendről) ====
 const AVAILABLE_FORMATS = ["CSV", "XLSX", "PDF"];
@@ -170,17 +172,24 @@ function ParametersForm({ template, value, onChange }) {
 }
 
 // ====== Export panel (user nézet) ======
-function ReportExportPanel({ templates }) {
-  const [selectedId, setSelectedId] = useState(templates?.[0]?.id || "");
+function ReportExportPanel({ templates = [], onExport }) {
+  const [selectedId, setSelectedId] = useState("");
   const selected = useMemo(
     () => templates.find((t) => t.id === selectedId),
     [selectedId, templates]
   );
   const [params, setParams] = useState({});
-  const [format, setFormat] = useState(selected?.formats?.[0] || "CSV");
+  const [format, setFormat] = useState("CSV");
 
-  // ha váltasz reportot, reset formátumot/params-t
-  React.useEffect(() => {
+  // amikor megjönnek a template-ek, állíts be defaultot
+  useEffect(() => {
+    if (!templates.length) return;
+    const first = templates[0];
+    setSelectedId((prev) => (prev ? prev : first.id));
+  }, [templates]);
+
+  // ha váltasz reportot, reset paramok/format
+  useEffect(() => {
     if (!selected) return;
     setParams(
       (selected.parameters || []).reduce((acc, p) => {
@@ -191,27 +200,20 @@ function ReportExportPanel({ templates }) {
       }, {})
     );
     setFormat(selected.formats?.[0] || "CSV");
-  }, [selectedId]); // eslint-disable-line
+  }, [selectedId, selected]);
 
-  const onExport = () => {
-    // Itt majd backend hívás: POST /api/reports/export { templateId, params, format }
-    console.log("EXPORT →", {
-      templateId: selected?.id,
-      params,
-      format
-    });
-    alert(
-      `Export indítva:\n- Report: ${
-        selected?.name
-      }\n- Formátum: ${format}\n- Paraméterek: ${JSON.stringify(
-        params,
-        null,
-        2
-      )}`
-    );
+  const handleExportClick = () => {
+    if (!selected || !format) return;
+    onExport?.(selected.id, format, params);
   };
 
-  if (!selected) return null;
+  if (!templates.length) {
+    return (
+      <Card className="shadow-sm">
+        <Card.Body>Nem található report sablon.</Card.Body>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-sm">
@@ -259,7 +261,7 @@ function ReportExportPanel({ templates }) {
                 </option>
               ))}
             </Form.Select>
-            <Button className="mt-3 w-100" onClick={onExport}>
+            <Button className="mt-3 w-100" onClick={handleExportClick}>
               <i className="bi bi-file-earmark-arrow-down me-2" />
               Exportálás
             </Button>
@@ -273,7 +275,9 @@ function ReportExportPanel({ templates }) {
 // ====== Admin: Report designer ======
 function AdminReportDesigner({
   templates,
-  setTemplates,
+  onCreate,
+  onUpdate,
+  onDelete,
   availableFormats = AVAILABLE_FORMATS
 }) {
   const [showModal, setShowModal] = useState(false);
@@ -299,11 +303,6 @@ function AdminReportDesigner({
     setEditing(t.id);
     setDraft(JSON.parse(JSON.stringify(t)));
     setShowModal(true);
-  };
-
-  const removeTemplate = (id) => {
-    if (!window.confirm("Biztosan törlöd ezt a sablont?")) return;
-    setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
   // param szerkesztő
@@ -340,27 +339,68 @@ function AdminReportDesigner({
     });
   };
 
-  const saveTemplate = () => {
-    if (!draft.id || !draft.name) {
-      alert("ID és Név kötelező.");
+  const saveTemplate = async () => {
+    if (!draft.code || !draft.name) {
+      alert("Kód és Név kötelező.");
       return;
     }
-    // egyszerű valid
     if (!draft.formats?.length) {
       alert("Legalább egy formátumot válassz.");
       return;
     }
+    if (!draft.queryText) {
+      alert("A lekérdezés szövege kötelező.");
+      return;
+    }
 
-    setTemplates((prev) => {
-      const idx = prev.findIndex((t) => t.id === draft.id);
-      if (idx >= 0) {
-        const cloned = [...prev];
-        cloned[idx] = draft;
-        return cloned;
+    // helper az AdminReportDesigner-hez
+    const toBackendParamType = (t) => {
+      switch (t) {
+        case "dateRange":
+          return "DATE_RANGE";
+        case "enum":
+          return "ENUM";
+        case "text":
+          return "TEXT";
+        case "number":
+          return "NUMBER";
+        case "checkbox":
+          return "CHECKBOX";
+        default:
+          return t;
       }
-      return [...prev, draft];
+    };
+
+    const normalizeTemplateForApi = (tpl) => ({
+      code: tpl.code, // <-- KÖTELEZŐ
+      name: tpl.name,
+      description: tpl.description,
+      queryType: tpl.queryType || "SQL", // <-- valószínűleg KÖTELEZŐ
+      queryText: tpl.queryText || "", // <-- valószínűleg KÖTELEZŐ
+      formats: tpl.formats || [],
+      parameters: (tpl.parameters || []).map((p) => ({
+        key: p.key,
+        label: p.label,
+        type: toBackendParamType(p.type),
+        defaultValue: p.default ?? null,
+        options: p.options
+          ? p.options.map((o) => ({ id: o.id, label: o.label }))
+          : []
+      }))
     });
+
+    const payload = normalizeTemplateForApi(draft);
+    if (editing) {
+      await onUpdate?.(editing, payload);
+    } else {
+      await onCreate?.(payload);
+    }
     setShowModal(false);
+  };
+
+  const removeTemplate = async (id) => {
+    if (!window.confirm("Biztosan törlöd ezt a sablont?")) return;
+    await onDelete?.(id);
   };
 
   return (
@@ -639,6 +679,42 @@ function AdminReportDesigner({
                   })}
                 </div>
               </Col>
+              <Col md={6}>
+                <Form.Label>Kód</Form.Label>
+                <Form.Control
+                  placeholder="pl. rep-orders-by-client"
+                  value={draft.code || ""}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, code: e.target.value.trim() }))
+                  }
+                />
+              </Col>
+
+              <Col md={6}>
+                <Form.Label>Lekérdezés típusa</Form.Label>
+                <Form.Select
+                  value={draft.queryType || "SQL"}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, queryType: e.target.value }))
+                  }
+                >
+                  <option value="SQL">SQL</option>
+                  {/* ha vannak más típusok is, sorold fel itt */}
+                </Form.Select>
+              </Col>
+
+              <Col md={12}>
+                <Form.Label>Lekérdezés</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={6}
+                  placeholder="SELECT ... FROM ..."
+                  value={draft.queryText || ""}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, queryText: e.target.value }))
+                  }
+                />
+              </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
@@ -786,47 +862,53 @@ function KpiAndSamples() {
 
 function ReportsPage() {
   const dispatch = useDispatch();
-  const role = useSelector((state) => state.auth?.user?.role);
-  console.log(role); // "admin" esetén látja a designt
+  const role = useSelector((s) => s.auth?.user?.role);
   const isAdmin = role === "admin" || role === "companyAdmin";
+  const templates = useSelector((s) => s.reports?.templates || []);
+  const loading = useSelector((s) => s.reports?.loading); // ha csináltál ilyet
 
-  const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
+  useEffect(() => {
+    // Ha a reportApi thunk és dispatch-el, akkor:
+    reportApi.getAllReportTemplatesApi();
+  }, [dispatch]);
+
+  const handleExport = async (templateId, format, params) => {
+    try {
+      const { blob, filename } = await reportApi.runReportApi(
+        templateId,
+        format,
+        params
+      );
+      downloadBlob(blob, filename);
+    } catch (err) {
+      console.error("Report export hiba:", err);
+      alert("Nem sikerült az export.");
+    }
+  };
+
+  const handleCreate = async (tpl) => {
+    await dispatch(reportApi.createReportTemplateApi(tpl));
+  };
+  const handleUpdate = async (id, tpl) => {
+    await dispatch(reportApi.updateReportTemplateApi(id, tpl));
+  };
+  const handleDelete = async (id) => {
+    if (!window.confirm("Biztosan törlöd ezt a sablont?")) return;
+    await dispatch(reportApi.deleteReportTemplateApi(id));
+  };
 
   return (
     <Container fluid style={{ paddingTop: "2rem", paddingBottom: "2rem" }}>
-      <Row className="mb-3">
-        <Col xs={12}>
-          <h2 className="mb-1">
-            <i className="bi bi-bar-chart-fill me-2" />
-            Kimutatások
-          </h2>
-          <div className="text-muted">
-            Export és szerkesztés (sablonok). A szerkesztő csak admin számára
-            látható.
-          </div>
-        </Col>
-      </Row>
+      {/* ... KPI stb. maradhat */}
+      <ReportExportPanel templates={templates} onExport={handleExport} />
 
-      {/* KPI + minta blokkok (opcionális) */}
-      <KpiAndSamples />
-
-      {/* Export panel – mindenki használhatja */}
-      <Row className="g-3 mb-4">
-        <Col xs={12}>
-          <ReportExportPanel templates={templates} />
-        </Col>
-      </Row>
-
-      {/* Admin designer */}
       {isAdmin && (
-        <Row className="g-3">
-          <Col xs={12}>
-            <AdminReportDesigner
-              templates={templates}
-              setTemplates={setTemplates}
-            />
-          </Col>
-        </Row>
+        <AdminReportDesigner
+          templates={templates}
+          onCreate={handleCreate}
+          onUpdate={handleUpdate}
+          onDelete={handleDelete}
+        />
       )}
     </Container>
   );
